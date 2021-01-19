@@ -72,3 +72,7 @@ After a change wait for the build to finish and then refresh your browser and th
 #### Python:
 
 If you make a change to the python code then you will need to restart the notebook kernel to have it take effect.
+
+## Notes
+
+- Svelte transitions don't seem to work well as they force an expensive re-layout operation. Avoid using them during interactions.

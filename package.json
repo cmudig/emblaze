@@ -43,21 +43,24 @@
     "watch:nbextension": "webpack --watch --mode=development"
   },
   "dependencies": {
-    "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3"
+    "@fortawesome/free-solid-svg-icons": "^5.15.2",
+    "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3",
+    "d3": "^6.3.1"
   },
   "devDependencies": {
     "@phosphor/application": "^1.6.0",
     "@phosphor/widgets": "^1.6.0",
+    "@tsconfig/svelte": "^1.0.10",
     "@types/node": "^10.11.6",
     "@types/webpack-env": "^1.13.6",
     "@typescript-eslint/eslint-plugin": "^3.6.0",
     "@typescript-eslint/parser": "^3.6.0",
-    "@tsconfig/svelte": "^1.0.10",
     "acorn": "^7.2.0",
     "css-loader": "^3.2.0",
     "eslint": "^7.4.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.4",
+    "fa-svelte": "^3.1.0",
     "fs-extra": "^7.0.0",
     "mkdirp": "^0.5.1",
     "npm-run-all": "^4.1.3",
@@ -65,12 +68,12 @@
     "rimraf": "^2.6.2",
     "source-map-loader": "^0.2.4",
     "style-loader": "^1.0.0",
+    "svelte": "^3.0.0",
+    "svelte-loader": "2.13.3",
     "ts-loader": "^5.2.1",
     "typescript": "~3.8",
     "webpack": "^4.20.2",
-    "webpack-cli": "^3.1.2",
-    "svelte": "^3.0.0",
-    "svelte-loader": "2.13.3"
+    "webpack-cli": "^3.1.2"
   },
   "jupyterlab": {
     "extension": "lib/plugin",

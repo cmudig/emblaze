@@ -1,9 +1,9 @@
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
-export function createValue(model: any, name_: string, value_: any) {
+export function syncValue(model: any, name_: string) {
   const name: string = name_;
-  const curVal: Writable<any> = writable(value_);
+  const curVal: Writable<any> = writable(model.get(name));
 
   model.on('change:' + name, () => curVal.set(model.get(name)), null);
 

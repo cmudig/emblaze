@@ -9,7 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
-from traitlets import Integer, Unicode
+from traitlets import Integer, Unicode, Dict
 from ._frontend import module_name, module_version
 
 
@@ -23,4 +23,4 @@ class DRViewer(DOMWidget):
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
 
-    value = Integer(0).tag(sync=True)
+    data = Dict({}).tag(sync=True)
