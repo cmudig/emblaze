@@ -11,6 +11,8 @@
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
   let data = syncValue(model, 'data', {});
+  let isLoading = syncValue(model, 'isLoading', true);
+  let loadingMessage = syncValue(model, 'loadingMessage', '');
 
   let dataset = null;
   $: if (!!$data && !!$data['data']) {
@@ -25,18 +27,25 @@
   });
 </script>
 
-<SynchronizedScatterplot
-  data={dataset}
-  hoverable
-  animateTransitions
-  width={400}
-  height={400}
-  colorScheme={{
-    name: 'tableau',
-    value: d3.schemeTableau10,
-    type: 'categorical',
-  }}
-/>
+{#if $isLoading}
+  <div class="text-center">
+    Loading {#if $loadingMessage.length > 0} ({$loadingMessage}){/if}...
+    <i class="text-primary fa fa-spinner fa-spin" />
+  </div>
+{:else}
+  <SynchronizedScatterplot
+    data={dataset}
+    hoverable
+    animateTransitions
+    width={400}
+    height={400}
+    colorScheme={{
+      name: 'tableau',
+      value: d3.schemeTableau10,
+      type: 'categorical',
+    }}
+  />
+{/if}
 
 <style>
 </style>
