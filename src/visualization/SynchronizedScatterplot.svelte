@@ -84,7 +84,7 @@
     }
   }
 
-  function updateFrame(newFrame) {
+  export function updateFrame(newFrame) {
     dataManager.setFrame(newFrame, animateTransitions);
     if (!!hoveredID && !data.atFrame(hoveredID, newFrame)) {
       hideStarGraph(hoveredID);

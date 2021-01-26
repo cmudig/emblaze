@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
+from affine import Affine
 
 def round_floats(o, amount):
     if isinstance(o, (float, np.float64)): return round(float(o), amount)
@@ -208,14 +209,35 @@ FLIP_FACTORS = [
 ]
 
 def projection_standardizer(emb):
-    """Converts the embedding to 3D and standardizes its mean and spread."""
-    emb = np.hstack([emb, np.zeros(len(emb)).reshape(-1, 1)])
-    def standardizer(mat):
-        mat = np.hstack([mat, np.zeros(len(mat)).reshape(-1, 1)])
-        return mat - emb.mean(axis=0)
-    return standardizer
+    """Returns an affine transformation to translate an embedding to the centroid
+    of the given set of points."""
+    return Affine.translation(*(-emb.mean(axis=0)[:2]))
 
-def align_projection(base_frame, frame, ids=None):
+def affine_to_matrix(t):
+    """
+    Returns a 3x3 matrix representing the transformation matrix.
+    """
+    return np.array([
+        [t.a, t.b, t.c],
+        [t.d, t.e, t.f],
+        [t.g, t.h, t.i]
+    ])
+    
+def matrix_to_affine(mat):
+    """
+    Returns an Affine transformation object from the given 3x3 matrix.
+    """
+    return Affine(*(mat.flatten()[:6]))
+
+def affine_transform(transform, points):
+    """
+    Transforms a set of N x 2 points using the given Affine object.
+    """
+    reshaped_points = np.vstack([points.T, np.ones((1, points.shape[0]))])
+    transformed = np.dot(affine_to_matrix(transform), reshaped_points)
+    return transformed.T[:,:2] # pylint: disable=unsubscriptable-object
+
+def align_projection(base_frame, frame, ids=None, return_transform=False, base_transform=None, allow_flips=True):
     """
     Aligns the given projection to the base frame. The frames are aligned based
     on the keys they have in common.
@@ -225,6 +247,11 @@ def align_projection(base_frame, frame, ids=None):
         frame: A ScatterplotFrame to transform.
         ids: Point IDs to use for alignment (default None, which results in an
             alignment using the intersection of IDs between the two frames).
+        return_transform: If true, return just the Affine object instead of the
+            rotated data.
+        base_transform: If not None, an Affine object representing the
+            transformation to apply to the base frame before aligning.
+        allow_flips: If true, test inversions as possible candidates for alignment.
         
     Returns:
         A numpy array containing the x and y coordinates for the points in
@@ -235,23 +262,34 @@ def align_projection(base_frame, frame, ids=None):
     proj_subset = frame.mat(fields=[frame.x_key, frame.y_key], ids=ids_to_compare)
     proj_scaler = projection_standardizer(proj_subset)
     base_proj_subset = base_frame.mat(fields=[base_frame.x_key, base_frame.y_key], ids=ids_to_compare)
+    if base_transform is not None:
+        base_proj_subset = affine_transform(base_transform, base_proj_subset)    
     base_proj_scaler = projection_standardizer(base_proj_subset)
     
-    proj = proj_scaler(proj_subset)
-    base_proj = base_proj_scaler(base_proj_subset)
+    proj = np.hstack([
+        affine_transform(proj_scaler, proj_subset),
+        np.zeros((len(proj_subset), 1))
+    ])
+    base_proj = np.hstack([
+        affine_transform(base_proj_scaler, base_proj_subset),
+        np.zeros((len(base_proj_subset), 1))
+    ])
     
     # Test flips
     min_rmsd = 1e9
     best_variant = None
-    for factor in FLIP_FACTORS:
+    for factor in (FLIP_FACTORS if allow_flips else FLIP_FACTORS[:1]):
         opt_rotation, rmsd = Rotation.align_vectors( # pylint: disable=unbalanced-tuple-unpacking
             base_proj,
             proj * factor)
         if rmsd < min_rmsd:
             min_rmsd = rmsd
-            best_variant = opt_rotation.apply(proj_scaler(
-                frame.mat([frame.x_key, frame.y_key])
-            ) * factor)
+            transform = ~base_proj_scaler * matrix_to_affine(opt_rotation.as_matrix()) * Affine.scale(*factor[:2]) * proj_scaler
+            if return_transform:
+                best_variant = transform
+            else:
+                best_variant = affine_transform(transform,
+                    frame.mat([frame.x_key, frame.y_key]))
 
     return best_variant
 

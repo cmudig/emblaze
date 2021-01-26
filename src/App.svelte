@@ -18,14 +18,33 @@
   let plotPadding = syncValue(model, 'plotPadding', 10.0);
 
   let dataset = null;
-  $: if (!!$data && !!$data['data']) {
+  let frameTransformations = syncValue(model, 'frameTransformations', []);
+
+  $: if (
+    !!$frameTransformations &&
+    $frameTransformations.length > 0 &&
+    !!dataset
+  ) {
+    console.log('Transforming');
+    updateTransformations();
+  } else if (!!$data && !!$data['data']) {
     console.log('Updating data');
     dataset = new Dataset($data, 'color', 3);
+    if (!!$frameTransformations && $frameTransformations.length > 0)
+      updateTransformations(false);
   } else {
     dataset = null;
   }
 
-  onMount(() => {
+  function updateTransformations(animate = true) {
+    dataset.transform($frameTransformations);
+    if (!!canvas && animate) {
+      console.log('Updating frame', $currentFrame);
+      canvas.updateFrame($currentFrame);
+    }
+  }
+
+  $: onMount(() => {
     // This logs if the widget is initialized successfully
     console.log('Mounted DR widget successfully');
   });
@@ -38,16 +57,16 @@
   let previewThumbnailMessage = '';
   let previewThumbnailNeighbors = [];
 
-  let currentFrame = 0;
+  let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = -1;
 
   function updateThumbnailID(id) {
     thumbnailID = id;
     if (
       thumbnailID != null &&
-      dataset.atFrame(thumbnailID, currentFrame) != null
+      dataset.atFrame(thumbnailID, $currentFrame) != null
     ) {
-      thumbnailNeighbors = dataset.atFrame(thumbnailID, currentFrame)
+      thumbnailNeighbors = dataset.atFrame(thumbnailID, $currentFrame)
         .highlightIndexes;
     } else {
       thumbnailNeighbors = [];
@@ -85,9 +104,9 @@
   }
 
   let oldFrame = 0;
-  $: if (oldFrame != currentFrame) {
+  $: if (oldFrame != $currentFrame) {
     updateThumbnailID(thumbnailID);
-    oldFrame = currentFrame;
+    oldFrame = $currentFrame;
   }
 
   let oldPreviewFrame = -1;
@@ -125,7 +144,7 @@
         bind:this={canvas}
         data={dataset}
         padding={$plotPadding}
-        frame={currentFrame}
+        frame={$currentFrame}
         {previewFrame}
         hoverable
         animateTransitions
@@ -145,9 +164,9 @@
         bind:this={spinner}
         width={120}
         height={120}
-        selectedIndex={currentFrame}
+        selectedIndex={$currentFrame}
         on:hover={(e) => (previewFrame = e.detail != null ? e.detail : -1)}
-        on:select={(e) => (currentFrame = e.detail)}
+        on:select={(e) => ($currentFrame = e.detail)}
       />
     </div>
   </div>

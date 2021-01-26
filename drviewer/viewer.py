@@ -19,6 +19,7 @@ import threading
 import multiprocessing as mp
 from functools import partial
 import numpy as np
+import affine
 
 def apply_projection(hi_d, method='tsne', metric='euclidean', params={}):
     """
@@ -39,10 +40,10 @@ def apply_projection(hi_d, method='tsne', metric='euclidean', params={}):
         return umap.UMAP(metric=metric, **params).fit_transform(hi_d)
     elif method.lower() == "pca":
         from sklearn.decomposition import PCA
-        return PCA(metric=metric, **params).fit_transform(hi_d)
+        return PCA(**params).fit_transform(hi_d)
     else:
         raise ValueError("Method '{}' not recognized".format(method))
-        
+            
 class DRViewer(DOMWidget):
     """TODO: Add docstring here
     """
@@ -65,6 +66,10 @@ class DRViewer(DOMWidget):
     
     plotPadding = Float(10.0).tag(sync=True)
     plotScale = Float(100.0)
+    
+    currentFrame = Integer(0).tag(sync=True)
+    # List of 3 x 3 matrices (expressed as 3x3 nested lists)
+    frameTransformations = List([]).tag(sync=True)
     
     def __init__(self, hi_d, labels, *args, **kwargs):
         super(DRViewer, self).__init__(*args, **kwargs)
@@ -118,6 +123,7 @@ class DRViewer(DOMWidget):
         for i, frame in enumerate(self.frames):
             best_proj = ms.align_projection(self.frames[0], frame)
             frame.set_mat(["aligned_x", "aligned_y"], best_proj[:,:2])
+            frame.set_coordinate_keys("aligned_x", "aligned_y")
             
         # Write out JSON
         data = [frame.to_viewer_dict(x_key="aligned_x", 
@@ -134,31 +140,37 @@ class DRViewer(DOMWidget):
             "frameLabels": [str(i) for i in range(len(self.frames))],
             "frameColors": [[i / len(self.frames) * 360, 60, 70] for i in range(len(self.frames))]
         }
+        self.frameTransformations = [
+            np.eye(3).tolist()
+            for i in range(len(self.frames))
+        ]
     
-    def align_to_points(self, point_ids, base_frame_idx=0):
+    def align_to_points(self, point_ids):
         """
         Re-align the projections to minimize motion for the given point IDs.
-        Updates the self.data traitlet.
+        Uses currentFrame as the base frame. Updates the 
+        self.frameTransformations traitlet.
         
         Args:
             point_ids: Iterable of point IDs to use for alignment.
-            base_frame_idx: Index of the frame to align to.
         """
-        for i, frame in enumerate(self.frames):
-            best_proj = ms.align_projection(self.frames[base_frame_idx], frame, ids=point_ids)
-            frame.set_mat(["aligned_x", "aligned_y"], best_proj[:,:2])
-            
-        data = [frame.to_viewer_dict(x_key="aligned_x", 
-                                     y_key="aligned_y",
-                                     additional_fields={
-                                         "highlight": lambda _, item: item["highlight"].tolist(),
-                                         "color": lambda _, item: item["label"]
-                                     }) for frame in self.frames]
+        if point_ids is None:
+            self.frameTransformations = [
+                np.eye(3).tolist()
+                for i in range(len(self.frames))
+            ]
+            return
+    
+        transformations = []
+        base_transform = ms.matrix_to_affine(np.array(self.frameTransformations[self.currentFrame]))
 
-        self.isLoading = False
-        self.loadingMessage = ""
-        self.data = {
-            "data": data,
-            "frameLabels": [str(i) for i in range(len(self.frames))],
-            "frameColors": [[i / len(self.frames) * 360, 60, 70] for i in range(len(self.frames))]
-        }
+        for frame in self.frames:
+            transformations.append(ms.affine_to_matrix(ms.align_projection(
+                self.frames[self.currentFrame], 
+                frame, 
+                ids=point_ids,
+                base_transform=base_transform,
+                return_transform=True,
+                allow_flips=False)).tolist())
+
+        self.frameTransformations = transformations

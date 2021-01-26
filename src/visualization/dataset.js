@@ -5,6 +5,7 @@ import {
   precomputedPreviewIntensities,
 } from './preview_intensity.js';
 import * as d3 from 'd3';
+import { transformPoint } from './helpers.js';
 
 export function Dataset(rawData, colorKey, r = 4.0) {
   if (rawData['data']) {
@@ -21,6 +22,7 @@ export function Dataset(rawData, colorKey, r = 4.0) {
       .range(this.frames.length)
       .map((f) => [Math.round((f * 360) / dataset.frameCount), 60, 70]);
   }
+  this.frameTransformations = [];
 
   this.getXExtent = function () {
     if (!this._xExtent) {
@@ -126,8 +128,15 @@ export function Dataset(rawData, colorKey, r = 4.0) {
       Object.keys(frame).forEach((id) => {
         let el = frame[id];
         points[id].hoverText = el.hoverText;
-        points[id].xs[f] = el.x;
-        points[id].ys[f] = el.y;
+        let point = [el.x, el.y];
+        if (
+          !!this.frameTransformations &&
+          this.frameTransformations.length > f
+        ) {
+          point = transformPoint(this.frameTransformations[f], point);
+        }
+        points[id].xs[f] = point[0];
+        points[id].ys[f] = point[1];
         points[id].colors[f] =
           colorKey == 'constant' ? 0.0 : el[colorKey] || 0.0;
         points[id].alphas[f] = el.alpha != undefined ? el.alpha : 1.0;
@@ -141,15 +150,17 @@ export function Dataset(rawData, colorKey, r = 4.0) {
     this.points = Object.values(points);
     this.index = points;
     this.length = this.points.length;
-    this.neighborTrees = [];
 
     let xex = this.getXExtent();
     let yex = this.getYExtent();
     let neighborScale = (xex[1] - xex[0] + yex[1] - yex[0]) / 2.0;
 
-    this.frames.forEach((frame, i) => {
-      this.neighborTrees.push(buildKdTree(points, i));
-    });
+    if (!this.neighborTrees) {
+      this.neighborTrees = [];
+      this.frames.forEach((frame, i) => {
+        this.neighborTrees.push(buildKdTree(points, i));
+      });
+    }
 
     this.frames.forEach((frame, i) => {
       Object.keys(points).forEach((id, j) => {
@@ -222,6 +233,11 @@ export function Dataset(rawData, colorKey, r = 4.0) {
     return this.neighborTrees[frame]
       .nearest(pointID, k)
       .map((point) => point.id);
+  };
+
+  this.transform = function (frameTransformations) {
+    this.frameTransformations = frameTransformations;
+    this.reformat();
   };
 
   this.frameCount = this.frames.length;

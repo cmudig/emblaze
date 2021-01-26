@@ -1,12 +1,12 @@
 export function scaleCanvas(c, w, h) {
   // Scales the canvas for the device screen resolution
   var result = c
-    .attr("width", w * window.devicePixelRatio)
-    .attr("height", h * window.devicePixelRatio)
-    .style("width", w + "px")
-    .style("height", h + "px");
+    .attr('width', w * window.devicePixelRatio)
+    .attr('height', h * window.devicePixelRatio)
+    .style('width', w + 'px')
+    .style('height', h + 'px');
 
-  var context = c.node().getContext("2d");
+  var context = c.node().getContext('2d');
   context.scale(window.devicePixelRatio, window.devicePixelRatio);
   return result;
 }
@@ -23,14 +23,14 @@ export function ColorGenerator() {
       ret.push((this.nextColor & 0xff0000) >> 16); // B
       this.nextColor += 5;
     }
-    var col = "rgb(" + ret.join(",") + ")";
+    var col = 'rgb(' + ret.join(',') + ')';
     return col;
   };
 }
 
 export function colorWithOpacity(stringVal, opacity) {
   var rgb = stringVal.substring(4, stringVal.length - 1);
-  return "rgba(" + rgb + ", " + opacity + ")";
+  return 'rgba(' + rgb + ', ' + opacity + ')';
 }
 
 export function shuffle(array) {
@@ -59,7 +59,7 @@ export function getWithFallback(obj, attrName, fallback) {
 }
 
 export function approxEquals(obj1, obj2) {
-  if (typeof obj1 == "number" && typeof obj2 == "number") {
+  if (typeof obj1 == 'number' && typeof obj2 == 'number') {
     return Math.abs(obj1 - obj2) <= 0.001;
   }
   return obj1 == obj2;
@@ -89,4 +89,12 @@ export function boundingBox(points) {
 // Pads outward
 export function padExtent(extent, padding) {
   return [extent[0] - padding, extent[1] + padding];
+}
+
+// Transforms the [x, y] point by the given transform 3x3 list (row-major).
+export function transformPoint(transform, point) {
+  return [
+    transform[0][0] * point[0] + transform[0][1] * point[1] + transform[0][2],
+    transform[1][0] * point[0] + transform[1][1] * point[1] + transform[1][2],
+  ];
 }
