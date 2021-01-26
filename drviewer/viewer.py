@@ -9,7 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
-from traitlets import Integer, Unicode, Dict, Bool, List, Float
+from traitlets import Integer, Unicode, Dict, Bool, List, Float, observe
 from ._frontend import module_name, module_version
 from . import moving_scatterplot as ms
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
@@ -68,6 +68,7 @@ class DRViewer(DOMWidget):
     plotScale = Float(100.0)
     
     currentFrame = Integer(0).tag(sync=True)
+    alignedIDs = List([]).tag(sync=True)
     # List of 3 x 3 matrices (expressed as 3x3 nested lists)
     frameTransformations = List([]).tag(sync=True)
     
@@ -144,6 +145,18 @@ class DRViewer(DOMWidget):
             np.eye(3).tolist()
             for i in range(len(self.frames))
         ]
+        
+    @observe("alignedIDs")
+    def _observe_alignment_ids(self, change):
+        """Align to the currently selected points and their neighbors."""
+        if not change.new:
+            self.align_to_points(None)
+        else:
+            ids_of_interest = change.new
+            for neighbors in self.frames[0].mat("highlight", ids=ids_of_interest):
+                ids_of_interest += neighbors.tolist()
+            thread = threading.Thread(target=self.align_to_points, args=(list(set(ids_of_interest)),))
+            thread.start()
     
     def align_to_points(self, point_ids):
         """

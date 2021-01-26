@@ -48,6 +48,7 @@
   };
 
   const renderMargin = 50.0;
+  const HiddenMultiselectColor = 'rgb(200,200,200)';
 
   var canvas;
 
@@ -294,6 +295,34 @@
       });
     }
 
+    if (isMultiselecting) {
+      context.save();
+      if (hidden) {
+        // Fully opaque
+        context.fillStyle = HiddenMultiselectColor;
+      } else {
+        context.fillStyle = '#30cdfc44';
+        context.strokeStyle = '#30cdfc99';
+      }
+
+      context.beginPath();
+      context.moveTo(
+        multiselectPath[multiselectPath.length - 1][0],
+        multiselectPath[multiselectPath.length - 1][1]
+      );
+      multiselectPath
+        .slice()
+        .reverse()
+        .forEach((point) => context.lineTo(point[0], point[1]));
+      context.fill();
+      if (!hidden) {
+        context.lineWidth = 2;
+        context.setLineDash([3, 3]);
+        context.stroke();
+      }
+      context.restore();
+    }
+
     context.globalAlpha = 1.0;
   }
 
@@ -307,21 +336,15 @@
     ).data;
   }
 
-  // Zooming and panning code from https://www.cs.colostate.edu/~anderson/newsite/javascript-zoom.html
-
-  function handleDblClick(event) {
-    /*var X = event.clientX - this.offsetLeft - this.clientLeft + this.scrollLeft; //Canvas coordinates
-    var Y = event.clientY - this.offsetTop - this.clientTop + this.scrollTop;
-    var x = (X / width) * widthView + xleftView; // View coordinates
-    var y = (Y / height) * heightView + ytopView;
-
-    scaleFactor *= event.shiftKey == 1 ? 1.5 : 0.5; // shrink (1.5) if shift key pressed
-    
-
-    xleftView = x - widthView / 2;
-    ytopView = y - heightView / 2;
-
-    dispatch("transform", {scale: })*/
+  export function pointIsInMultiselect(x, y) {
+    if (!hidden) {
+      console.error('pointIsInMultiselect only works for hidden canvases');
+      return false;
+    }
+    if (!isMultiselecting) return false;
+    let color = getColorAtPoint(x, y);
+    let colKey = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
+    return colKey == HiddenMultiselectColor;
   }
 
   var mouseDown = false;
@@ -330,13 +353,20 @@
   var lastX = 0;
   var lastY = 0;
 
+  export var isMultiselecting = false;
+  export var multiselectPath = [];
+
   function handleMouseMove(event) {
     mouseMoved = true;
     var rect = event.target.getBoundingClientRect();
     var mouseX = event.clientX - rect.left; //x position within the element.
     var mouseY = event.clientY - rect.top; //y position within the element.
 
-    if (mouseDown && !!lastX && !!lastY) {
+    if (mouseDown && (event.shiftKey || isMultiselecting)) {
+      isMultiselecting = true;
+      multiselectPath.push([mouseX, mouseY]);
+      draw();
+    } else if (mouseDown && !!lastX && !!lastY) {
       var dx = mouseX - lastX; // * scaleFactor;
       var dy = mouseY - lastY; // * scaleFactor;
 
@@ -372,13 +402,6 @@
     canvas = d3
       .select(selector)
       .append('canvas')
-      .on('dblclick', (e) => {
-        if (zoom) {
-          handleDblClick(e);
-        } else {
-          dispatch('dblclick', e);
-        }
-      })
       .on('mousedown', (e) => {
         mouseDown = true;
         mouseMoved = false;
@@ -388,7 +411,12 @@
         mouseDown = false;
         lastX = 0;
         lastY = 0;
-        if (!mouseMoved) {
+        if (isMultiselecting) {
+          dispatch('multiselect', multiselectPath);
+          isMultiselecting = false;
+          multiselectPath = [];
+          draw();
+        } else if (!mouseMoved) {
           dispatch('click', e);
         }
         setTimeout(() => (mouseMoved = false));
@@ -411,9 +439,9 @@
       .on('DOMMouseScroll', handleMouseWheel)
       .on('MozMousePixelScroll', (e) => e.preventDefault());
     scaleCanvas(canvas, width, height);
-    if (hidden) {
+    /*if (hidden) {
       canvas.style('display', 'none');
-    }
+    }*/
 
     //custom = d3.select(document.createElement("custom"));
 

@@ -51,6 +51,8 @@
 
   let canvas;
 
+  let alignedIDs = syncValue(model, 'alignedIDs', []);
+
   let thumbnailID = null;
   let thumbnailNeighbors = [];
   let previewThumbnailID = null;
@@ -99,8 +101,16 @@
   }
 
   function onScatterplotClick(e) {
-    console.log(e.detail);
-    updateThumbnailID(e.detail);
+    if (e.detail.length > 0) {
+      $alignedIDs = e.detail;
+    }
+
+    if (e.detail.length != 1) updateThumbnailID(null);
+    else updateThumbnailID(e.detail);
+  }
+
+  function onScatterplotReset(e) {
+    $alignedIDs = [];
   }
 
   let oldFrame = 0;
@@ -152,6 +162,7 @@
         height={600}
         on:datahover={onScatterplotHover}
         on:dataclick={onScatterplotClick}
+        on:reset={onScatterplotReset}
         colorScheme={{
           name: 'tableau',
           value: d3.schemeTableau10,

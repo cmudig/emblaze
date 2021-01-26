@@ -41,7 +41,7 @@
   var prevPreviewFrame = -1;
 
   export let hoveredID = null;
-  export let clickedID = null;
+  export let clickedIDs = [];
 
   export let data = null;
   let oldData = null;
@@ -53,26 +53,6 @@
   let currentTime = 0;
 
   let warningMessage = '';
-  $: {
-    if (!data) warningMessage = '';
-    else if (
-      !!clickedID &&
-      previewFrame >= 0 &&
-      previewFrame != frame &&
-      !data.atFrame(clickedID, previewFrame)
-    ) {
-      warningMessage =
-        'The selected entity is not present in the destination frame';
-    } else if (
-      !!clickedID &&
-      (previewFrame < 0 || previewFrame == frame) &&
-      !data.atFrame(clickedID, frame)
-    ) {
-      warningMessage = 'The selected entity is not present in this plot';
-    } else {
-      warningMessage = '';
-    }
-  }
 
   // Animate point positions on different frames
   $: {
@@ -92,13 +72,8 @@
     } else if (!!hoveredID) {
       updateStarGraph(hoveredID);
     }
-    if (!!clickedID && !data.atFrame(clickedID, newFrame)) {
-      hideStarGraph(clickedID);
-      if (isCenteredOnPoint) {
-        showVicinityOfClickedPoint();
-      }
-    } else if (!!clickedID) {
-      updateStarGraph(clickedID);
+    if (clickedIDs.length > 0) {
+      clickedIDs.forEach((id) => updateStarGraph(id));
       // if (!isCenteredOnPoint) {
       //   // Re-zoom to show where points have moved
       //   showVicinityOfClickedPoint();
@@ -108,6 +83,10 @@
     if (!!canvas && !animateTransitions) {
       canvas.draw();
     }
+  }
+
+  $: if (clickedIDs.length > 1 && isCenteredOnPoint) {
+    showVicinityOfClickedPoint();
   }
 
   // Animate shadow lines when previewing a frame
@@ -189,7 +168,7 @@
   }
 
   var prevHoverID = null;
-  var prevClickedID = null;
+  var prevClickedIDs = null;
 
   let starGraphs = {};
 
@@ -235,7 +214,7 @@
   }
 
   $: if (prevHoverID != hoveredID && !!marks && !!data) {
-    if (prevHoverID != null && prevHoverID != clickedID) {
+    if (prevHoverID != null && clickedIDs.indexOf(prevHoverID) < 0) {
       hideStarGraph(prevHoverID);
     }
     if (hoveredID != null) {
@@ -244,37 +223,42 @@
     prevHoverID = hoveredID;
   }
 
-  $: if (prevClickedID != clickedID && !!marks && !!data) {
-    if (prevClickedID != null) {
-      hideStarGraph(prevClickedID);
-    }
-    if (clickedID != null) {
-      showStarGraph(clickedID);
-    }
+  $: if (prevClickedIDs != clickedIDs && !!marks && !!data) {
+    let prevSet = new Set(prevClickedIDs);
+    let currSet = new Set(clickedIDs);
+    prevSet.forEach((id) => {
+      if (!currSet.has(id)) hideStarGraph(id);
+    });
+    currSet.forEach((id) => {
+      if (!prevSet.has(id)) showStarGraph(id);
+    });
 
-    prevClickedID = clickedID;
+    updateSelection();
+    prevClickedIDs = clickedIDs;
   }
 
-  export function selectPoint(pointID) {
-    clickedID = pointID;
-    dispatch('dataclick', clickedID);
+  export function selectPoint(pointID, multi = false) {
+    if (pointID != null) {
+      if (multi) {
+        let index = clickedIDs.indexOf(pointID);
+        if (index >= 0)
+          clickedIDs = [
+            ...clickedIDs.slice(0, index),
+            ...clickedIDs.slice(index + 1),
+          ];
+        else clickedIDs = [...clickedIDs, pointID];
+      } else {
+        clickedIDs = [pointID];
+      }
+    } else {
+      clickedIDs = [];
+    }
+    dispatch('dataclick', clickedIDs);
+  }
 
-    if (!!clickedID) {
-      // Find the nearest neighbors in all frames and highlight those
-      let filteredPoints = new Set([clickedID]);
-      let highlightIndexes = data.byID(clickedID).highlightIndexes;
-      let allNeighbors = new Set(Object.values(highlightIndexes).flat());
-      // Add another round of neighbors
-      allNeighbors.forEach((n) => {
-        filteredPoints.add(n);
-        let highlightIndexes = data.byID(n).highlightIndexes;
-        Object.values(highlightIndexes)
-          .flat()
-          .forEach((id) => filteredPoints.add(id));
-      });
-      dataManager.filter(filteredPoints);
-
-      if (isCenteredOnPoint) {
+  function updateSelection() {
+    if (clickedIDs.length > 0) {
+      if (isCenteredOnPoint && clickedIDs.length == 1) {
         centerOnClickedPoint();
       } else {
         showVicinityOfClickedPoint();
@@ -321,31 +305,61 @@
     var mouseY = e.clientY - rect.top; //y position within the element.
     var idx = getIDAtPoint(mouseX, mouseY);
 
-    selectPoint(idx);
+    selectPoint(idx, e.shiftKey);
+  }
+
+  function onMultiselect(info) {
+    if (!hoverable) return;
+
+    // Draw multiselect onto hidden canvas
+    var points = info.detail;
+    hiddenCanvas.isMultiselecting = true;
+    hiddenCanvas.multiselectPath = points;
+    hiddenCanvas.draw();
+
+    // Find points that are in the multiselect
+    clickedIDs = marks
+      .filter((mark) => {
+        let x = Math.round(mark.attr('x'));
+        let y = Math.round(mark.attr('y'));
+        return hiddenCanvas.pointIsInMultiselect(x, y);
+      })
+      .map((mark) => mark.id);
+    dispatch('dataclick', clickedIDs);
+
+    hiddenCanvas.isMultiselecting = false;
+    hiddenCanvas.multiselectPath = [];
+    hiddenCanvas.draw();
   }
 
   let showResetButton = false;
 
   let showCenterButton = false;
   let isCenteredOnPoint = false;
-  $: showCenterButton = clickedID != null;
+  $: showCenterButton = clickedIDs.length > 0;
   let centeredText = '';
-  $: centeredText = getCenteredText(isCenteredOnPoint, clickedID);
+  $: centeredText = getCenteredText(isCenteredOnPoint, clickedIDs);
 
-  function getCenteredText(isCentered, pointID) {
-    if (pointID == null || thumbnail) {
+  function getCenteredText(isCentered, pointIDs) {
+    if (pointIDs.length == 0 || thumbnail) {
       return '';
     }
+    let pointID = pointIDs[0];
     let datapt = data.byID(pointID);
     if (!datapt) return '';
     let detailMessage = datapt.hoverText;
     if (!!detailMessage) detailMessage = ' - ' + detailMessage;
     else detailMessage = '';
 
-    if (isCentered) {
-      return `Centered on <strong>${pointID}${detailMessage}</strong>`;
+    let othersMessage = '';
+    if (pointIDs.length > 1) {
+      othersMessage = ` and ${pointIDs.length - 1} others`;
     }
-    return `Showing vicinity of <strong>${pointID}${detailMessage}</strong>`;
+
+    if (isCentered) {
+      return `Centered on <strong>${pointID}${detailMessage}</strong>${othersMessage}`;
+    }
+    return `Showing vicinity of <strong>${pointID}${detailMessage}</strong>${othersMessage}`;
   }
 
   function rescale() {
@@ -364,9 +378,11 @@
       dataManager.rescale();
       canvas.draw();
     }
+    dispatch('reset');
   }
 
   function centerOnClickedPoint() {
+    let clickedID = clickedIDs[0];
     let datapt = data.atFrame(clickedID, frame);
 
     let neighbors = datapt.highlightIndexes;
@@ -380,10 +396,16 @@
   function showVicinityOfClickedPoint() {
     isCenteredOnPoint = false;
 
+    // Find the nearest neighbors in all frames and highlight those
+    let filteredPoints = new Set(clickedIDs);
+    clickedIDs.forEach((clickedID) => {
+      let highlightIndexes = data.byID(clickedID).highlightIndexes;
+      let allNeighbors = new Set(Object.values(highlightIndexes).flat());
+      allNeighbors.forEach((n) => filteredPoints.add(n));
+    });
+
     scales.zoomTo(
-      Array.from(dataManager.filterVisiblePoints).map((pt) =>
-        dataManager.marks.getMarkByID(pt)
-      )
+      Array.from(filteredPoints).map((pt) => dataManager.marks.getMarkByID(pt))
     );
   }
 
@@ -430,7 +452,7 @@
     );
 
     scales.onUpdate(() => {
-      showResetButton = !scales.isNeutral() || clickedID != null;
+      showResetButton = !scales.isNeutral() || clickedIDs.length > 0;
     });
     canvas.draw();
   }
@@ -465,6 +487,7 @@
     on:mouseup={onMouseup}
     on:mouseout={onMouseout}
     on:click={onClick}
+    on:multiselect={onMultiselect}
     on:scale={(e) => {
       scales.scaleBy(e.detail.ds, e.detail.centerPoint);
       rescale();
@@ -489,7 +512,7 @@
     <div id="button-panel">
       {#if showCenterButton}
         <button
-          disabled={!data.atFrame(clickedID, frame)}
+          disabled={clickedIDs.length != 1}
           type="button"
           class="btn btn-primary btn-sm"
           on:click|preventDefault={!isCenteredOnPoint

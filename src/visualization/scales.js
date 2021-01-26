@@ -196,10 +196,8 @@ export function Scales(
         yExtent = [fixedCenter.y - yDist, fixedCenter.y + yDist];
       }
 
-      console.log('Before padding:', xExtent, yExtent);
       xExtent = padExtent(xExtent, padding);
       yExtent = padExtent(yExtent, padding);
-      console.log('After padding:', xExtent, yExtent);
 
       let xScale =
         this.xRExtent /

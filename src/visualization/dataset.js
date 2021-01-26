@@ -237,7 +237,29 @@ export function Dataset(rawData, colorKey, r = 4.0) {
 
   this.transform = function (frameTransformations) {
     this.frameTransformations = frameTransformations;
-    this.reformat();
+    let points = this.index;
+    this.frames.forEach((frame, f) => {
+      Object.keys(frame).forEach((id) => {
+        let el = frame[id];
+        points[id].hoverText = el.hoverText;
+        let point = [el.x, el.y];
+        if (
+          !!this.frameTransformations &&
+          this.frameTransformations.length > f
+        ) {
+          point = transformPoint(this.frameTransformations[f], point);
+        }
+        points[id].xs[f] = point[0];
+        points[id].ys[f] = point[1];
+        points[id].colors[f] =
+          colorKey == 'constant' ? 0.0 : el[colorKey] || 0.0;
+        points[id].alphas[f] = el.alpha != undefined ? el.alpha : 1.0;
+        points[id].halos[f] = el.halo;
+        points[id].highlightIndexes[f] = el.highlight.map((h) => '' + h);
+        points[id].visibleFlags[f] = true;
+        points[id].rs[f] = r;
+      });
+    });
   };
 
   this.frameCount = this.frames.length;
