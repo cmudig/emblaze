@@ -1,21 +1,25 @@
 import {
   buildKdTree,
   neighborMotionDifferencePreviewIntensities,
-  neighborSimilarityPreviewIntensities,
+  projectionNeighborSimilarityPreviewIntensities,
   precomputedPreviewIntensities,
-} from "./preview_intensity.js";
-import * as d3 from "d3";
+} from './preview_intensity.js';
+import * as d3 from 'd3';
 
 export function Dataset(rawData, colorKey, r = 4.0) {
-  if (rawData["data"]) {
+  if (rawData['data']) {
     // There are other keys
     this.frames = rawData.data;
     this.previews = rawData.previews;
     this.frameLabels = rawData.frameLabels;
+    this.frameColors = rawData.frameColors;
   } else {
     // Old format
     this.frames = rawData;
-    this.frameLabels = this.frames.map((f, i) => "Frame " + (i + 1));
+    this.frameLabels = this.frames.map((f, i) => 'Frame ' + (i + 1));
+    this.frameColors = d3
+      .range(this.frames.length)
+      .map((f) => [Math.round((f * 360) / dataset.frameCount), 60, 70]);
   }
 
   this.getXExtent = function () {
@@ -125,10 +129,10 @@ export function Dataset(rawData, colorKey, r = 4.0) {
         points[id].xs[f] = el.x;
         points[id].ys[f] = el.y;
         points[id].colors[f] =
-          colorKey == "constant" ? 0.0 : el[colorKey] || 0.0;
+          colorKey == 'constant' ? 0.0 : el[colorKey] || 0.0;
         points[id].alphas[f] = el.alpha != undefined ? el.alpha : 1.0;
         points[id].halos[f] = el.halo;
-        points[id].highlightIndexes[f] = el.highlight.map((h) => "" + h);
+        points[id].highlightIndexes[f] = el.highlight.map((h) => '' + h);
         points[id].visibleFlags[f] = true;
         points[id].rs[f] = r;
       });
@@ -145,6 +149,9 @@ export function Dataset(rawData, colorKey, r = 4.0) {
 
     this.frames.forEach((frame, i) => {
       this.neighborTrees.push(buildKdTree(points, i));
+    });
+
+    this.frames.forEach((frame, i) => {
       Object.keys(points).forEach((id, j) => {
         if (!frame[id]) return;
 
@@ -168,15 +175,9 @@ export function Dataset(rawData, colorKey, r = 4.0) {
               neighborScale
             );
           } else {
-            /*intensities = neighborMotionDifferencePreviewIntensities(
+            intensities = projectionNeighborSimilarityPreviewIntensities(
               points[id],
-              neighborTrees[i],
-              i,
-              neighborScale
-            );*/
-            intensities = neighborSimilarityPreviewIntensities(
-              points[id],
-              points,
+              this.neighborTrees,
               i
             );
           }

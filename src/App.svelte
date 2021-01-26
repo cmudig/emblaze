@@ -1,6 +1,7 @@
 <script>
   import { dummyData } from './dummy-data/data.js';
   import SynchronizedScatterplot from './visualization/SynchronizedScatterplot.svelte';
+  import SpinnerButton from './visualization/SpinnerButton.svelte';
   import * as d3 from 'd3';
 
   export let model;
@@ -14,8 +15,11 @@
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
 
+  let plotPadding = syncValue(model, 'plotPadding', 10.0);
+
   let dataset = null;
   $: if (!!$data && !!$data['data']) {
+    console.log('Updating data');
     dataset = new Dataset($data, 'color', 3);
   } else {
     dataset = null;
@@ -25,6 +29,88 @@
     // This logs if the widget is initialized successfully
     console.log('Mounted DR widget successfully');
   });
+
+  let canvas;
+
+  let thumbnailID = null;
+  let thumbnailNeighbors = [];
+  let previewThumbnailID = null;
+  let previewThumbnailMessage = '';
+  let previewThumbnailNeighbors = [];
+
+  let currentFrame = 0;
+  let previewFrame = -1;
+
+  function updateThumbnailID(id) {
+    thumbnailID = id;
+    if (
+      thumbnailID != null &&
+      dataset.atFrame(thumbnailID, currentFrame) != null
+    ) {
+      thumbnailNeighbors = dataset.atFrame(thumbnailID, currentFrame)
+        .highlightIndexes;
+    } else {
+      thumbnailNeighbors = [];
+    }
+  }
+
+  function updatePreviewThumbnailID() {
+    if (previewFrame == -1) {
+      previewThumbnailID = null;
+      previewThumbnailMessage = '';
+      previewThumbnailNeighbors = [];
+    } else if (
+      thumbnailID != null &&
+      dataset.atFrame(thumbnailID, previewFrame) != null
+    ) {
+      previewThumbnailID = thumbnailID;
+      previewThumbnailNeighbors = dataset.atFrame(thumbnailID, previewFrame)
+        .highlightIndexes;
+    } else {
+      previewThumbnailID = null;
+      if (thumbnailID != null)
+        previewThumbnailMessage =
+          'The selected point is not present in the preview';
+      previewThumbnailNeighbors = [];
+    }
+  }
+
+  function onScatterplotHover(e) {
+    updateThumbnailID(e.detail != null ? e.detail : canvas.clickedID || null);
+  }
+
+  function onScatterplotClick(e) {
+    console.log(e.detail);
+    updateThumbnailID(e.detail);
+  }
+
+  let oldFrame = 0;
+  $: if (oldFrame != currentFrame) {
+    updateThumbnailID(thumbnailID);
+    oldFrame = currentFrame;
+  }
+
+  let oldPreviewFrame = -1;
+
+  $: if (oldPreviewFrame != previewFrame) {
+    updatePreviewThumbnailID();
+    oldPreviewFrame = previewFrame;
+  }
+
+  let spinner;
+  $: if (!!spinner && dataset != null) {
+    console.log('Updating spinner colors', dataset.frameColors);
+    setTimeout(() => {
+      spinner.setColors(
+        d3.range(dataset.frameCount).map((f) => ({
+          hue: dataset.frameColors[f][0],
+          saturation: dataset.frameColors[f][1],
+          lightness: dataset.frameColors[f][2],
+        })),
+        true
+      );
+    }, 0);
+  }
 </script>
 
 {#if $isLoading}
@@ -33,19 +119,47 @@
     <i class="text-primary fa fa-spinner fa-spin" />
   </div>
 {:else}
-  <SynchronizedScatterplot
-    data={dataset}
-    hoverable
-    animateTransitions
-    width={400}
-    height={400}
-    colorScheme={{
-      name: 'tableau',
-      value: d3.schemeTableau10,
-      type: 'categorical',
-    }}
-  />
+  <div style="display: flex; align-items: flex-end;">
+    <div class="scatterplot-container">
+      <SynchronizedScatterplot
+        bind:this={canvas}
+        data={dataset}
+        padding={$plotPadding}
+        frame={currentFrame}
+        {previewFrame}
+        hoverable
+        animateTransitions
+        width={600}
+        height={600}
+        on:datahover={onScatterplotHover}
+        on:dataclick={onScatterplotClick}
+        colorScheme={{
+          name: 'tableau',
+          value: d3.schemeTableau10,
+          type: 'categorical',
+        }}
+      />
+    </div>
+    <div class="spinner-container">
+      <SpinnerButton
+        bind:this={spinner}
+        width={120}
+        height={120}
+        selectedIndex={currentFrame}
+        on:hover={(e) => (previewFrame = e.detail != null ? e.detail : -1)}
+        on:select={(e) => (currentFrame = e.detail)}
+      />
+    </div>
+  </div>
 {/if}
 
 <style>
+  .scatterplot-container {
+    width: 600px;
+    height: 600px;
+    border: 1px solid #444;
+  }
+  .spinner-container {
+    padding-left: 16px;
+  }
 </style>

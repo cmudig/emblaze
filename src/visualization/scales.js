@@ -4,8 +4,8 @@ import {
   easeInOut,
   interpolateTo,
   interpolateToFunction,
-} from "./data_items";
-import { boundingBox, padExtent } from "./helpers";
+} from './data_items';
+import { boundingBox, padExtent } from './helpers';
 
 const ZoomAnimationDuration = 1000;
 const MaxScale = 14.0;
@@ -46,7 +46,7 @@ export function Scales(
   this.scaleFactor = new Attribute(1.0);
   this.translateX = new Attribute(0.0);
   this.translateY = new Attribute(0.0);
-  this.translateX.label = "scaleFactor";
+  this.translateX.label = 'scaleFactor';
 
   this._updatedNoAdvance = false;
   this.listeners = [];
@@ -99,7 +99,7 @@ export function Scales(
     this.unfollow();
 
     if (animated) {
-      if (scaleInfo.hasOwnProperty("scale"))
+      if (scaleInfo.hasOwnProperty('scale'))
         this.scaleFactor.animate(
           new Animator(
             interpolateTo(scaleInfo.scale),
@@ -107,7 +107,7 @@ export function Scales(
             easeInOut
           )
         );
-      if (scaleInfo.hasOwnProperty("translateX"))
+      if (scaleInfo.hasOwnProperty('translateX'))
         this.translateX.animate(
           new Animator(
             interpolateTo(scaleInfo.translateX),
@@ -115,7 +115,7 @@ export function Scales(
             easeInOut
           )
         );
-      if (scaleInfo.hasOwnProperty("translateY"))
+      if (scaleInfo.hasOwnProperty('translateY'))
         this.translateY.animate(
           new Animator(
             interpolateTo(scaleInfo.translateY),
@@ -124,11 +124,11 @@ export function Scales(
           )
         );
     } else {
-      if (scaleInfo.hasOwnProperty("scale"))
+      if (scaleInfo.hasOwnProperty('scale'))
         this.scaleFactor.set(scaleInfo.scale);
-      if (scaleInfo.hasOwnProperty("translateX"))
+      if (scaleInfo.hasOwnProperty('translateX'))
         this.translateX.set(scaleInfo.translateX);
-      if (scaleInfo.hasOwnProperty("translateY"))
+      if (scaleInfo.hasOwnProperty('translateY'))
         this.translateY.set(scaleInfo.translateY);
     }
   };
@@ -196,8 +196,10 @@ export function Scales(
         yExtent = [fixedCenter.y - yDist, fixedCenter.y + yDist];
       }
 
+      console.log('Before padding:', xExtent, yExtent);
       xExtent = padExtent(xExtent, padding);
       yExtent = padExtent(yExtent, padding);
+      console.log('After padding:', xExtent, yExtent);
 
       let xScale =
         this.xRExtent /
@@ -234,13 +236,7 @@ export function Scales(
 
   // Animates the scale and translate factors to show the given points.
   // points should be an array of objects with x and y properties.
-  this.zoomTo = function (
-    marks,
-    padding = 0.2,
-    animated = true,
-    xAttr = "x",
-    yAttr = "y"
-  ) {
+  this.zoomTo = function (marks, animated = true, xAttr = 'x', yAttr = 'y') {
     let points = marks.map((mark) => ({
       x: mark.attr(xAttr, false),
       y: mark.attr(yAttr, false),
@@ -265,7 +261,7 @@ export function Scales(
 
     let value = this._computeZoomBox(
       this._markPointFn(this.followingMarks),
-      0.2,
+      padding,
       !!this.centerMark ? this._markPointFn([this.centerMark])[0] : null,
       this._fixedScale
     );
@@ -279,7 +275,7 @@ export function Scales(
   };
 
   // Sets the scales to follow the locations of the given marks
-  this.follow = function (marks, animated = true, xAttr = "x", yAttr = "y") {
+  this.follow = function (marks, animated = true, xAttr = 'x', yAttr = 'y') {
     this.followingMarks = marks;
     this.centerMark = null;
     this._markPointFn = (m) =>
@@ -322,8 +318,8 @@ export function Scales(
     mark,
     peripheralMarks,
     animated = true,
-    xAttr = "x",
-    yAttr = "y"
+    xAttr = 'x',
+    yAttr = 'y'
   ) {
     this.followingMarks = [mark, ...peripheralMarks];
     this.centerMark = mark;

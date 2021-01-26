@@ -95,6 +95,14 @@ class ScatterplotFrame:
         """Returns the list of ids."""
         return self.df.index.tolist()
     
+    def set_coordinate_keys(self, x_key, y_key):
+        """Changes the field names for computing distances and neighbors."""
+        self.x_key = x_key
+        self.y_key = y_key
+        self._neighbors = None
+        self._neighbor_dists = None
+        self._distances = None
+    
     def __contains__(self, id_val):
         """Returns whether or not the frame contains the given ID."""
         return id_val in self.df.index
@@ -193,18 +201,21 @@ class ScatterplotFrame:
 
         return self._distances[indexes,:][:,indexes]
 
-def standardize_projection(emb):
-    """Converts the embedding to 3D and standardizes its mean and spread."""
-    emb = np.hstack([emb, np.zeros(len(emb)).reshape(-1, 1)])
-    return (emb - emb.mean(axis=0)) / (emb.std(axis=0) + 1e-4)
-
 FLIP_FACTORS = [
     np.array([1, 1, 1]),
     np.array([-1, 1, 1]),
     np.array([1, -1, 1])    
 ]
 
-def align_projection(base_frame, frame, x_key='x', y_key='y'):
+def projection_standardizer(emb):
+    """Converts the embedding to 3D and standardizes its mean and spread."""
+    emb = np.hstack([emb, np.zeros(len(emb)).reshape(-1, 1)])
+    def standardizer(mat):
+        mat = np.hstack([mat, np.zeros(len(mat)).reshape(-1, 1)])
+        return mat - emb.mean(axis=0)
+    return standardizer
+
+def align_projection(base_frame, frame, ids=None):
     """
     Aligns the given projection to the base frame. The frames are aligned based
     on the keys they have in common.
@@ -212,21 +223,22 @@ def align_projection(base_frame, frame, x_key='x', y_key='y'):
     Args:
         base_frame: A ScatterplotFrame to use as the base.
         frame: A ScatterplotFrame to transform.
-        x_key: Key to use for retrieving x coordinates.
-        y_key: Key to use for retrieving y coordinates.
+        ids: Point IDs to use for alignment (default None, which results in an
+            alignment using the intersection of IDs between the two frames).
         
     Returns:
         A numpy array containing the x and y coordinates for the points in
         frame.
     """
     # Determine a set of points to use for comparison
-    ids_to_compare = list(set(frame.get_ids()) & set(base_frame.get_ids()))
-    proj = standardize_projection(
-        frame.mat(fields=[x_key, y_key], ids=ids_to_compare)
-    )
-    base_proj = standardize_projection(
-        base_frame.mat(fields=[x_key, y_key], ids=ids_to_compare)
-    )
+    ids_to_compare = list(ids) if ids is not None else list(set(frame.get_ids()) & set(base_frame.get_ids()))
+    proj_subset = frame.mat(fields=[frame.x_key, frame.y_key], ids=ids_to_compare)
+    proj_scaler = projection_standardizer(proj_subset)
+    base_proj_subset = base_frame.mat(fields=[base_frame.x_key, base_frame.y_key], ids=ids_to_compare)
+    base_proj_scaler = projection_standardizer(base_proj_subset)
+    
+    proj = proj_scaler(proj_subset)
+    base_proj = base_proj_scaler(base_proj_subset)
     
     # Test flips
     min_rmsd = 1e9
@@ -237,8 +249,8 @@ def align_projection(base_frame, frame, x_key='x', y_key='y'):
             proj * factor)
         if rmsd < min_rmsd:
             min_rmsd = rmsd
-            best_variant = opt_rotation.apply(standardize_projection(
-                frame.mat([x_key, y_key])
+            best_variant = opt_rotation.apply(proj_scaler(
+                frame.mat([frame.x_key, frame.y_key])
             ) * factor)
 
     return best_variant

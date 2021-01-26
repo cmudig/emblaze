@@ -9,7 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
-from traitlets import Integer, Unicode, Dict, Bool
+from traitlets import Integer, Unicode, Dict, Bool, List, Float
 from ._frontend import module_name, module_version
 from . import moving_scatterplot as ms
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
@@ -18,6 +18,7 @@ from scipy.spatial.transform import Rotation
 import threading
 import multiprocessing as mp
 from functools import partial
+import numpy as np
 
 def apply_projection(hi_d, method='tsne', metric='euclidean', params={}):
     """
@@ -53,6 +54,7 @@ class DRViewer(DOMWidget):
     _view_module_version = Unicode(module_version).tag(sync=True)
 
     data = Dict({}).tag(sync=True)
+    frames = List([])
     isLoading = Bool(True).tag(sync=True)
     loadingMessage = Unicode("").tag(sync=True)
     numNeighbors = Integer(10)
@@ -60,7 +62,10 @@ class DRViewer(DOMWidget):
     method = Unicode("tsne").tag(sync=True)
     params = Dict({}).tag(sync=True)
     metric = Unicode("euclidean").tag(sync=True)
-
+    
+    plotPadding = Float(10.0).tag(sync=True)
+    plotScale = Float(100.0)
+    
     def __init__(self, hi_d, labels, *args, **kwargs):
         super(DRViewer, self).__init__(*args, **kwargs)
         self.load_projections(hi_d, labels)
@@ -82,25 +87,65 @@ class DRViewer(DOMWidget):
                                         n_neighbors=self.numNeighbors + 1).fit(hi_d)
         _, neigh_indexes = neighbor_clf.kneighbors(hi_d)
 
-        frames = []
+        self.frames = []
         self.loadingMessage = "frame 0/{}".format(self.numReplicates)
         pool = mp.Pool(3)
         num_results = 0
         worker = partial(apply_projection, metric=self.metric, method=self.method, params=self.params)
         for lo_d in pool.imap_unordered(worker, (hi_d for _ in range(self.numReplicates))):
-            frames.append(ms.ScatterplotFrame([{
+            self.frames = self.frames + [ms.ScatterplotFrame([{
                 "id": i,
                 "x": lo_d[i,0],
                 "y": lo_d[i,1],
                 "label": labels[i],
                 "highlight": neigh_indexes[i,1:]
-            } for i in range(len(hi_d))]))
+            } for i in range(len(hi_d))])]
             num_results += 1
             self.loadingMessage = "frame {}/{}".format(num_results, self.numReplicates)
         
+        # Scale frames by the same amount
+        base_frame = self.frames[0]
+        base_data = base_frame.mat(["x", "y"])
+        mins = np.min(base_data, axis=0)
+        maxes = np.max(base_data, axis=0)
+        scale_factor = np.min(self.plotScale / (maxes - mins))
+        for frame in self.frames:
+            frame.set_mat(["scaled_x", "scaled_y"], frame.mat(["x", "y"]) * scale_factor)
+            frame.set_coordinate_keys("scaled_x", "scaled_y")
+
+        # Align frames
         self.loadingMessage = "aligning frames"
-        for i, frame in enumerate(frames):
-            best_proj = ms.align_projection(frames[0], frame)
+        for i, frame in enumerate(self.frames):
+            best_proj = ms.align_projection(self.frames[0], frame)
+            frame.set_mat(["aligned_x", "aligned_y"], best_proj[:,:2])
+            
+        # Write out JSON
+        data = [frame.to_viewer_dict(x_key="aligned_x", 
+                                     y_key="aligned_y",
+                                     additional_fields={
+                                         "highlight": lambda _, item: item["highlight"].tolist(),
+                                         "color": lambda _, item: item["label"]
+                                     }) for frame in self.frames]
+
+        self.isLoading = False
+        self.loadingMessage = ""
+        self.data = {
+            "data": data,
+            "frameLabels": [str(i) for i in range(len(self.frames))],
+            "frameColors": [[i / len(self.frames) * 360, 60, 70] for i in range(len(self.frames))]
+        }
+    
+    def align_to_points(self, point_ids, base_frame_idx=0):
+        """
+        Re-align the projections to minimize motion for the given point IDs.
+        Updates the self.data traitlet.
+        
+        Args:
+            point_ids: Iterable of point IDs to use for alignment.
+            base_frame_idx: Index of the frame to align to.
+        """
+        for i, frame in enumerate(self.frames):
+            best_proj = ms.align_projection(self.frames[base_frame_idx], frame, ids=point_ids)
             frame.set_mat(["aligned_x", "aligned_y"], best_proj[:,:2])
             
         data = [frame.to_viewer_dict(x_key="aligned_x", 
@@ -108,12 +153,12 @@ class DRViewer(DOMWidget):
                                      additional_fields={
                                          "highlight": lambda _, item: item["highlight"].tolist(),
                                          "color": lambda _, item: item["label"]
-                                     }) for frame in frames]
+                                     }) for frame in self.frames]
 
         self.isLoading = False
         self.loadingMessage = ""
         self.data = {
             "data": data,
-            "frameLabels": [str(i) for i in range(len(frames))]
+            "frameLabels": [str(i) for i in range(len(self.frames))],
+            "frameColors": [[i / len(self.frames) * 360, 60, 70] for i in range(len(self.frames))]
         }
-        

@@ -14,6 +14,8 @@
 
   let container;
 
+  export let padding = 1.0;
+
   export let width = null;
   export let height = null;
   let actualWidth = null;
@@ -97,6 +99,10 @@
       }
     } else if (!!clickedID) {
       updateStarGraph(clickedID);
+      // if (!isCenteredOnPoint) {
+      //   // Re-zoom to show where points have moved
+      //   showVicinityOfClickedPoint();
+      // }
     }
 
     if (!!canvas && !animateTransitions) {
@@ -410,19 +416,23 @@
     }
 
     dispatch('colorScale', colorScale);
+  }
 
-    // Initialize scales
+  $: if (!!data && !!dataManager && !!canvas) initializeScales(padding);
+
+  function initializeScales(plotPadding) {
     scales = new Scales(
       data.getXExtent(),
       data.getYExtent(),
       [canvas.margin.left, actualWidth - canvas.margin.right],
       [canvas.margin.top, actualHeight - canvas.margin.bottom],
-      0.5
+      plotPadding
     );
 
     scales.onUpdate(() => {
       showResetButton = !scales.isNeutral() || clickedID != null;
     });
+    canvas.draw();
   }
 
   function handleResize() {

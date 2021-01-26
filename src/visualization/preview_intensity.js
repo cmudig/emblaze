@@ -6,7 +6,7 @@
   this point's transition into each preview frame.
 */
 
-import { kdTree } from "./kdTree";
+import { kdTree } from './kdTree';
 
 export function neighborSimilarityPreviewIntensities(
   point,
@@ -61,7 +61,7 @@ export function buildKdTree(allPoints, currentFrameNumber) {
       ys: p.ys,
     }));
 
-  let tree = new kdTree(coordinates, distance2, ["x", "y"]);
+  let tree = new kdTree(coordinates, distance2, ['x', 'y']);
   return {
     _tree: tree,
     nearest: (pointID, k) => {
@@ -75,6 +75,47 @@ export function buildKdTree(allPoints, currentFrameNumber) {
       return results.map((el) => el[0]);
     },
   };
+}
+
+export function projectionNeighborSimilarityPreviewIntensities(
+  point,
+  kdTrees,
+  currentFrameNumber,
+  k = 10
+) {
+  if (!point.visibleFlags[currentFrameNumber]) return {};
+
+  let currentNeighbors = new Set(
+    kdTrees[currentFrameNumber].nearest(point.id, k).map((n) => n.id)
+  );
+  let result = {};
+
+  Object.keys(point.visibleFlags).forEach((previewFrameNumber) => {
+    if (!point.visibleFlags[previewFrameNumber]) return;
+    let previewNeighbors = new Set(
+      kdTrees[previewFrameNumber].nearest(point.id, k).map((n) => n.id)
+    );
+    let intersectionCount = 0;
+    currentNeighbors.forEach((n) => {
+      if (previewNeighbors.has(n)) {
+        intersectionCount++;
+      }
+    });
+
+    let fraction = intersectionCount / currentNeighbors.size;
+    let intensity;
+    if (fraction >= 0.7) {
+      intensity = { lineWidth: 0.0, lineAlpha: 0.0 };
+    } else {
+      intensity = {
+        lineWidth: (1 - fraction / 0.7) * 30.0,
+        lineAlpha: 1 - fraction / 0.7,
+      }; //5.0 + 20.0 * (1.0 - fraction * fraction));
+    }
+    result[previewFrameNumber] = intensity;
+  });
+
+  return result;
 }
 
 // Takes the result of buildKdTree as an argument instead of allPoints
