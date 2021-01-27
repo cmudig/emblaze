@@ -181,7 +181,7 @@ class ScatterplotFrame:
             return neighbor_ids, dists[:,:k]
         return neighbor_ids
 
-    def distances(self, ids=None):
+    def distances(self, ids=None, comparison_ids=None):
         """
         Returns the pairwise distances from the given IDs to each other (or all
         points to each other, if ids is None).
@@ -196,11 +196,16 @@ class ScatterplotFrame:
                 raise NotImplementedError("Unsupported metric for distances")
         
         if ids is None:
-            indexes = np.arange(self._neighbors.shape[0])
+            indexes = np.arange(len(self.df))
         else:
             indexes = self.index(ids)
+            
+        if comparison_ids is None:
+            comparison_indexes = indexes
+        else:
+            comparison_indexes = self.index(comparison_ids)
 
-        return self._distances[indexes,:][:,indexes]
+        return self._distances[indexes,:][:,comparison_indexes]
 
 FLIP_FACTORS = [
     np.array([1, 1, 1]),

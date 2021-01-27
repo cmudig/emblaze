@@ -12,6 +12,7 @@ from ipywidgets import DOMWidget
 from traitlets import Integer, Unicode, Dict, Bool, List, Float, observe
 from ._frontend import module_name, module_version
 from . import moving_scatterplot as ms
+from .frame_colors import compute_colors
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
@@ -69,6 +70,8 @@ class DRViewer(DOMWidget):
     
     currentFrame = Integer(0).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
+    # List of lists of 3 elements each, containing HSV colors for each frame
+    frameColors = List([]).tag(sync=True)
     # List of 3 x 3 matrices (expressed as 3x3 nested lists)
     frameTransformations = List([]).tag(sync=True)
     
@@ -134,13 +137,15 @@ class DRViewer(DOMWidget):
                                          "color": lambda _, item: item["label"]
                                      }) for frame in self.frames]
 
+        colors = compute_colors(self.frames)
+        
         self.isLoading = False
         self.loadingMessage = ""
         self.data = {
             "data": data,
-            "frameLabels": [str(i) for i in range(len(self.frames))],
-            "frameColors": [[i / len(self.frames) * 360, 60, 70] for i in range(len(self.frames))]
+            "frameLabels": [str(i) for i in range(len(self.frames))]
         }
+        self.frameColors = colors
         self.frameTransformations = [
             np.eye(3).tolist()
             for i in range(len(self.frames))
@@ -150,15 +155,15 @@ class DRViewer(DOMWidget):
     def _observe_alignment_ids(self, change):
         """Align to the currently selected points and their neighbors."""
         if not change.new:
-            self.align_to_points(None)
+            self.align_to_points(None, None)
         else:
             ids_of_interest = change.new
             for neighbors in self.frames[0].mat("highlight", ids=ids_of_interest):
                 ids_of_interest += neighbors.tolist()
-            thread = threading.Thread(target=self.align_to_points, args=(list(set(ids_of_interest)),))
+            thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
             thread.start()
     
-    def align_to_points(self, point_ids):
+    def align_to_points(self, point_ids, peripheral_points):
         """
         Re-align the projections to minimize motion for the given point IDs.
         Uses currentFrame as the base frame. Updates the 
@@ -172,6 +177,7 @@ class DRViewer(DOMWidget):
                 np.eye(3).tolist()
                 for i in range(len(self.frames))
             ]
+            self.frameColors = compute_colors(self.frames)
             return
     
         transformations = []
@@ -181,9 +187,10 @@ class DRViewer(DOMWidget):
             transformations.append(ms.affine_to_matrix(ms.align_projection(
                 self.frames[self.currentFrame], 
                 frame, 
-                ids=point_ids,
+                ids=list(set(point_ids + peripheral_points)),
                 base_transform=base_transform,
                 return_transform=True,
                 allow_flips=False)).tolist())
 
         self.frameTransformations = transformations
+        self.frameColors = compute_colors(self.frames, point_ids, peripheral_points)

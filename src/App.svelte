@@ -19,6 +19,7 @@
 
   let dataset = null;
   let frameTransformations = syncValue(model, 'frameTransformations', []);
+  let frameColors = syncValue(model, 'frameColors', []);
 
   $: if (
     !!$frameTransformations &&
@@ -127,14 +128,14 @@
   }
 
   let spinner;
-  $: if (!!spinner && dataset != null) {
-    console.log('Updating spinner colors', dataset.frameColors);
+  $: if (!!spinner && !!$frameColors && $frameColors.length > 0) {
+    console.log('Spinner!');
     setTimeout(() => {
       spinner.setColors(
-        d3.range(dataset.frameCount).map((f) => ({
-          hue: dataset.frameColors[f][0],
-          saturation: dataset.frameColors[f][1],
-          lightness: dataset.frameColors[f][2],
+        $frameColors.map((f) => ({
+          hue: f[0],
+          saturation: f[1],
+          lightness: f[2],
         })),
         true
       );

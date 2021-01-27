@@ -13,14 +13,10 @@ export function Dataset(rawData, colorKey, r = 4.0) {
     this.frames = rawData.data;
     this.previews = rawData.previews;
     this.frameLabels = rawData.frameLabels;
-    this.frameColors = rawData.frameColors;
   } else {
     // Old format
     this.frames = rawData;
     this.frameLabels = this.frames.map((f, i) => 'Frame ' + (i + 1));
-    this.frameColors = d3
-      .range(this.frames.length)
-      .map((f) => [Math.round((f * 360) / dataset.frameCount), 60, 70]);
   }
   this.frameTransformations = [];
 
