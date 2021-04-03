@@ -6,9 +6,9 @@ import {
   Decoration,
   Animator,
   interpolateToFunction,
-} from "./data_items.js";
-import { ColorGenerator, getWithFallback } from "./helpers.js";
-import * as d3 from "d3";
+} from './data_items.js';
+import { ColorGenerator, getWithFallback } from './helpers.js';
+import * as d3 from 'd3';
 
 const animationDuration = 4000;
 const previewAnimDuration = 1000;
@@ -21,23 +21,23 @@ function DecorationStarGraph(centerMark, neighborMarks) {
   this.neighborMarks = neighborMarks;
   this.isOn = false;
 
-  this.outlineDecoration = new Decoration("outline", [this.centerMark], {
+  this.outlineDecoration = new Decoration('outline', [this.centerMark], {
     r: {
-      valueFn: () => (this.isOn ? this.centerMark.attr("r") + 3.0 : 0.0),
+      valueFn: () => (this.isOn ? this.centerMark.attr('r') + 3.0 : 0.0),
     },
-    color: "darkgrey",
+    color: 'darkgrey',
     lineWidth: 1.0,
   });
 
   this._makeNeighborDecoration = function (mark) {
-    let dec = new Decoration("line", [this.centerMark, mark], {
-      color: "darkgrey",
+    let dec = new Decoration('line', [this.centerMark, mark], {
+      color: 'darkgrey',
       lineWidth: 1.0,
       x2: {
-        valueFn: () => (this.isOn ? mark.attr("x") : this.centerMark.attr("x")),
+        valueFn: () => (this.isOn ? mark.attr('x') : this.centerMark.attr('x')),
       },
       y2: {
-        valueFn: () => (this.isOn ? mark.attr("y") : this.centerMark.attr("y")),
+        valueFn: () => (this.isOn ? mark.attr('y') : this.centerMark.attr('y')),
       },
     });
     return dec;
@@ -54,13 +54,13 @@ function DecorationStarGraph(centerMark, neighborMarks) {
   this._updateNeighborDecoration = function (markSet, d, duration, curve) {
     markSet.animateDecoration(
       d,
-      "x2",
-      new Animator(interpolateTo(d.data("x2")), duration, curve)
+      'x2',
+      new Animator(interpolateTo(d.data('x2')), duration, curve)
     );
     markSet.animateDecoration(
       d,
-      "y2",
-      new Animator(interpolateTo(d.data("y2")), duration, curve)
+      'y2',
+      new Animator(interpolateTo(d.data('y2')), duration, curve)
     );
   };
 
@@ -68,9 +68,9 @@ function DecorationStarGraph(centerMark, neighborMarks) {
     this.isOn = true;
     markSet.animateDecoration(
       this.outlineDecoration,
-      "r",
+      'r',
       new Animator(
-        interpolateTo(this.outlineDecoration.data("r")),
+        interpolateTo(this.outlineDecoration.data('r')),
         duration,
         curve
       )
@@ -85,7 +85,7 @@ function DecorationStarGraph(centerMark, neighborMarks) {
     this.isOn = false;
     markSet.animateDecoration(
       this.outlineDecoration,
-      "r",
+      'r',
       new Animator(interpolateTo(0.0), duration, curve)
     );
 
@@ -185,7 +185,7 @@ export function DatasetManager(
           fillStyle: {
             value: getWithFallback(d.colors, this.currentFrameNumber, 0.0),
             transform: (c) => d3.color(this.colorScale(c)).formatRgb(),
-            cache: true,
+            cached: true,
           },
           alpha: { valueFn: () => this._getPointAlpha(d) },
           r: { valueFn: () => this._getPointRadius(d) },
@@ -289,31 +289,31 @@ export function DatasetManager(
       // them from appearing to move
       this.marks.forEach((mark, i) => {
         if (
-          mark.attr("r") < 0.001 &&
+          mark.attr('r') < 0.001 &&
           this.data.at(i).visibleFlags[frameNumber]
         ) {
           mark.setAttr(
-            "x",
-            getWithFallback(this.data.at(i).xs, frameNumber, mark.data("x"))
+            'x',
+            getWithFallback(this.data.at(i).xs, frameNumber, mark.data('x'))
           );
           mark.setAttr(
-            "y",
-            getWithFallback(this.data.at(i).ys, frameNumber, mark.data("y"))
+            'y',
+            getWithFallback(this.data.at(i).ys, frameNumber, mark.data('y'))
           );
           mark.setAttr(
-            "x2",
-            getWithFallback(this.data.at(i).xs, frameNumber, mark.data("x"))
+            'x2',
+            getWithFallback(this.data.at(i).xs, frameNumber, mark.data('x'))
           );
           mark.setAttr(
-            "y2",
-            getWithFallback(this.data.at(i).ys, frameNumber, mark.data("y"))
+            'y2',
+            getWithFallback(this.data.at(i).ys, frameNumber, mark.data('y'))
           );
           mark.setAttr(
-            "fillStyle",
+            'fillStyle',
             getWithFallback(
               this.data.at(i).colors,
               frameNumber,
-              mark.data("fillStyle")
+              mark.data('fillStyle')
             )
           );
         }
@@ -323,109 +323,109 @@ export function DatasetManager(
 
       // Update visible flag
       this.marks.setAll(
-        "visible",
+        'visible',
         (_, i) => this.data.at(i).visibleFlags[frameNumber] || false
       );
 
       // Register animations
       this.marks.animateAll(
-        "x",
+        'x',
         (mark, i) =>
           interpolateTo(
             getWithFallback(
               this.data.at(i).xs,
               frameNumber,
-              getWithFallback(this.data.at(i).xs, oldFrame, mark.data("x"))
+              getWithFallback(this.data.at(i).xs, oldFrame, mark.data('x'))
             )
           ),
         animationDuration,
         easeInOut
       );
       this.marks.animateAll(
-        "y",
+        'y',
         (mark, i) =>
           interpolateTo(
             getWithFallback(
               this.data.at(i).ys,
               frameNumber,
-              getWithFallback(this.data.at(i).ys, oldFrame, mark.data("y"))
+              getWithFallback(this.data.at(i).ys, oldFrame, mark.data('y'))
             )
           ),
         animationDuration,
         easeInOut
       );
       this.marks.animateAll(
-        "x2",
+        'x2',
         (mark, i) =>
           interpolateTo(
             getWithFallback(
               this.data.at(i).xs,
               frameNumber,
-              getWithFallback(this.data.at(i).xs, oldFrame, mark.data("x"))
+              getWithFallback(this.data.at(i).xs, oldFrame, mark.data('x'))
             )
           ),
         animationDuration,
         easeInOut
       );
       this.marks.animateAll(
-        "y2",
+        'y2',
         (mark, i) =>
           interpolateTo(
             getWithFallback(
               this.data.at(i).ys,
               frameNumber,
-              getWithFallback(this.data.at(i).ys, oldFrame, mark.data("y"))
+              getWithFallback(this.data.at(i).ys, oldFrame, mark.data('y'))
             )
           ),
         animationDuration,
         easeInOut
       );
       this.marks.animateAll(
-        "halo",
+        'halo',
         (mark, i) =>
           interpolateTo(
             getWithFallback(
               this.data.at(i).halos,
               frameNumber,
-              mark.data("halo")
+              mark.data('halo')
             )
           ),
         animationDuration,
         easeInOut
       );
       this.marks.animateAll(
-        "fillStyle",
+        'fillStyle',
         (mark, i) =>
           interpolateTo(
             getWithFallback(
               this.data.at(i).colors,
               frameNumber,
-              mark.data("fillStyle")
+              mark.data('fillStyle')
             )
           ),
         animationDuration,
         easeInOut
       );
       this.marks.animateComputed(
-        "r",
+        'r',
         interpolateTo,
         animationDuration,
         easeInOut
       );
       this.marks.animateComputed(
-        "alpha",
+        'alpha',
         interpolateTo,
         animationDuration,
         easeInOut
       );
       this.marks.animateComputed(
-        "lineAlpha",
+        'lineAlpha',
         interpolateTo,
         animationDuration,
         easeInOut
       );
       this.marks.animateComputed(
-        "lineWidth",
+        'lineWidth',
         interpolateTo,
         animationDuration,
         easeInOut
@@ -433,27 +433,27 @@ export function DatasetManager(
     } else {
       this.currentFrameNumber = frameNumber;
 
-      this.marks.setAll("x", (mark, i) =>
-        getWithFallback(this.data.at(i).xs, frameNumber, mark.data("x"))
+      this.marks.setAll('x', (mark, i) =>
+        getWithFallback(this.data.at(i).xs, frameNumber, mark.data('x'))
       );
-      this.marks.setAll("y", (mark, i) =>
-        getWithFallback(this.data.at(i).ys, frameNumber, mark.data("y"))
+      this.marks.setAll('y', (mark, i) =>
+        getWithFallback(this.data.at(i).ys, frameNumber, mark.data('y'))
       );
-      this.marks.setAll("x2", (mark, i) =>
-        getWithFallback(this.data.at(i).xs, frameNumber, mark.data("x"))
+      this.marks.setAll('x2', (mark, i) =>
+        getWithFallback(this.data.at(i).xs, frameNumber, mark.data('x'))
       );
-      this.marks.setAll("y2", (mark, i) =>
-        getWithFallback(this.data.at(i).ys, frameNumber, mark.data("y"))
+      this.marks.setAll('y2', (mark, i) =>
+        getWithFallback(this.data.at(i).ys, frameNumber, mark.data('y'))
       );
-      this.marks.setAll("halo", (mark, i) =>
-        getWithFallback(this.data.at(i).halos, frameNumber, mark.data("halo"))
+      this.marks.setAll('halo', (mark, i) =>
+        getWithFallback(this.data.at(i).halos, frameNumber, mark.data('halo'))
       );
-      this.marks.setAll("lineWidth", () => 0.0);
-      this.marks.setAll("fillStyle", (mark, i) =>
+      this.marks.setAll('lineWidth', () => 0.0);
+      this.marks.setAll('fillStyle', (mark, i) =>
         getWithFallback(
           this.data.at(i).colors,
           frameNumber,
-          mark.data("fillStyle")
+          mark.data('fillStyle')
         )
       );
     }
@@ -476,7 +476,7 @@ export function DatasetManager(
     // Animate properties
     if (halos) {
       this.marks.animateAll(
-        "halo",
+        'halo',
         (_, i) => {
           if (destFrame != this.currentFrameNumber) {
             let previewWidths = this.data.at(i).previewLineWidths[
@@ -493,7 +493,7 @@ export function DatasetManager(
       );
     }
     this.marks.animateAll(
-      "x2",
+      'x2',
       (mark, i) =>
         interpolateTo(
           getWithFallback(
@@ -502,7 +502,7 @@ export function DatasetManager(
             getWithFallback(
               this.data.at(i).xs,
               this.currentFrameNumber,
-              mark.data("x")
+              mark.data('x')
             )
           )
         ),
@@ -510,7 +510,7 @@ export function DatasetManager(
       easeInOut
     );
     this.marks.animateAll(
-      "y2",
+      'y2',
       (mark, i) =>
         interpolateTo(
           getWithFallback(
@@ -519,17 +519,17 @@ export function DatasetManager(
             getWithFallback(
               this.data.at(i).ys,
               this.currentFrameNumber,
-              mark.data("y")
+              mark.data('y')
             )
           )
         ),
       duration,
       easeInOut
     );
-    this.marks.animateComputed("alpha", interpolateTo, duration, easeInOut);
-    this.marks.animateComputed("r", interpolateTo, duration, easeInOut);
-    this.marks.animateComputed("lineWidth", interpolateTo, duration, easeInOut);
-    this.marks.animateComputed("lineAlpha", interpolateTo, duration, easeInOut);
+    this.marks.animateComputed('alpha', interpolateTo, duration, easeInOut);
+    this.marks.animateComputed('r', interpolateTo, duration, easeInOut);
+    this.marks.animateComputed('lineWidth', interpolateTo, duration, easeInOut);
+    this.marks.animateComputed('lineAlpha', interpolateTo, duration, easeInOut);
 
     // Show hover text for points that have preview lines (up to a point)
     /*this.marks.setAll("hoverText", (mark, i) => {
@@ -551,11 +551,11 @@ export function DatasetManager(
       this.marks.getMarkByID(nodeID),
       linkedNodeIDs.map((id) => this.marks.getMarkByID(id)).filter((m) => !!m)
     );
-    let graphID = "stargraph_" + nodeID + "_" + Math.floor(Math.random() * 1e9);
+    let graphID = 'stargraph_' + nodeID + '_' + Math.floor(Math.random() * 1e9);
     let graphInfo = {
       highlightedNodes: [nodeID, ...linkedNodeIDs],
       graph,
-      state: "waiting",
+      state: 'waiting',
     };
     displayedGraphs[graphID] = graphInfo;
     graph.getDecorations().forEach((d) => this.marks.addDecoration(d));
@@ -566,7 +566,7 @@ export function DatasetManager(
   this.updateStarGraph = function (graphID, newNeighbors, animated = true) {
     let graphInfo = displayedGraphs[graphID];
     if (!graphInfo) {
-      console.warn("Trying to update a non-existent graph");
+      console.warn('Trying to update a non-existent graph');
       return;
     }
     graphInfo.highlightedNodes = [
@@ -584,18 +584,18 @@ export function DatasetManager(
   this.highlightStarGraph = function (graphID, animated = true) {
     let graphInfo = displayedGraphs[graphID];
     if (!graphInfo) {
-      console.warn("Trying to highlight a non-existent graph");
+      console.warn('Trying to highlight a non-existent graph');
       return;
     }
-    if (graphInfo.state == "visible") {
+    if (graphInfo.state == 'visible') {
       return Promise.resolve();
     }
-    if (graphInfo.state == "entering") {
+    if (graphInfo.state == 'entering') {
       return Promise.reject();
     }
 
     let graph = graphInfo.graph;
-    graphInfo.state = "entering";
+    graphInfo.state = 'entering';
     graph.enter(this.marks, animated ? highlightDuration : 0);
 
     this.updateDimmedPoints(animated);
@@ -605,8 +605,8 @@ export function DatasetManager(
       setTimeout(
         () => {
           // Resolve if it's still highlighted, otherwise reject
-          if (graphInfo.state == "entering") {
-            graphInfo.state = "visible";
+          if (graphInfo.state == 'entering') {
+            graphInfo.state = 'visible';
             resolve();
           } else reject();
         },
@@ -617,15 +617,15 @@ export function DatasetManager(
 
   this.unhighlightStarGraph = function (graphID, animated = true) {
     let graphInfo = displayedGraphs[graphID];
-    if (!graphInfo || graphInfo.state == "waiting") {
+    if (!graphInfo || graphInfo.state == 'waiting') {
       return Promise.resolve();
     }
-    if (graphInfo.state == "exiting") {
+    if (graphInfo.state == 'exiting') {
       return Promise.reject();
     }
 
     let graph = graphInfo.graph;
-    graphInfo.state = "exiting";
+    graphInfo.state = 'exiting';
     graph.exit(this.marks, animated ? highlightDuration : 0);
     this.updateDimmedPoints(animated);
 
@@ -634,7 +634,7 @@ export function DatasetManager(
       setTimeout(
         () => {
           // Resolve if it's still gone, otherwise reject
-          if (!!displayedGraphs[graphID] && graphInfo.state == "exiting") {
+          if (!!displayedGraphs[graphID] && graphInfo.state == 'exiting') {
             // Remove it from the cache too
             graph
               .getDecorations()
@@ -656,7 +656,7 @@ export function DatasetManager(
 
     Object.keys(displayedGraphs).forEach((graphID) => {
       let g = displayedGraphs[graphID];
-      if (g.state == "entering" || g.state == "visible") {
+      if (g.state == 'entering' || g.state == 'visible') {
         g.highlightedNodes.forEach((n) => highlightedPointIDs.add(n));
       }
     });
@@ -682,30 +682,30 @@ export function DatasetManager(
       Object.values(displayedGraphs)
         .filter(
           (graphInfo) =>
-            graphInfo.state == "entering" || graphInfo.state == "visible"
+            graphInfo.state == 'entering' || graphInfo.state == 'visible'
         )
         .map((graphInfo) => graphInfo.graph.centerMark.id)
     );
     this.showHoverText((datum) => centerIDs.has(datum.id));
 
     if (animated) {
-      this.marks.animateComputed("alpha", interpolateTo, highlightDuration);
-      this.marks.animateComputed("r", interpolateTo, highlightDuration);
+      this.marks.animateComputed('alpha', interpolateTo, highlightDuration);
+      this.marks.animateComputed('r', interpolateTo, highlightDuration);
     }
   };
 
   this.filter = function (visibleIDs) {
     this.filterVisiblePoints = new Set(visibleIDs);
-    this.marks.animateComputed("alpha", interpolateTo, highlightDuration);
+    this.marks.animateComputed('alpha', interpolateTo, highlightDuration);
   };
 
   this.clearFilter = function () {
     this.filterVisiblePoints = new Set();
-    this.marks.animateComputed("alpha", interpolateTo, highlightDuration);
+    this.marks.animateComputed('alpha', interpolateTo, highlightDuration);
   };
 
   this.showHoverText = function (hoverTextFn) {
-    this.marks.setAll("hoverText", (_, i) =>
+    this.marks.setAll('hoverText', (_, i) =>
       hoverTextFn(this.data.at(i), i) ? this.data.at(i).hoverText : null
     );
   };

@@ -1,6 +1,6 @@
 <script>
-  import SynchronizedScatterplot from "./SynchronizedScatterplot.svelte";
-  import { createEventDispatcher } from "svelte";
+  import SynchronizedScatterplot from './SynchronizedScatterplot.svelte';
+  import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -9,23 +9,23 @@
   export let frame;
   export let isSelected = false;
 
-  let canvasBG = "transparent";
+  let canvasBG = 'transparent';
   let isHovering = false;
   let isClicking = false;
 
   $: {
     if (isClicking) {
-      canvasBG = "skyblue";
+      canvasBG = 'skyblue';
     } else if (isHovering) {
-      canvasBG = isSelected ? "deepskyblue" : "skyblue";
+      canvasBG = isSelected ? 'deepskyblue' : 'skyblue';
     } else {
-      canvasBG = isSelected ? "deepskyblue" : "transparent";
+      canvasBG = isSelected ? 'deepskyblue' : 'transparent';
     }
   }
 
   function onMouseover(obj) {
     isHovering = true;
-    dispatch("mouseover");
+    dispatch('mouseover');
   }
 
   function onMousedown(obj) {
@@ -36,27 +36,11 @@
     isClicking = false;
   }
 
-  function onMouseout(obj) {
+  function onMouseleave(obj) {
     isHovering = false;
-    dispatch("mouseout");
+    dispatch('mouseleave');
   }
 </script>
-
-<style>
-  .thumbnail-container {
-    width: 60px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-radius: 8px;
-  }
-  .thumbnail-name {
-    color: #555;
-    font-size: small;
-    text-align: center;
-    margin-bottom: 4px !important;
-  }
-</style>
 
 <div
   class="thumbnail-container"
@@ -64,7 +48,8 @@
   on:mouseover={onMouseover}
   on:mousedown={onMousedown}
   on:mouseup={onMouseup}
-  on:mouseout={onMouseout}>
+  on:mouseleave={onMouseleave}
+>
   <SynchronizedScatterplot
     thumbnail
     on:click
@@ -73,6 +58,24 @@
     width={40}
     height={40}
     {frame}
-    rFactor="0.05" />
+    rFactor="0.05"
+  />
   <p class="thumbnail-name">{data.frameLabels[frame]}</p>
 </div>
+
+<style>
+  .thumbnail-container {
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 8px;
+    margin: 12px;
+  }
+  .thumbnail-name {
+    color: #555;
+    font-size: small;
+    text-align: center;
+    margin-bottom: 4px !important;
+  }
+</style>

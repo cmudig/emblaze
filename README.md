@@ -4,6 +4,12 @@ Interactive uncertainty-aware dimensionality reduction viewer
 
 ## Installation
 
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
 You can install using `pip`:
 
 ```bash
@@ -25,6 +31,12 @@ jupyter nbextension enable --py [--sys-prefix|--user|--system] drviewer
 ```
 
 ## Development Installation
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
 
 ```bash
 # First install the python package. This will also build the JS packages.

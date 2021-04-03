@@ -1,6 +1,6 @@
 <script>
-  import { dummyData } from './dummy-data/data.js';
   import SynchronizedScatterplot from './visualization/SynchronizedScatterplot.svelte';
+  import ScatterplotThumbnail from './visualization/ScatterplotThumbnail.svelte';
   import SpinnerButton from './visualization/SpinnerButton.svelte';
   import * as d3 from 'd3';
 
@@ -20,6 +20,12 @@
   let dataset = null;
   let frameTransformations = syncValue(model, 'frameTransformations', []);
   let frameColors = syncValue(model, 'frameColors', []);
+
+  let colorScheme = {
+    name: 'tableau',
+    value: d3.schemeTableau10,
+    type: 'categorical',
+  };
 
   $: if (
     !!$frameTransformations &&
@@ -51,6 +57,9 @@
   });
 
   let canvas;
+
+  let selectedIDs = syncValue(model, 'selectedIDs', []);
+  $: console.log($selectedIDs);
 
   let alignedIDs = syncValue(model, 'alignedIDs', []);
 
@@ -149,7 +158,7 @@
     <i class="text-primary fa fa-spinner fa-spin" />
   </div>
 {:else}
-  <div style="display: flex; align-items: flex-end;">
+  <div style="display: flex; align-items: flex-start;">
     <div class="scatterplot-container">
       <SynchronizedScatterplot
         bind:this={canvas}
@@ -161,17 +170,14 @@
         animateTransitions
         width={600}
         height={600}
+        bind:clickedIDs={$selectedIDs}
         on:datahover={onScatterplotHover}
         on:dataclick={onScatterplotClick}
         on:reset={onScatterplotReset}
-        colorScheme={{
-          name: 'tableau',
-          value: d3.schemeTableau10,
-          type: 'categorical',
-        }}
+        {colorScheme}
       />
     </div>
-    <div class="spinner-container">
+    <!-- <div class="spinner-container">
       <SpinnerButton
         bind:this={spinner}
         width={120}
@@ -180,7 +186,25 @@
         on:hover={(e) => (previewFrame = e.detail != null ? e.detail : -1)}
         on:select={(e) => ($currentFrame = e.detail)}
       />
-    </div>
+    </div> -->
+    {#if !!dataset}
+      <div
+        style="margin-left: 24px; height: 600px; display: flex; flex-wrap: wrap; flex-direction: column; align-content: flex-start; width: 240px;"
+      >
+        {#each [...d3.range(dataset.frameCount)] as i}
+          <ScatterplotThumbnail
+            on:mouseover={() => (previewFrame = i)}
+            on:mouseleave={() => (previewFrame = -1)}
+            on:click={() => ($currentFrame = i)}
+            isSelected={$currentFrame == i}
+            isPreviewing={previewFrame == i && previewFrame != $currentFrame}
+            {colorScheme}
+            data={dataset}
+            frame={i}
+          />
+        {/each}
+      </div>
+    {/if}
   </div>
 {/if}
 

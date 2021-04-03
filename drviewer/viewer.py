@@ -69,6 +69,7 @@ class DRViewer(DOMWidget):
     plotScale = Float(100.0)
     
     currentFrame = Integer(0).tag(sync=True)
+    selectedIDs = List([]).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
@@ -134,10 +135,11 @@ class DRViewer(DOMWidget):
                                      y_key="aligned_y",
                                      additional_fields={
                                          "highlight": lambda _, item: item["highlight"].tolist(),
+                                         "hoverText": lambda _, item: item["label"],
                                          "color": lambda _, item: item["label"]
                                      }) for frame in self.frames]
 
-        colors = compute_colors(self.frames)
+        # colors = compute_colors(self.frames)
         
         self.isLoading = False
         self.loadingMessage = ""
@@ -145,7 +147,7 @@ class DRViewer(DOMWidget):
             "data": data,
             "frameLabels": [str(i) for i in range(len(self.frames))]
         }
-        self.frameColors = colors
+        # self.frameColors = colors
         self.frameTransformations = [
             np.eye(3).tolist()
             for i in range(len(self.frames))
@@ -193,4 +195,4 @@ class DRViewer(DOMWidget):
                 allow_flips=False)).tolist())
 
         self.frameTransformations = transformations
-        self.frameColors = compute_colors(self.frames, point_ids, peripheral_points)
+        # self.frameColors = compute_colors(self.frames, point_ids, peripheral_points)
