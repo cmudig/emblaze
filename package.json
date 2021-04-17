@@ -27,6 +27,19 @@
     "type": "git",
     "url": "https://github.com/cmudig/dr-viewer-widget"
   },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-proposal-class-properties",
+        {
+          "loose": true
+        }
+      ]
+    ]
+  },
   "scripts": {
     "build": "npm run build:nbextension",
     "build:labextension": "npm run clean:labextension && mkdirp drviewer/labextension && cd drviewer/labextension && npm pack ../..",
@@ -45,9 +58,14 @@
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^5.15.2",
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3",
-    "d3": "^6.3.1"
+    "d3": "^6.3.1",
+    "mathjs": "^9.3.2",
+    "pixi.js": "^6.0.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.13.15",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-env": "^7.13.15",
     "@phosphor/application": "^1.6.0",
     "@phosphor/widgets": "^1.6.0",
     "@tsconfig/svelte": "^1.0.10",
@@ -56,6 +74,7 @@
     "@typescript-eslint/eslint-plugin": "^3.6.0",
     "@typescript-eslint/parser": "^3.6.0",
     "acorn": "^7.2.0",
+    "babel-loader": "^8.2.2",
     "css-loader": "^3.2.0",
     "eslint": "^7.4.0",
     "eslint-config-prettier": "^6.11.0",

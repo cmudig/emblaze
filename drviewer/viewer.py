@@ -102,7 +102,7 @@ class DRViewer(DOMWidget):
         pool = mp.Pool(3)
         num_results = 0
         worker = partial(apply_projection, metric=self.metric, method=self.method, params=self.params)
-        for lo_d in pool.imap_unordered(worker, (hi_d for _ in range(self.numReplicates))):
+        for lo_d in map(worker, (hi_d for _ in range(self.numReplicates))):
             self.frames = self.frames + [ms.ScatterplotFrame([{
                 "id": i,
                 "x": lo_d[i,0],
@@ -160,8 +160,6 @@ class DRViewer(DOMWidget):
             self.align_to_points(None, None)
         else:
             ids_of_interest = change.new
-            for neighbors in self.frames[0].mat("highlight", ids=ids_of_interest):
-                ids_of_interest += neighbors.tolist()
             thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
             thread.start()
     

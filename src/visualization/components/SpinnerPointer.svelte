@@ -1,12 +1,12 @@
 <script>
-  import { scaleCanvas } from "./helpers";
-  import * as d3 from "d3";
-  import { onMount } from "svelte";
+  import { scaleCanvas } from '../utils/helpers';
+  import * as d3 from 'd3';
+  import { onMount } from 'svelte';
 
   let canvas;
   export let length = 40;
-  export let fillColor = "#333";
-  export let strokeColor = "#eee";
+  export let fillColor = '#333';
+  export let strokeColor = '#eee';
   let width = 4;
 
   export let angle = 0;
@@ -33,13 +33,21 @@
   onMount(() => {
     scaleCanvas(d3.select(canvas), length * 2, width * 2 + 2);
 
-    var context = canvas.getContext("2d");
+    var context = canvas.getContext('2d');
     context.clearRect(0, 0, length * 2, 2 * width + 2);
     context.translate(length, width + 1);
     context.rotate(-Math.PI / 2.0);
     drawPointer(context);
   });
 </script>
+
+<div class="pointer-container">
+  <canvas
+    bind:this={canvas}
+    style="transform: rotate({angle}rad);"
+    class="pointer"
+  />
+</div>
 
 <style>
   .pointer-container {
@@ -60,10 +68,3 @@
     transition: transform 0.8s ease-in-out;
   }
 </style>
-
-<div class="pointer-container">
-  <canvas
-    bind:this={canvas}
-    style="transform: rotate({angle}rad);"
-    class="pointer" />
-</div>

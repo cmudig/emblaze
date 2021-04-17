@@ -1,13 +1,13 @@
 <script>
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
-  import { scaleCanvas } from './helpers.js';
+  import { scaleCanvas } from '../utils/helpers.js';
   import * as d3 from 'd3';
   import {
     Animator,
     Attribute,
     easeInOut,
     interpolateTo,
-  } from './data_items.js';
+  } from '../models/data_items.js';
   import SpinnerPointer from './SpinnerPointer.svelte';
 
   const dispatch = createEventDispatcher();

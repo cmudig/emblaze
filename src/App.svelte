@@ -1,14 +1,14 @@
 <script>
   import SynchronizedScatterplot from './visualization/SynchronizedScatterplot.svelte';
-  import ScatterplotThumbnail from './visualization/ScatterplotThumbnail.svelte';
-  import SpinnerButton from './visualization/SpinnerButton.svelte';
+  import ScatterplotThumbnail from './visualization/components/ScatterplotThumbnail.svelte';
+  import SpinnerButton from './visualization/components/SpinnerButton.svelte';
   import * as d3 from 'd3';
 
   export let model;
 
   // Creates a Svelte store (https://svelte.dev/tutorial/writable-stores) that syncs with the named Traitlet in widget.ts and example.py.
   import { syncValue } from './stores';
-  import { Dataset } from './visualization/dataset.js';
+  import { Dataset } from './visualization/models/dataset.js';
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
   let data = syncValue(model, 'data', {});
@@ -32,7 +32,7 @@
     $frameTransformations.length > 0 &&
     !!dataset
   ) {
-    console.log('Transforming');
+    console.log('Transforming', $frameTransformations);
     updateTransformations();
   } else if (!!$data && !!$data['data']) {
     console.log('Updating data');
@@ -47,7 +47,7 @@
     dataset.transform($frameTransformations);
     if (!!canvas && animate) {
       console.log('Updating frame', $currentFrame);
-      canvas.updateFrame($currentFrame);
+      canvas.animateDatasetUpdate();
     }
   }
 
@@ -111,16 +111,8 @@
   }
 
   function onScatterplotClick(e) {
-    if (e.detail.length > 0) {
-      $alignedIDs = e.detail;
-    }
-
     if (e.detail.length != 1) updateThumbnailID(null);
     else updateThumbnailID(e.detail);
-  }
-
-  function onScatterplotReset(e) {
-    $alignedIDs = [];
   }
 
   let oldFrame = 0;
@@ -170,10 +162,13 @@
         animateTransitions
         width={600}
         height={600}
+        backgroundColor={previewFrame != $currentFrame && previewFrame != -1
+          ? '#f8f8ff'
+          : 'white'}
         bind:clickedIDs={$selectedIDs}
+        bind:alignedIDs={$alignedIDs}
         on:datahover={onScatterplotHover}
         on:dataclick={onScatterplotClick}
-        on:reset={onScatterplotReset}
         {colorScheme}
       />
     </div>
@@ -193,14 +188,17 @@
       >
         {#each [...d3.range(dataset.frameCount)] as i}
           <ScatterplotThumbnail
-            on:mouseover={() => (previewFrame = i)}
-            on:mouseleave={() => (previewFrame = -1)}
-            on:click={() => ($currentFrame = i)}
+            on:click={() => {
+              if (previewFrame == i) {
+                $currentFrame = i;
+              } else if ($currentFrame != i) previewFrame = i;
+              else if ($currentFrame == i) previewFrame = -1;
+            }}
             isSelected={$currentFrame == i}
             isPreviewing={previewFrame == i && previewFrame != $currentFrame}
-            {colorScheme}
+            colorScale={!!dataset ? dataset.colorScale(colorScheme) : null}
             data={dataset}
-            frame={i}
+            frame={!!dataset ? dataset.frame(i) : null}
           />
         {/each}
       </div>
@@ -210,8 +208,8 @@
 
 <style>
   .scatterplot-container {
-    width: 600px;
-    height: 600px;
+    width: 602px;
+    height: 602px;
     border: 1px solid #444;
   }
   .spinner-container {

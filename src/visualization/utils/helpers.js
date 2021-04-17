@@ -1,21 +1,25 @@
 export function scaleCanvas(c, w, h) {
   // Scales the canvas for the device screen resolution
   var result = c
-    .attr('width', w * window.devicePixelRatio)
-    .attr('height', h * window.devicePixelRatio)
-    .style('width', w + 'px')
-    .style('height', h + 'px');
+    .attr("width", w * window.devicePixelRatio)
+    .attr("height", h * window.devicePixelRatio)
+    .style("width", w + "px")
+    .style("height", h + "px");
 
-  var context = c.node().getContext('2d');
+  var context = c.node().getContext("2d");
   context.scale(window.devicePixelRatio, window.devicePixelRatio);
   return result;
 }
 
 // Function to create new colours for the hidden canvas.
-export function ColorGenerator() {
+export function ColorIDMap(format = "css") {
   this.nextColor = 1;
+  this.format = format; // "css" or "hex"
 
-  this.next = function () {
+  this.mapping = {};
+  this.reverseMapping = {};
+
+  this._next = function () {
     var ret = [];
     if (this.nextColor < 16777215) {
       ret.push(this.nextColor & 0xff); // R
@@ -23,14 +27,25 @@ export function ColorGenerator() {
       ret.push((this.nextColor & 0xff0000) >> 16); // B
       this.nextColor += 5;
     }
-    var col = 'rgb(' + ret.join(',') + ')';
-    return col;
+    if (this.format == "css") return "rgb(" + ret.join(",") + ")";
+    else if (this.format == "hex") return this.nextColor;
+  };
+
+  this.id = function (id, obj = null) {
+    if (!this.mapping.hasOwnProperty(id)) this.mapping[id] = this._next();
+    this.reverseMapping[this.mapping[id]] = obj || id;
+
+    return this.mapping[id];
+  };
+
+  this.obj = function (color) {
+    return this.reverseMapping[color];
   };
 }
 
 export function colorWithOpacity(stringVal, opacity) {
   var rgb = stringVal.substring(4, stringVal.length - 1);
-  return 'rgba(' + rgb + ', ' + opacity + ')';
+  return "rgba(" + rgb + ", " + opacity + ")";
 }
 
 export function shuffle(array) {
@@ -59,7 +74,7 @@ export function getWithFallback(obj, attrName, fallback) {
 }
 
 export function approxEquals(obj1, obj2) {
-  if (typeof obj1 == 'number' && typeof obj2 == 'number') {
+  if (typeof obj1 == "number" && typeof obj2 == "number") {
     return Math.abs(obj1 - obj2) <= 0.001;
   }
   return obj1 == obj2;
@@ -97,4 +112,45 @@ export function transformPoint(transform, point) {
     transform[0][0] * point[0] + transform[0][1] * point[1] + transform[0][2],
     transform[1][0] * point[0] + transform[1][1] * point[1] + transform[1][2],
   ];
+}
+
+export function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? [
+        parseInt(result[1], 16) / 255.0,
+        parseInt(result[2], 16) / 255.0,
+        parseInt(result[3], 16) / 255.0,
+      ]
+    : [0, 0, 0];
+}
+
+export function makeTimeProvider() {
+  var currentTime = 0;
+  let fn = function () {
+    return currentTime;
+  };
+  fn.advance = function (dt) {
+    currentTime += dt;
+  };
+  return fn;
+}
+
+export function distance2(a, b) {
+  let dx = a.x - b.x;
+  let dy = a.y - b.y;
+  return dx * dx + dy * dy;
+}
+
+export class ValueHistory {
+  lastValues = {};
+
+  update(newValues) {
+    let changed = false;
+    Object.keys(newValues).forEach((key) => {
+      changed = changed || !approxEquals(newValues[key], this.lastValues[key]);
+      this.lastValues[key] = newValues[key];
+    });
+    return changed;
+  }
 }

@@ -4,8 +4,8 @@ import {
   easeInOut,
   interpolateTo,
   interpolateToFunction,
-} from './data_items';
-import { boundingBox, padExtent } from './helpers';
+} from "./data_items";
+import { boundingBox, padExtent } from "../utils/helpers";
 
 const ZoomAnimationDuration = 1000;
 const MaxScale = 14.0;
@@ -46,7 +46,7 @@ export function Scales(
   this.scaleFactor = new Attribute(1.0);
   this.translateX = new Attribute(0.0);
   this.translateY = new Attribute(0.0);
-  this.translateX.label = 'scaleFactor';
+  this.translateX.label = "scaleFactor";
 
   this._updatedNoAdvance = false;
   this.listeners = [];
@@ -93,13 +93,38 @@ export function Scales(
     return base * this.scaleFactor.get() - this.translateY.get();
   };
 
+  // Returns values that can be used to transform raw x, y coordinates into
+  // screen-space. Specifically, the screen-space coordinates can be calculated
+  // as follows:
+  // x_screen = x_data * info.x.a + info.x.b
+  // y_screen = y_data * info.y.a + info.y.b
+  this.getTransformInfo = function () {
+    let baseScaleX = this.xRExtent / this.xDExtent;
+    let baseScaleY = this.yRExtent / this.yDExtent;
+    let scale = this.scaleFactor.get();
+    return {
+      x: {
+        a: baseScaleX * scale,
+        b:
+          scale * (this.xRange[0] - baseScaleX * this.xDomain[0]) -
+          this.translateX.get(),
+      },
+      y: {
+        a: baseScaleY * scale,
+        b:
+          scale * (this.yRange[0] - baseScaleY * this.yDomain[0]) -
+          this.translateY.get(),
+      },
+    };
+  };
+
   // These parameters tell the scales how to transform the coordinates after
   // they have been converted into pixel space.
   this.transform = function (scaleInfo, animated = false) {
     this.unfollow();
 
     if (animated) {
-      if (scaleInfo.hasOwnProperty('scale'))
+      if (scaleInfo.hasOwnProperty("scale"))
         this.scaleFactor.animate(
           new Animator(
             interpolateTo(scaleInfo.scale),
@@ -107,7 +132,7 @@ export function Scales(
             easeInOut
           )
         );
-      if (scaleInfo.hasOwnProperty('translateX'))
+      if (scaleInfo.hasOwnProperty("translateX"))
         this.translateX.animate(
           new Animator(
             interpolateTo(scaleInfo.translateX),
@@ -115,7 +140,7 @@ export function Scales(
             easeInOut
           )
         );
-      if (scaleInfo.hasOwnProperty('translateY'))
+      if (scaleInfo.hasOwnProperty("translateY"))
         this.translateY.animate(
           new Animator(
             interpolateTo(scaleInfo.translateY),
@@ -124,11 +149,11 @@ export function Scales(
           )
         );
     } else {
-      if (scaleInfo.hasOwnProperty('scale'))
+      if (scaleInfo.hasOwnProperty("scale"))
         this.scaleFactor.set(scaleInfo.scale);
-      if (scaleInfo.hasOwnProperty('translateX'))
+      if (scaleInfo.hasOwnProperty("translateX"))
         this.translateX.set(scaleInfo.translateX);
-      if (scaleInfo.hasOwnProperty('translateY'))
+      if (scaleInfo.hasOwnProperty("translateY"))
         this.translateY.set(scaleInfo.translateY);
     }
   };
@@ -136,6 +161,8 @@ export function Scales(
   // Increases the scale by the given amount, optionally centering by the given
   // point in transformed pixel space
   this.scaleBy = function (ds, centerPoint = null) {
+    this.unfollow();
+
     let tx = this.translateX.get();
     let ty = this.translateY.get();
     let s = this.scaleFactor.get();
@@ -159,6 +186,7 @@ export function Scales(
 
   // Translates the scales by the given amount
   this.translateBy = function (dx, dy) {
+    this.unfollow();
     this.translateX.set(this.translateX.get() + dx);
     this.translateY.set(this.translateY.get() + dy);
   };
@@ -234,7 +262,7 @@ export function Scales(
 
   // Animates the scale and translate factors to show the given points.
   // points should be an array of objects with x and y properties.
-  this.zoomTo = function (marks, animated = true, xAttr = 'x', yAttr = 'y') {
+  this.zoomTo = function (marks, animated = true, xAttr = "x", yAttr = "y") {
     let points = marks.map((mark) => ({
       x: mark.attr(xAttr, false),
       y: mark.attr(yAttr, false),
@@ -273,7 +301,7 @@ export function Scales(
   };
 
   // Sets the scales to follow the locations of the given marks
-  this.follow = function (marks, animated = true, xAttr = 'x', yAttr = 'y') {
+  this.follow = function (marks, animated = true, xAttr = "x", yAttr = "y") {
     this.followingMarks = marks;
     this.centerMark = null;
     this._markPointFn = (m) =>
@@ -316,8 +344,8 @@ export function Scales(
     mark,
     peripheralMarks,
     animated = true,
-    xAttr = 'x',
-    yAttr = 'y'
+    xAttr = "x",
+    yAttr = "y"
   ) {
     this.followingMarks = [mark, ...peripheralMarks];
     this.centerMark = mark;

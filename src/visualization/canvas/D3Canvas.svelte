@@ -1,8 +1,8 @@
 <svelte:options accessors />
 
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
-  import { normalizeVector, scaleCanvas } from './helpers.js';
+  import { onMount, createEventDispatcher, onDestroy } from 'svelte';
+  import { normalizeVector, scaleCanvas } from '../utils/helpers.js';
   import * as d3 from 'd3';
 
   const dispatch = createEventDispatcher();
@@ -14,12 +14,18 @@
   export let height = 300;
   export let hidden = false;
   export let thumbnail = false;
+  export let backgroundColor = 'white';
   export let pan = false;
   export let zoom = false;
   export let rFactor = 1.0;
   export let hiddenDim = 16.0; // The size of the target on the hidden canvas
 
   export let halosEnabled = true;
+
+  export let needsDraw = false;
+  export let frozen = false;
+
+  let drawCompletionHandlers = [];
 
   $: {
     // Makes sure to scale the canvas when the width/height change
@@ -36,16 +42,11 @@
     }
   }
 
-  export const margin = {
-    // top: 30,
-    // bottom: 50,
-    // left: 50,
-    // right: 30,
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  };
+  $: {
+    if (!!backgroundColor) {
+      draw();
+    }
+  }
 
   const renderMargin = 50.0;
   const HiddenMultiselectColor = 'rgb(200,200,200)';
@@ -108,8 +109,10 @@
     );
   }
 
-  export function draw() {
-    if (!data || !canvas) {
+  function _draw() {
+    needsDraw = false;
+
+    if (!data || !canvas || frozen) {
       return;
     }
 
@@ -120,6 +123,35 @@
     if (hidden) {
       context.imageSmoothingEnabled = false;
     }
+
+    // Background decorations
+    let haloDecorations = data.decorations.filter((d) => d.type == 'halo');
+    haloDecorations.sort((d1, d2) => d2.attr('r') - d1.attr('r'));
+    haloDecorations.forEach((d, i) => {
+      context.save();
+      if (!hidden) {
+        let alpha = d.attr('alpha');
+        context.globalAlpha = alpha;
+      }
+
+      let x = d.attr('x');
+      let y = d.attr('y');
+
+      let r = d.attr('r');
+      let lineWidth = d.attr('lineWidth') || 0.0;
+
+      context.beginPath();
+      context.ellipse(x, y, r, r, 0, 0, 2 * Math.PI);
+      context.fillStyle = hidden ? d.attr('colorID') : d.attr('color');
+      context.fill();
+      if (!hidden && lineWidth > 0.001) {
+        context.globalAlpha = 1.0;
+        context.lineWidth = lineWidth;
+        context.strokeStyle = context.fillStyle;
+        context.stroke();
+      }
+      context.restore();
+    });
 
     data.forEach(function (d, i) {
       let x = d.attr('x');
@@ -174,11 +206,11 @@
         if (!thumbnail && !!halo && halosEnabled) {
           // Draw a semitransparent halo around the point
 
+          context.globalAlpha = 0.1;
           if (showDelta) {
-            context.globalAlpha = 0.1;
             context.translate(x, y);
-            let haloAngle = Math.atan2(x2 - x, y - y2);
-            context.rotate(-haloAngle);
+            let haloAngle = Math.atan2(x - x2, y2 - y);
+            context.rotate(haloAngle);
             context.beginPath();
             // Draw a semicircle and then an angular side
             let extent =
@@ -186,7 +218,7 @@
               (width * 0.7);
             drawOblongHalo(context, halo, extent);
             context.fill();
-            context.rotate(haloAngle);
+            context.rotate(-haloAngle);
             context.translate(-x, -y);
           } else if (halo > 1.0) {
             context.beginPath();
@@ -196,18 +228,39 @@
         } else if (!thumbnail && showDelta) {
           let lineAlpha = d.attr('lineAlpha');
           if (lineAlpha >= 0.001) {
+            context.save();
             context.globalAlpha = lineAlpha || 0.1;
-            context.beginPath();
-            /*context.moveTo(x, y);
-            context.lineTo(x2, y2);
-            context.lineCap = "round";
-            context.lineWidth = d.attr("lineWidth") || 2.0;*/
-            let lineWidth = d.attr('lineWidth') * 0.3 || 2.0;
-            drawWideningLine(context, x, y, x2, y2, r * 0.3, lineWidth);
-            context.fillStyle = fillStyle;
-            context.fill();
-            // context.strokeStyle = d.attr("haloStyle");
-            // context.stroke();
+
+            let previewPath = d.attr('previewPath');
+            if (!!previewPath && previewPath.length > 0) {
+              let previewStartIdx = Math.floor(
+                d.attr('previewPathStart') * previewPath.length
+              );
+              let previewEndIdx = Math.floor(
+                d.attr('previewPathEnd') * previewPath.length
+              );
+
+              context.beginPath();
+              let lineWidth = d.attr('lineWidth') * 0.3 || 2.0;
+              context.moveTo(
+                previewPath[previewStartIdx][0],
+                previewPath[previewStartIdx][1]
+              );
+              previewPath
+                .slice(previewStartIdx, previewEndIdx)
+                .forEach((point) => context.lineTo(point[0], point[1]));
+              context.strokeStyle = fillStyle;
+              context.lineWidth = lineWidth;
+              context.stroke();
+            } else {
+              context.beginPath();
+              let lineWidth = d.attr('lineWidth') * 0.3 || 2.0;
+              drawWideningLine(context, x, y, x2, y2, r * 0.3, lineWidth);
+              context.fillStyle = fillStyle;
+              context.fill();
+            }
+
+            context.restore();
           }
         }
         context.globalAlpha = oldAlpha;
@@ -240,6 +293,7 @@
 
     if (!hidden) {
       data.decorations.forEach((d, i) => {
+        context.save();
         let alpha = d.attr('alpha');
         context.globalAlpha = alpha;
 
@@ -266,32 +320,7 @@
           context.lineCap = 'round';
           context.stroke();
         }
-      });
-
-      data.forEach((d) => {
-        let hoverText = d.attr('hoverText');
-        let x = d.attr('x');
-        let y = d.attr('y');
-
-        if (!!hoverText) {
-          // Draw a background below it
-          context.globalAlpha = 0.9;
-          context.fillStyle = 'white';
-          let textWidth = context.measureText(hoverText).width;
-          let fontSize = 9;
-          let padding = 3;
-          context.fillRect(
-            x - textWidth / 2 - padding,
-            y - (10 + fontSize + padding),
-            textWidth + padding * 2,
-            fontSize + padding * 2
-          );
-          context.globalAlpha = 1.0;
-          context.font = `${fontSize}pt Arial`;
-          context.textAlign = 'center';
-          context.fillStyle = 'black';
-          context.fillText(hoverText, x, y - 10);
-        }
+        context.restore();
       });
     }
 
@@ -324,6 +353,22 @@
     }
 
     context.globalAlpha = 1.0;
+
+    drawCompletionHandlers.forEach((d) => d());
+    drawCompletionHandlers = [];
+  }
+
+  export function draw(oncomplete = null) {
+    if (!!oncomplete) drawCompletionHandlers.push(oncomplete);
+
+    if (hidden) _draw();
+    else needsDraw = true;
+  }
+
+  export function setFrozen(val) {
+    frozen = val;
+    if (frozen && !!timer) timer.stop();
+    else if (!frozen) setupTimer();
   }
 
   export function getColorAtPoint(x, y) {
@@ -402,13 +447,13 @@
     canvas = d3
       .select(selector)
       .append('canvas')
+      .style('background-color', 'transparent')
       .on('mousedown', (e) => {
         mouseDown = true;
         mouseMoved = false;
         dispatch('mousedown', e);
       })
       .on('mouseup', (e) => {
-        mouseDown = false;
         lastX = 0;
         lastY = 0;
         if (isMultiselecting) {
@@ -416,9 +461,10 @@
           isMultiselecting = false;
           multiselectPath = [];
           draw();
-        } else if (!mouseMoved) {
+        } else if (!mouseMoved && mouseDown) {
           dispatch('click', e);
         }
+        mouseDown = false;
         setTimeout(() => (mouseMoved = false));
         dispatch('mouseup', e);
       })
@@ -439,9 +485,9 @@
       .on('DOMMouseScroll', handleMouseWheel)
       .on('MozMousePixelScroll', (e) => e.preventDefault());
     scaleCanvas(canvas, width, height);
-    /*if (hidden) {
+    if (hidden) {
       canvas.style('display', 'none');
-    }*/
+    }
 
     //custom = d3.select(document.createElement("custom"));
 
@@ -452,9 +498,38 @@
     togglePlay(null);*/
   }
 
+  let timer;
+
+  function setupTimer() {
+    if (hidden) return;
+    timer = d3.timer(() => {
+      if (needsDraw) _draw();
+    });
+  }
+
   onMount(() => {
     initializeCanvas(container, []);
+    setupTimer();
+  });
+
+  onDestroy(() => {
+    if (!!timer) timer.stop();
   });
 </script>
 
-<div bind:this={container} />
+<div
+  bind:this={container}
+  style="background-color: {backgroundColor}; width: 100%; height: 100%;"
+/>
+
+<style>
+  .debug {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+</style>
