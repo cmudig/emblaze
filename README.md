@@ -88,3 +88,16 @@ If you make a change to the python code then you will need to restart the notebo
 ## Notes
 
 - Svelte transitions don't seem to work well as they force an expensive re-layout operation. Avoid using them during interactions.
+
+# Standalone App
+
+To build once and run the app, first run `npm run build:standalone`. (For development, see below).
+
+Start the Flask server:
+
+```bash
+cd drviewer
+python server.py
+```
+
+For development, run `npm run watch:standalone` to continuously build the frontend and automatically reload when the content changes.
