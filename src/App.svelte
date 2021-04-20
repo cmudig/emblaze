@@ -11,6 +11,8 @@
   import { Dataset } from './visualization/models/dataset.js';
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
+  import ImageThumbnailViewer from './visualization/components/ImageThumbnailViewer.svelte';
+  import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
@@ -20,6 +22,7 @@
   let dataset = null;
   let frameTransformations = syncValue(model, 'frameTransformations', []);
   let frameColors = syncValue(model, 'frameColors', []);
+  let thumbnailData = syncValue(model, 'thumbnailData', {});
 
   let colorScheme = {
     name: 'tableau',
@@ -74,12 +77,10 @@
 
   function updateThumbnailID(id) {
     thumbnailID = id;
-    if (
-      thumbnailID != null &&
-      dataset.atFrame(thumbnailID, $currentFrame) != null
-    ) {
-      thumbnailNeighbors = dataset.atFrame(thumbnailID, $currentFrame)
-        .highlightIndexes;
+    if (thumbnailID != null && dataset.frame($currentFrame).has(thumbnailID)) {
+      thumbnailNeighbors = dataset
+        .frame($currentFrame)
+        .get(thumbnailID, 'highlightIndexes');
     } else {
       thumbnailNeighbors = [];
     }
@@ -92,11 +93,12 @@
       previewThumbnailNeighbors = [];
     } else if (
       thumbnailID != null &&
-      dataset.atFrame(thumbnailID, previewFrame) != null
+      dataset.frame(previewFrame).has(thumbnailID)
     ) {
       previewThumbnailID = thumbnailID;
-      previewThumbnailNeighbors = dataset.atFrame(thumbnailID, previewFrame)
-        .highlightIndexes;
+      previewThumbnailNeighbors = dataset
+        .frame(previewFrame)
+        .get(thumbnailID, 'highlightIndexes');
     } else {
       previewThumbnailID = null;
       if (thumbnailID != null)
@@ -107,12 +109,15 @@
   }
 
   function onScatterplotHover(e) {
-    updateThumbnailID(e.detail != null ? e.detail : canvas.clickedID || null);
+    if (e.detail != null) updateThumbnailID(e.detail);
+    else if (canvas.clickedIDs.length == 1)
+      updateThumbnailID(canvas.clickedIDs[0]);
+    else updateThumbnailID(null);
   }
 
   function onScatterplotClick(e) {
     if (e.detail.length != 1) updateThumbnailID(null);
-    else updateThumbnailID(e.detail);
+    else updateThumbnailID(e.detail[0]);
   }
 
   let oldFrame = 0;
@@ -141,6 +146,13 @@
         true
       );
     }, 0);
+  }
+
+  // Thumbnails
+
+  $: if (!!$thumbnailData && !!dataset) {
+    dataset.addThumbnails($thumbnailData);
+    canvas.updateThumbnails();
   }
 </script>
 
@@ -202,6 +214,35 @@
           />
         {/each}
       </div>
+    {/if}
+
+    {#if !!$thumbnailData}
+      {#if $thumbnailData.format == 'text_descriptions'}
+        <TextThumbnailViewer
+          thumbnailData={$thumbnailData}
+          width={200}
+          height={600}
+          frame={$currentFrame}
+          diffColor="red"
+          primaryThumbnail={thumbnailID}
+          secondaryThumbnails={thumbnailNeighbors}
+          secondaryDiff={previewThumbnailNeighbors}
+        />
+        {#if previewFrame != -1 && previewFrame != currentFrame}
+          <TextThumbnailViewer
+            thumbnailData={$thumbnailData}
+            width={200}
+            height={600}
+            primaryTitle="Preview"
+            frame={previewFrame}
+            diffColor="green"
+            message={previewThumbnailMessage}
+            primaryThumbnail={previewThumbnailID}
+            secondaryThumbnails={previewThumbnailNeighbors}
+            secondaryDiff={thumbnailNeighbors}
+          />
+        {/if}
+      {/if}
     {/if}
   </div>
 {/if}

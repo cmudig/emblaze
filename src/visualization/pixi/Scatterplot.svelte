@@ -10,6 +10,7 @@
   import { ColorIDMap } from '../utils/helpers';
   import ScatterplotViewportState from '../state/ScatterplotViewportState.svelte';
   import PixiScatterplot from './PixiScatterplot';
+  import { PixiInMemoryLoader } from './PixiInMemoryLoader';
 
   export let padding = 0.3;
 
@@ -154,7 +155,12 @@
 
   // Texture loading (for image labels)
 
-  $: if (!!thumbnailsURL && !!scatterplot) {
+  export function updateThumbnails() {
+    if (!scatterplot || !data) return;
+    loadSpritesheets();
+  }
+
+  $: if (!!scatterplot) {
     loadSpritesheets();
   }
 
@@ -163,20 +169,28 @@
       loader.destroy();
       scatterplot.setTextureLoader(null);
     }
-    if (!data.spritesheets) return;
+    if (!data || !data.spritesheets) return;
 
-    loader = new PIXI.Loader(thumbnailsURL);
-    data.spritesheets.forEach((name) => loader.add(name));
-    loader.onComplete.add(() => {
+    // All spritesheet data (JSON specs, images) are located in the
+    // data.spritesheets object.
+    loader = new PixiInMemoryLoader();
+    let content = data.spritesheets;
+    Promise.all(
+      Object.keys(content).map((name) => {
+        loader.add(
+          name,
+          content[name].spec,
+          content[name].image,
+          content[name].imageFormat || 'image/png'
+        );
+      })
+    ).then(() => {
       if (!!loader)
-        console.log(`Loaded ${data.spritesheets.length} spritesheets`);
+        console.log(
+          `Loaded ${Object.keys(content).length} spritesheets in-memory`
+        );
+      console.log(loader.resources['img_0.json'].textures);
     });
-    loader.onError.add(() => {
-      console.log('Error loading spritesheets');
-      loader = null;
-    });
-    loader.load();
-
     scatterplot.setTextureLoader(loader);
   }
 

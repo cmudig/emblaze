@@ -9,7 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
-from traitlets import Integer, Unicode, Dict, Bool, List, Float, observe
+from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, observe
 from ._frontend import module_name, module_version
 from . import moving_scatterplot as ms
 from .frame_colors import compute_colors
@@ -21,6 +21,8 @@ import multiprocessing as mp
 from functools import partial
 import numpy as np
 import affine
+import base64
+import os
 
 def apply_projection(hi_d, method='tsne', metric='euclidean', params={}):
     """
@@ -75,6 +77,9 @@ class DRViewer(DOMWidget):
     frameColors = List([]).tag(sync=True)
     # List of 3 x 3 matrices (expressed as 3x3 nested lists)
     frameTransformations = List([]).tag(sync=True)
+    
+    # JSON-serializable dictionary of thumbnail info
+    thumbnailData = Dict({}).tag(sync=True)
     
     def __init__(self, hi_d, labels, *args, **kwargs):
         super(DRViewer, self).__init__(*args, **kwargs)

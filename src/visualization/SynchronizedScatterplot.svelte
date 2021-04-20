@@ -192,6 +192,10 @@
     scatterplot.animateDatasetUpdate();
   }
 
+  export function updateThumbnails() {
+    if (!!scatterplot.updateThumbnails) scatterplot.updateThumbnails();
+  }
+
   export function reset() {
     clickedIDs = [];
     alignedIDs = [];
