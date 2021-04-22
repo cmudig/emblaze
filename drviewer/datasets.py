@@ -316,6 +316,15 @@ class EmbeddingSet:
 
         return EmbeddingSet(lo_ds, align=align and not pre_aligned)
     
+    def compute_neighbors(self, n_neighbors=10, metric='euclidean'):
+        """
+        Computes and saves a set of nearest neighbors in each embedding set according
+        to the Field.POSITION values. This can be accessed after completing this
+        step by calling .field(Field.NEIGHBORS).
+        """
+        for emb in self.embeddings:
+            emb.compute_neighbors(n_neighbors=n_neighbors, metric=metric)
+
     def to_json(self):
         """
         Converts this set of embeddings into a JSON object.

@@ -57,20 +57,19 @@ class DRViewer(DOMWidget):
     # JSON-serializable dictionary of thumbnail info
     thumbnailData = Dict({}).tag(sync=True)
     
-    def __init__(self, embeddings, thumbnails, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         embeddings: An EmbeddingSet object.
         thumbnails: A ThumbnailSet object.
         """
         super(DRViewer, self).__init__(*args, **kwargs)
-        assert len(embeddings) > 0, "Must have at least one embedding"
-        self.embeddings = embeddings
-        self.thumbnails = thumbnails
+        assert len(self.embeddings) > 0, "Must have at least one embedding"
         self.isLoading = False
         
     @observe("embeddings")
     def _observe_embeddings(self, change):
         embeddings = change.new
+        assert len(embeddings) > 0, "Must have at least one embedding"
         if embeddings is not None:
             self.data = embeddings.to_json()
         else:

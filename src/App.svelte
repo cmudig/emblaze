@@ -178,6 +178,7 @@
         frame={$currentFrame}
         {previewFrame}
         hoverable
+        showPreviewControls
         animateTransitions
         width={600}
         height={600}
@@ -210,6 +211,7 @@
             on:click={() => {
               if (previewFrame == i) {
                 $currentFrame = i;
+                previewFrame = -1;
               } else if ($currentFrame != i) previewFrame = i;
               else if ($currentFrame == i) previewFrame = -1;
             }}

@@ -54,7 +54,7 @@
     "lint": "eslint . --ext .ts,.tsx --fix",
     "lint:check": "eslint . --ext .ts,.tsx",
     "prepack": "npm run build",
-    "watch": "npm-run-all -p watch:*",
+    "watch": "npm run watch:nbextension",
     "watch:nbextension": "webpack --watch --mode=development",
     "watch:standalone": "webpack --watch --config-name standalone --mode=development",
     "serve": "webpack serve --config-name standalone --mode=development"
