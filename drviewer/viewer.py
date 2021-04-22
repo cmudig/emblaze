@@ -13,6 +13,7 @@ from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, observe
 from ._frontend import module_name, module_version
 from . import moving_scatterplot as ms
 from .frame_colors import compute_colors
+from .utils import Field
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
@@ -81,9 +82,23 @@ class DRViewer(DOMWidget):
     # JSON-serializable dictionary of thumbnail info
     thumbnailData = Dict({}).tag(sync=True)
     
-    def __init__(self, hi_d, labels, *args, **kwargs):
+    def __init__(self, embeddings, thumbnails, *args, **kwargs):
+        """
+        embeddings: An EmbeddingSet object.
+        thumbnails: A ThumbnailSet object.
+        """
         super(DRViewer, self).__init__(*args, **kwargs)
-        self.load_projections(hi_d, labels)
+        assert len(embeddings) > 0, "Must have at least one embedding"
+        self.data = embeddings.to_json()
+        self.isLoading = False
+        
+        # Compute padding based on first embedding
+        base_frame = embeddings[0].field(Field.POSITION)
+        mins = np.min(base_frame, axis=0)
+        maxes = np.max(base_frame, axis=0)
+        self.plotPadding = np.min(maxes - mins) * 0.2
+
+        # self.load_projections(hi_d, labels)
     
 
     def load_projections(self, hi_d, labels):

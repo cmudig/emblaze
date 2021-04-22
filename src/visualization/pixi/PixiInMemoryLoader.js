@@ -3,6 +3,8 @@ import * as PIXI from "pixi.js";
 /*
   A Loader-mimicking class that provides access to spritesheets already loaded
   in memory.
+
+  Thanks to https://github.com/pixijs/pixi.js/issues/5597
 */
 export class PixiInMemoryLoader {
   resources = {};

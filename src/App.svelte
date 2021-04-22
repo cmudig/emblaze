@@ -150,7 +150,7 @@
 
   // Thumbnails
 
-  $: if (!!$thumbnailData && !!dataset) {
+  $: if (!!$thumbnailData && !!dataset && !!canvas) {
     dataset.addThumbnails($thumbnailData);
     canvas.updateThumbnails();
   }
