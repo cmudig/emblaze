@@ -2,21 +2,21 @@
 <svelte:options accessors />
 
 <script>
-  import * as d3 from "d3";
-  import { getWithFallback } from "../utils/helpers";
+  import * as d3 from 'd3';
+  import { getWithFallback } from '../utils/helpers';
   import {
     MarkSet,
     Mark,
     Decoration,
     interpolateTo,
     easeInOut,
-  } from "../models/data_items";
-  import AnimationPool from "../models/animation_pool";
+  } from '../models/data_items';
+  import AnimationPool from '../models/animation_pool';
   import {
     DecorationStarGraph,
     WideningLineDecoration,
-  } from "../models/decorations";
-  import { onDestroy } from "svelte";
+  } from '../models/decorations';
+  import { onDestroy } from 'svelte';
 
   // State variables - these should fully encode the visual state of the scatterplot,
   // except for visibility due to scaling
@@ -44,7 +44,7 @@
   export let filter = new Set();
 
   // Mark styles may be specified in different formats for different renderers
-  export let colorFormat = "hex";
+  export let colorFormat = 'hex';
 
   // Constants
 
@@ -62,7 +62,7 @@
   function initializeMarks() {
     marks = new MarkSet(
       data.map((id) => {
-        let colorID = colorMap.id(id, { type: "mark", id });
+        let colorID = colorMap.id(id, { type: 'mark', id });
         return new Mark(
           id,
           {
@@ -78,7 +78,7 @@
             },
             halo: 0.0,
             fillStyle: {
-              valueFn: () => frame.get(id, "color", 0.0),
+              valueFn: () => frame.get(id, 'color', 0.0),
               transform: _transformColor,
               cached: true,
             },
@@ -86,16 +86,16 @@
             r: { valueFn: _getPointRadius, lazy: true },
             visible: frame.has(id) || false,
             colorID,
-            hoverText: frame.get(id, "hoverText"),
+            hoverText: frame.get(id, 'hoverText'),
           }
           // special
         );
       })
     );
-    marks.registerPreloadableProperty("x");
-    marks.registerPreloadableProperty("y");
-    marks.registerPreloadableProperty("r");
-    marks.registerPreloadableProperty("alpha");
+    marks.registerPreloadableProperty('x');
+    marks.registerPreloadableProperty('y');
+    marks.registerPreloadableProperty('r');
+    marks.registerPreloadableProperty('alpha');
 
     setupDecorationPools();
 
@@ -117,9 +117,9 @@
 
   function _getX(mark) {
     let id = mark.id;
-    let base = frame.get(id, "x", mark.attributes.x.last() || 0.0);
+    let base = frame.get(id, 'x', mark.attributes.x.last() || 0.0);
     if (previewFrame != null && previewProgress > 0.0) {
-      let dest = previewFrame.get(id, "x", base);
+      let dest = previewFrame.get(id, 'x', base);
       return base * (1 - previewProgress) + dest * previewProgress;
     }
     return base;
@@ -127,9 +127,9 @@
 
   function _getY(mark) {
     let id = mark.id;
-    let base = frame.get(id, "y", mark.attributes.y.last() || 0.0);
+    let base = frame.get(id, 'y', mark.attributes.y.last() || 0.0);
     if (previewFrame != null && previewProgress > 0.0) {
-      let dest = previewFrame.get(id, "y", base);
+      let dest = previewFrame.get(id, 'y', base);
       return base * (1 - previewProgress) + dest * previewProgress;
     }
     return base;
@@ -137,7 +137,7 @@
 
   let oldColorScale = null;
   $: if (!!marks && colorScale !== oldColorScale) {
-    marks.forEach((mark) => mark.updateTransform("fillStyle"));
+    marks.forEach((mark) => mark.updateTransform('fillStyle'));
     oldColorScale = colorScale;
   }
 
@@ -145,9 +145,9 @@
     let color = d3.color(colorScale(c));
     if (color == null) return null;
 
-    if (colorFormat == "hex") return color.formatHex();
-    else if (colorFormat == "rgb") return color.formatRgb();
-    else if (colorFormat == "rgbArray") {
+    if (colorFormat == 'hex') return color.formatHex();
+    else if (colorFormat == 'rgb') return color.formatRgb();
+    else if (colorFormat == 'rgbArray') {
       color = color.rgb();
       return [color.r / 255.0, color.g / 255.0, color.b / 255.0];
     }
@@ -156,7 +156,7 @@
 
   function _getPointAlpha(mark) {
     if (filter.size > 0 && !filter.has(mark.id)) return 0.0;
-    let alpha = frame.get(mark.id, "alpha") || 0.0;
+    let alpha = frame.get(mark.id, 'alpha') || 0.0;
 
     if (highlightedPoints.size != 0 && !highlightedPoints.has(mark.id))
       alpha *= 0.3;
@@ -165,7 +165,7 @@
   }
 
   function _getPointRadius(mark) {
-    let r = frame.get(mark.id, "r") || 0.0;
+    let r = frame.get(mark.id, 'r') || 0.0;
     if (highlightedPoints.size != 0 && !highlightedPoints.has(mark.id))
       r *= 0.7;
     if (selectedIDs.includes(mark.id)) r *= 1.5;
@@ -225,22 +225,22 @@
 
       // Update visible flag
       marks.setAll(
-        "visible",
+        'visible',
         (mark) => (!!newFrame && newFrame.has(mark.id)) || false
       );
 
       // Register animations
-      marks.animateComputed("x", interpolateTo, frameDuration, easeInOut);
-      marks.animateComputed("y", interpolateTo, frameDuration, easeInOut);
+      marks.animateComputed('x', interpolateTo, frameDuration, easeInOut);
+      marks.animateComputed('y', interpolateTo, frameDuration, easeInOut);
 
       marks.animateComputed(
-        "fillStyle",
+        'fillStyle',
         interpolateTo,
         frameDuration,
         easeInOut
       );
-      marks.animateComputed("r", interpolateTo, frameDuration, easeInOut);
-      marks.animateComputed("alpha", interpolateTo, frameDuration, easeInOut);
+      marks.animateComputed('r', interpolateTo, frameDuration, easeInOut);
+      marks.animateComputed('alpha', interpolateTo, frameDuration, easeInOut);
     }
 
     Object.keys(starGraphPool.getAllVisible()).forEach((id) => {
@@ -249,12 +249,12 @@
   }
 
   export function animateDatasetUpdate() {
-    marks.animateComputed("x", interpolateTo, frameDuration, easeInOut);
-    marks.animateComputed("y", interpolateTo, frameDuration, easeInOut);
-    marks.animateComputed("r", interpolateTo, defaultDuration, easeInOut);
-    marks.animateComputed("alpha", interpolateTo, defaultDuration, easeInOut);
+    marks.animateComputed('x', interpolateTo, frameDuration, easeInOut);
+    marks.animateComputed('y', interpolateTo, frameDuration, easeInOut);
+    marks.animateComputed('r', interpolateTo, defaultDuration, easeInOut);
+    marks.animateComputed('alpha', interpolateTo, defaultDuration, easeInOut);
     marks.animateComputed(
-      "fillStyle",
+      'fillStyle',
       interpolateTo,
       defaultDuration,
       easeInOut
@@ -271,16 +271,16 @@
     previewFrame !== frame &&
     oldPreviewProgress != previewProgress
   ) {
-    marks.updateComputed("x");
-    marks.updateComputed("y");
+    marks.updateComputed('x');
+    marks.updateComputed('y');
     oldPreviewProgress = previewProgress;
   }
 
   $: if (oldPreviewFrame !== previewFrame) {
     if (previewProgress != 0.0) {
       if (previewFrame == null) previewProgress = 0.0;
-      marks.animateComputed("x", interpolateTo, frameDuration, easeInOut);
-      marks.animateComputed("y", interpolateTo, frameDuration, easeInOut);
+      marks.animateComputed('x', interpolateTo, frameDuration, easeInOut);
+      marks.animateComputed('y', interpolateTo, frameDuration, easeInOut);
       oldPreviewProgress = previewProgress;
     }
     oldPreviewFrame = previewFrame;
@@ -321,7 +321,7 @@
 
   $: if (prevFilter !== filter) {
     if (prevFilter != null) {
-      marks.animateComputed("alpha", interpolateTo, defaultDuration);
+      marks.animateComputed('alpha', interpolateTo, defaultDuration);
     }
     if (previewInfo != null) {
       updatePreviewLines(previewInfo);
@@ -361,7 +361,7 @@
   export function selectElement(element, multi) {
     if (!element) {
       selectedIDs = [];
-    } else if (element.type == "mark") {
+    } else if (element.type == 'mark') {
       let selection = new Set(selectedIDs);
       if (multi) {
         if (selection.has(element.id)) selection.delete(element.id);
@@ -370,7 +370,7 @@
         selection = new Set([element.id]);
       }
       selectedIDs = Array.from(selection);
-    } else if (element.type == "halo") {
+    } else if (element.type == 'halo') {
       selectedIDs = element.ids;
     }
     hoveredID = null;
@@ -398,12 +398,12 @@
     highlightedPoints = new Set(
       selectedIDs
         .map((id) => {
-          return [id, ...frame.get(id, "highlightIndexes")];
+          return [id, ...frame.get(id, 'highlightIndexes')];
         })
         .flat()
     );
-    marks.animateComputed("r", interpolateTo, defaultDuration);
-    marks.animateComputed("alpha", interpolateTo, defaultDuration);
+    marks.animateComputed('r', interpolateTo, defaultDuration);
+    marks.animateComputed('alpha', interpolateTo, defaultDuration);
     updateLabelVisibility();
   }
 
@@ -485,11 +485,11 @@
         create: (nodeID) => {
           let mark = marks.getMarkByID(nodeID);
           if (!mark) return null;
-          return new Decoration("outline", [mark], {
+          return new Decoration('outline', [mark], {
             r: {
-              valueFn: () => mark.attr("r") + 3.0,
+              valueFn: () => mark.attr('r') + 3.0,
             },
-            color: "007bff",
+            color: '007bff',
             lineWidth: 2.0,
             zIndex: SelectionOutlineZIndex,
           });
@@ -506,11 +506,11 @@
         create: (nodeID) => {
           let mark = marks.getMarkByID(nodeID);
           if (!mark) return null;
-          return new Decoration("outline", [mark], {
+          return new Decoration('outline', [mark], {
             r: {
-              valueFn: () => mark.attr("r") + 3.0,
+              valueFn: () => mark.attr('r') + 3.0,
             },
-            color: "#aaaaaa",
+            color: '#aaaaaa',
             lineWidth: 2.0,
             zIndex: SelectionOutlineZIndex,
           });
@@ -529,20 +529,20 @@
           let dataItem = frame.byID(nodeID);
           if (!mark || !dataItem || !dataItem.label) return null;
           if (!!dataItem.label.text) {
-            return new Decoration("text", [mark], {
-              color: "black",
+            return new Decoration('text', [mark], {
+              color: 'black',
               text: dataItem.label.text,
               priority: { valueFn: () => _getLabelPriority(mark) },
               textScale: 1.0,
               alpha: 0.0,
             });
           } else if (!!dataItem.label.sheet) {
-            return new Decoration("image", [mark], {
+            return new Decoration('image', [mark], {
               color: null,
               labelInfo: dataItem.label,
               priority: { valueFn: () => _getLabelPriority(mark) },
               alpha: 0.0,
-              maxDim: 24.0, // maximum width or height
+              maxDim: 200.0, // maximum width or height
             });
           }
         },

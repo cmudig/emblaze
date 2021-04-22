@@ -37,13 +37,18 @@
   ) {
     console.log('Transforming', $frameTransformations);
     updateTransformations();
-  } else if (!!$data && !!$data['data']) {
-    console.log('Updating data');
-    dataset = new Dataset($data, 'color', 3);
-    if (!!$frameTransformations && $frameTransformations.length > 0)
-      updateTransformations(false);
-  } else {
-    dataset = null;
+  }
+
+  $: updateDataset($data);
+
+  function updateDataset(rawData) {
+    if (!!rawData && !!rawData['data']) {
+      dataset = new Dataset(rawData, 'color', 3);
+      if (!!$frameTransformations && $frameTransformations.length > 0)
+        updateTransformations(false);
+    } else {
+      dataset = null;
+    }
   }
 
   function updateTransformations(animate = true) {
@@ -150,8 +155,10 @@
 
   // Thumbnails
 
-  $: if (!!$thumbnailData && !!dataset && !!canvas) {
-    dataset.addThumbnails($thumbnailData);
+  $: if (!!dataset && !!canvas) {
+    if (!!$thumbnailData && !!$thumbnailData.format)
+      dataset.addThumbnails($thumbnailData);
+    else dataset.removeThumbnails();
     canvas.updateThumbnails();
   }
 </script>

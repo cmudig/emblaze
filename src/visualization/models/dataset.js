@@ -257,4 +257,10 @@ export class Dataset {
     if (!!this.thumbnailData)
       this.frames.forEach((f) => f.linkData("label", this.thumbnailData));
   }
+
+  removeThumbnails() {
+    this.spritesheets = null;
+    this.thumbnailData = null;
+    this.frames.forEach((f) => f.removeComputedField("label"));
+  }
 }

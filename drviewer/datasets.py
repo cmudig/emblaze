@@ -179,6 +179,8 @@ class Embedding(ColumnarData):
                 obj["r"] = sizes[index]
             if neighbors is not None:
                 obj["highlight"] = neighbors[index].tolist()
+            else:
+                obj["highlight"] = []
             result[id_val] = obj
         
         return result
@@ -202,7 +204,8 @@ class Embedding(ColumnarData):
             
         Returns:
             A new Embedding object representing the second input frame (the first
-            input frame is assumed to stay the same).
+            input frame is assumed to stay the same). Or, if return_transform is
+            True, returns the optimal transformation as an Affine object.
         """
         # Determine a set of points to use for comparison
         ids_to_compare = list(ids) if ids is not None else list(set(self.ids) & set(base_frame.ids))
@@ -242,6 +245,8 @@ class Embedding(ColumnarData):
                     best_variant = affine_transform(transform,
                         self.field(Field.POSITION))
 
+        if return_transform:
+            return best_variant
         return self.copy_with_fields({Field.POSITION: best_variant})
 
 class EmbeddingSet:
@@ -251,13 +256,15 @@ class EmbeddingSet:
     """
     def __init__(self, embs, align=True):
         if align:
-            if not all(lo_d.dimension() == 2 for lo_d in lo_ds):
+            if not all(emb.dimension() == 2 for emb in embs):
                 print("Embeddings are not 2D, skipping alignment")
                 self.embeddings = embs
             else:
-                self.embeddings = [embs[0]] + [emb.align_to(embs[0]) for emb in embs]
+                self.embeddings = [embs[0]] + [emb.align_to(embs[0]) for emb in embs[1:]]
         else:
             self.embeddings = embs
+
+        self.ids = np.array(sorted(set.union(*(set(emb.ids.tolist()) for emb in self.embeddings))))
     
     def __str__(self):
         return "<{} with {} embeddings:\n\t{}>".format(
@@ -315,5 +322,5 @@ class EmbeddingSet:
         """
         return {
             "data": [emb.to_json() for emb in self.embeddings],
-            "frameLabels": [emb.label or "Frame {}".format(i) for i, emb in self.embeddings]
+            "frameLabels": [emb.label or "Frame {}".format(i) for i, emb in enumerate(self.embeddings)]
         }

@@ -10,7 +10,9 @@ class Field:
     NEIGHBORS = "highlight"
     ALPHA = "alpha"
     
-    ALL_VALUES = [POSITION, COLOR, RADIUS, NEIGHBORS, ALPHA]
+    # Thumbnail fields
+    NAME = "name"
+    DESCRIPTION = "description"
     
 class ProjectionTechnique:
     """Names of projection techniques."""
