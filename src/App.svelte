@@ -192,7 +192,7 @@
         {colorScheme}
       />
     </div>
-    <!-- <div class="spinner-container">
+    <div class="spinner-container">
       <SpinnerButton
         bind:this={spinner}
         width={120}
@@ -201,7 +201,7 @@
         on:hover={(e) => (previewFrame = e.detail != null ? e.detail : -1)}
         on:select={(e) => ($currentFrame = e.detail)}
       />
-    </div> -->
+    </div>
     {#if !!dataset}
       <div
         style="margin-left: 24px; height: 600px; display: flex; flex-wrap: wrap; flex-direction: column; align-content: flex-start; width: 240px;"

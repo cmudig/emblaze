@@ -90,14 +90,16 @@ class Embedding(ColumnarData):
     A single set of high-dimensional embeddings, which can be represented as an
     n x k 2D numpy array (n = number of points, k = dimensionality).
     """
-    def __init__(self, data, ids=None, label=None):
+    def __init__(self, data, ids=None, label=None, metric='euclidean'):
         super().__init__(data, ids)
         assert Field.POSITION in data, "Field.POSITION is required"
         assert Field.COLOR in data, "Field.COLOR is required"
         self.label = label
+        self.metric = metric
+        self._distances = {}
 
     def copy(self):
-        return Embedding(self.data, self.ids, label=self.label)
+        return Embedding(self.data, self.ids, label=self.label, metric=self.metric)
     
     def dimension(self):
         """Returns the dimensionality of the Field.POSITION field."""
@@ -109,13 +111,17 @@ class Embedding(ColumnarData):
         parameter can be a callable, which will define a dimensionality
         reduction technique that takes as input a numpy array and a list of IDs,
         as well as any keyword arguments given to the params argument of this
-        method, and returns a dimension-reduced matrix.
+        method, and returns a dimension-reduced matrix. If no metric is provided
+        in the keyword params, the default metric of this Embedding is used.
         
         Returns: A new Embedding object with the Field.POSITION value set to the
             result of the projection.
         """
         hi_d = self.field(Field.POSITION)
         params = params or {}
+        if method != ProjectionTechnique.PCA:
+            params["metric"] = params.get("metric", self.metric)
+        
         if method == ProjectionTechnique.UMAP:
             import umap
             lo_d = umap.UMAP(**params).fit_transform(hi_d)
@@ -138,18 +144,49 @@ class Embedding(ColumnarData):
         return {self.index(id_val): other_emb.index(id_val)
                 for id_val in self.ids if id_val in other_emb}
     
-    def compute_neighbors(self, n_neighbors=10, metric='euclidean'):
+    def compute_neighbors(self, n_neighbors=10, metric=None):
         """
         Computes and saves a set of nearest neighbors in this embedding according
         to the Field.POSITION values. This can be accessed after completing this
-        step by calling .field(Field.NEIGHBORS).
+        step by calling .field(Field.NEIGHBORS). If the metric is not provided,
+        the default metric for this Embedding object is used.
         """
         pos = self.field(Field.POSITION)
-        neighbor_clf = NearestNeighbors(metric=metric,
+        neighbor_clf = NearestNeighbors(metric=metric or self.metric,
                                         n_neighbors=n_neighbors + 1).fit(pos)
         _, neigh_indexes = neighbor_clf.kneighbors(pos)
         self.set_field(Field.NEIGHBORS, neigh_indexes[:,1:])
         
+    def distances(self, ids=None, comparison_ids=None, metric=None):
+        """
+        Returns the pairwise distances from the given IDs to each other (or all
+        points to each other, if ids is None). If the metric is not provided,
+        the default metric for this Embedding object is used.
+        """
+        metric = metric or self.metric
+        if metric not in self._distances:
+            locations = self.field(Field.POSITION)
+            if metric == "euclidean":
+                self._distances[metric] = euclidean_distances(locations, locations)
+            elif metric == "cosine":
+                self._distances[metric] = cosine_distances(locations, locations)
+            elif metric == "precomputed":
+                self._distances[metric] = locations
+            else:
+                raise NotImplementedError("Unsupported metric for distances")
+        
+        if ids is None:
+            indexes = np.arange(len(self))
+        else:
+            indexes = self.index(ids)
+            
+        if comparison_ids is None:
+            comparison_indexes = indexes
+        else:
+            comparison_indexes = self.index(comparison_ids)
+
+        return self._distances[metric][indexes,:][:,comparison_indexes]
+
     def to_json(self):
         """
         Converts this embedding into a JSON object. Requires that the embedding

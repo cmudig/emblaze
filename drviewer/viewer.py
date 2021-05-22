@@ -11,7 +11,6 @@ TODO: Add module docstring
 from ipywidgets import DOMWidget
 from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, observe
 from ._frontend import module_name, module_version
-from . import moving_scatterplot as ms
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
@@ -108,6 +107,7 @@ class DRViewer(DOMWidget):
             np.eye(3).tolist()
             for i in range(len(self.embeddings))
         ]
+        self.frameColors = compute_colors(self.embeddings)
         
     def align_to_points(self, point_ids, peripheral_points):
         """
@@ -120,7 +120,7 @@ class DRViewer(DOMWidget):
         """
         if point_ids is None:
             self.reset_alignment()
-            # self.frameColors = compute_colors(self.frames)
+            self.frameColors = compute_colors(self.embeddings)
             return
     
         transformations = []
@@ -135,4 +135,4 @@ class DRViewer(DOMWidget):
                 allow_flips=False)).tolist())
 
         self.frameTransformations = transformations
-        # self.frameColors = compute_colors(self.frames, point_ids, peripheral_points)
+        self.frameColors = compute_colors(self.embeddings, point_ids, peripheral_points)

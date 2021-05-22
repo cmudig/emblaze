@@ -83,7 +83,7 @@ def compute_colors(frames, ids_of_interest=None, peripheral_points=None, scale_f
     Computes HSV colors for each frame.
     
     Args:
-        frames: A list of ScatterplotFrames.
+        frames: A list of Embeddings.
         ids_of_interest: A list of IDs to limit distance calculation to. If
             None, uses the full contents of each frame.
         scale_factor: Amount by which to scale the color wheel. Values larger
