@@ -13,6 +13,7 @@ export default class PixiMultiselect extends PIXI.Graphics {
   }
 
   addPoint(x, y) {
+    // console.log("Add new point to boundary!")
     this.points.push([x, y]);
   }
 

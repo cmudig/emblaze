@@ -119,6 +119,12 @@
     filter = new Set();
   }
 
+  // Radius select button
+  let showRadiusselectButton = false;
+  $: showRadiusselectButton = clickedIDs.length == 1;
+  
+  export let inRadiusselect = false;
+
   // Reset button
   let showResetButton = false;
   $: showResetButton =
@@ -260,6 +266,7 @@
     bind:filter
     bind:data
     bind:scalesNeutral
+    bind:inRadiusselect
     on:mouseover
     on:mouseout
     on:mousedown
@@ -270,6 +277,24 @@
   />
   {#if !thumbnail}
     <div id="button-panel">
+      {#if showRadiusselectButton && !inRadiusselect}
+        <button 
+          type="button"
+          class="btn"
+          on:click|preventDefault={() => (inRadiusselect = true)}>
+          Start Radius Select
+        </button>
+      {/if}
+
+      {#if showRadiusselectButton && inRadiusselect}
+        <button 
+          type="button"
+          class="btn"
+          on:click|preventDefault={() => (inRadiusselect = false)}>
+          End Radius Select
+        </button>
+      {/if}
+
       {#if showFilterButton}
         <button
           type="button"
