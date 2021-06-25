@@ -1,72 +1,35 @@
-// import * as PIXI from "pixi.js";
+import * as PIXI from "pixi.js";
+import { Circle } from "pixi.js";
 
-// export default class PixiRadiusselect extends PIXI.Graphics {
-//   points = [];
-//   radius = null;
-//   centerID = null;
-//   fillColor;
-//   strokeColor = null;
-//   hidden = false;
+export default class PixiRadiusSelect extends PIXI.Graphics {
+  centerID;
+  centerX;
+  centerY;
+  radius;
+  fillColor;
 
-//   constructor(centerX, centerY, radius = 1.0, fillColor, strokeColor = null) {
-//     super();
-//     this.centerX = centerX;
-//     this.centerY = centerY;
-//     this.radius = radius;
-//     this.fillColor = fillColor;
-//     this.strokeColor = strokeColor;
-//   }
+  constructor(centerID, centerX, centerY, radius, fillColor) {
+    super();
+    this.centerID = centerID;
+    this.centerX = centerX;
+    this.centerY = centerY;
+    this.radius = radius;
+    this.fillColor = fillColor;
+    this.circle = new Circle(centerX, centerY, radius);
+  }
 
-//   addPoint(x, y) {
-//     this.points.push([x, y]);
-//   }
-
-//   setPoints(points) {
-//     this.points = points;
-//   }
-
-//   _drawShape(dashed) {
-//     // Draw the path in reverse so the line dash moves
-//     let dashPattern = [2, 4]; // cumulative
-//     let currentDashPosition = 0;
-//     let currentDashIndex = 0;
-//     let dashOn = true;
-
-//     this.moveTo(
-//       this.points[this.points.length - 1][0],
-//       this.points[this.points.length - 1][1]
-//     );
-//     this.points
-//       .slice()
-//       .reverse()
-//       .forEach((point) => {
-//         if (dashed) {
-//           if (currentDashPosition == dashPattern[currentDashIndex]) {
-//             currentDashIndex = (currentDashIndex + 1) % dashPattern.length;
-//             dashOn = !dashOn;
-//           }
-//           currentDashPosition =
-//             (currentDashPosition + 1) %
-//             (dashPattern[dashPattern.length - 1] + 1);
-//         }
-
-//         if (dashOn) {
-//           this.lineTo(point[0], point[1]);
-//         } else {
-//           this.moveTo(point[0], point[1]);
-//         }
-//       });
-//   }
-
-//   update() {
-//     this.clear();
-//     if (this.strokeColor != null) {
-//       this.lineStyle(2, this.strokeColor, 0.6);
-//       this._drawShape(true);
-//     }
-//     this.lineStyle(0, this.strokeColor, 0.0);
-//     this.beginFill(this.fillColor, this.hidden ? 1.0 : 0.25);
-//     this._drawShape(false);
-//     this.endFill();
-//   }
-// }
+  
+  update(centerX, centerY) {
+    // 0x30cdfc
+    this.centerX = centerX;
+    this.centerY = centerY;
+    this.circle = new Circle(this.centerX, this.centerY, this.radius);
+    this.clear();
+    this.beginFill(this.fillColor, 0.5);
+    this.lineStyle(2, this.fillColor);
+    this.arc(0, 0, this.radius, 0, 2 * Math.PI);
+    this.position = {x: this.centerX, y: this.centerY};
+    // this.radiusselectContainer.addChild(circle);
+    this.endFill();
+  }
+}

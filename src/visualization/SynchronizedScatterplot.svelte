@@ -124,6 +124,7 @@
   $: showRadiusselectButton = clickedIDs.length == 1;
   
   export let inRadiusselect = false;
+  export let selectionRadius = 30;
 
   // Reset button
   let showResetButton = false;
@@ -267,6 +268,7 @@
     bind:data
     bind:scalesNeutral
     bind:inRadiusselect
+    bind:selectionRadius
     on:mouseover
     on:mouseout
     on:mousedown
@@ -277,10 +279,13 @@
   />
   {#if !thumbnail}
     <div id="button-panel">
+      {#if showRadiusselectButton && inRadiusselect}
+        <input type=range bind:value={selectionRadius} min=0 max=2500>
+      {/if}
       {#if showRadiusselectButton && !inRadiusselect}
         <button 
           type="button"
-          class="btn"
+          class="btn btn-secondary btn-sm"
           on:click|preventDefault={() => (inRadiusselect = true)}>
           Start Radius Select
         </button>
@@ -289,7 +294,7 @@
       {#if showRadiusselectButton && inRadiusselect}
         <button 
           type="button"
-          class="btn"
+          class="btn btn-secondary btn-sm"
           on:click|preventDefault={() => (inRadiusselect = false)}>
           End Radius Select
         </button>

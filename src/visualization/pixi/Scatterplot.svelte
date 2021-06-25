@@ -67,7 +67,9 @@
   //export let showRadiusselect = false;
   let centerX;
   let centerY;
+  let centerID;
   export let inRadiusselect = false;
+  export let selectionRadius = 30;
   //let defaultRadius = 25.0;
 
   onMount(() => {
@@ -328,8 +330,7 @@
     stateManager.selectElement(el, event.shiftKey);
 
     if (!!el && el.type == "mark") {
-      centerX = mouseX;
-      centerY = mouseY;
+      centerID = el.id;
     }
   }
 
@@ -349,28 +350,28 @@
     stateManager.selectElement({ type: "mark", id: pointID }, multi);
   }
 
-  function handleRadiusselect() {
-    //console.log("Entering handler!");
-    if (inRadiusselect) {
-      if (!scatterplot.radiusselect) {
-        scatterplot.startRadiusselect(centerX, centerY, 75.0);
-      }
-    } else {
-      if (!!scatterplot.radiusselect) {
-        clickedIDs = marks
-          .filter((mark) => {
-            if (mark.attr("alpha") < 0.01) return false;
-            let x = Math.round(mark.attr("x"));
-            let y = Math.round(mark.attr("y"));
-            return scatterplot.radiusselect.contains(x, y);
-          })
-          .map((mark) => mark.id);
-        dispatch("dataclick", clickedIDs);
+  // function handleRadiusselect() {
+  //   //console.log("Entering handler!");
+  //   if (inRadiusselect) {
+  //     if (!scatterplot.radiusselect) {
+  //       scatterplot.startRadiusSelect(centerX, centerY, 75.0);
+  //     }
+  //   } else {
+  //     if (!!scatterplot.radiusselect) {
+  //       clickedIDs = marks
+  //         .filter((mark) => {
+  //           if (mark.attr("alpha") < 0.01) return false;
+  //           let x = Math.round(mark.attr("x"));
+  //           let y = Math.round(mark.attr("y"));
+  //           return scatterplot.radiusselect.circle.contains(x, y);
+  //         })
+  //         .map((mark) => mark.id);
+  //       dispatch("dataclick", clickedIDs);
 
-        scatterplot.endRadiusselect();
-      }
-    }
-  }
+  //       scatterplot.endRadiusSelect();
+  //     }
+  //   }
+  // }
 
   // function stopRadiusselect() {
   //   clickedIDs = marks
@@ -426,23 +427,23 @@
   $: if (!!scatterplot) {
     if (inRadiusselect) {
       if (!scatterplot.radiusselect) {
-        scatterplot.startRadiusselect(centerX, centerY, 75.0);
+        scatterplot.startRadiusSelect(centerID, selectionRadius);
       }
     } else {
       if (!!scatterplot.radiusselect) {
-        if (!inRadiusselect) {
-          scatterplot.endMultiselect();
-        }
+        // if (!inRadiusselect) 
+        //   scatterplot.endRadiusSelect();
+        // }
         clickedIDs = marks
           .filter((mark) => {
             if (mark.attr("alpha") < 0.01) return false;
             let x = Math.round(mark.attr("x"));
             let y = Math.round(mark.attr("y"));
-            return scatterplot.radiusselect.contains(x, y);
+            return scatterplot.radiusselect.circle.contains(x, y);
           })
           .map((mark) => mark.id);
         dispatch("dataclick", clickedIDs);
-        scatterplot.endRadiusselect();
+        scatterplot.endRadiusSelect();
       }
     }
   }

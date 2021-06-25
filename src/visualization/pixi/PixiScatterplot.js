@@ -13,10 +13,11 @@ import {
 } from "./PixiDecorations";
 import { PixiTextLabel, PixiImageLabel, PixiLabelContainer } from "./PixiLabel";
 import PixiMultiselect from "./PixiMultiselect";
+import PixiRadiusSelect from "./PixiRadiusSelect";
 import PixiPointSet from "./PixiPointSet";
 import PixiColorIDMap from "./PixiColorIDMap";
 import { approxEquals } from "../utils/helpers";
-import { Circle } from "pixi.js";
+//import { Circle } from "pixi.js";
 
 const TextLabelZIndex = 1000;
 const HiddenRFactor = 1.0;
@@ -81,6 +82,11 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     this.updateDecorations();
     if (!!this.multiselect) {
       this.multiselect.update();
+    }
+
+    if (!!this.radiusselect) {
+      this.radiusselect.update(this.markSet.getMarkByID(this.radiusselect.centerID).attr("x"), 
+                               this.markSet.getMarkByID(this.radiusselect.centerID).attr("y"));
     }
   };
 
@@ -239,23 +245,19 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
   // ================= Radius Selection
   this.radiusselect = null;
 
-  this.startRadiusselect = function (centerX, centerY, radius) {
-    console.log("start radius");
+  this.startRadiusSelect = function (centerID, radius) {
     if (!!this.radiusselect) {
-      this.endRadiusselect();
+      this.endRadiusSelect();
     }
     
-    this.radiusselect = new Circle(centerX, centerY, radius)
-    var circle = new PIXI.Graphics();
-    circle.beginFill(0x30cdfc, 0.5);
-    circle.lineStyle(2, 0x30cdfc);
-    circle.arc(0, 0, radius, 0, 2 * Math.PI);
-    circle.position = {x: centerX, y: centerY};
-    this.radiusselectContainer.addChild(circle)
+    var centerX = this.markSet.getMarkByID(centerID).attr("x");
+    var centerY = this.markSet.getMarkByID(centerID).attr("y");
+    this.radiusselect = new PixiRadiusSelect(centerID, centerX, centerY, radius, 0x30cdfc);
+    this.radiusselectContainer.addChild(this.radiusselect);
   };
 
 
-  this.endRadiusselect = function () {
+  this.endRadiusSelect = function () {
     if (!!this.radiusselect) {
       //this.radiusselectContainer.removeChild(this.radiusselect);
       this.radiusselectContainer.removeChildren();
