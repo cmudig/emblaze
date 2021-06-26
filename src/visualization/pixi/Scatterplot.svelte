@@ -69,8 +69,8 @@
   let centerY;
   let centerID;
   export let inRadiusselect = false;
-  export let selectionRadius = 30;
-  //let defaultRadius = 25.0;
+  const defaultRadius = 25.0;
+  export let selectionRadius = defaultRadius;
 
   onMount(() => {
     PIXI.settings.FILTER_RESOLUTION = window.devicePixelRatio;
@@ -444,7 +444,14 @@
           .map((mark) => mark.id);
         dispatch("dataclick", clickedIDs);
         scatterplot.endRadiusSelect();
+        selectionRadius = defaultRadius;
       }
+    }
+  }
+
+  $: if (!!scatterplot) {
+    if (inRadiusselect && !!scatterplot.radiusselect) {
+      scatterplot.updateRadiusSelect(selectionRadius);
     }
   }
 

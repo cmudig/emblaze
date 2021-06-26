@@ -280,7 +280,7 @@
   {#if !thumbnail}
     <div id="button-panel">
       {#if showRadiusselectButton && inRadiusselect}
-        <input type=range bind:value={selectionRadius} min=0 max=2500>
+        <input type=range bind:value={selectionRadius} min=0 max=250>
       {/if}
       {#if showRadiusselectButton && !inRadiusselect}
         <button 

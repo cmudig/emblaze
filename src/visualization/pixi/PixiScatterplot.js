@@ -264,6 +264,13 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
       this.radiusselect = null;
     }
   };
+
+  this.updateRadiusSelect = function (newRadius) {
+    if (!!this.radiusselect) {
+      this.radiusselect.radius = newRadius;
+    }
+  };
+
   // ================= Selection
 
   this.multiselect = null;
