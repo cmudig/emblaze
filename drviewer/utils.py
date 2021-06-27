@@ -20,6 +20,11 @@ class ProjectionTechnique:
     TSNE = "tsne"
     ALIGNED_UMAP = "aligned-umap"
     PCA = "pca"
+    
+class DataType:
+    """Types of data, e.g. categorical vs continuous."""
+    CATEGORICAL = "categorical"
+    CONTINUOUS = "continuous"
 
 FLIP_FACTORS = [
     np.array([1, 1, 1]),
