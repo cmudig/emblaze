@@ -42,6 +42,8 @@
   export let filter = new Set();
   let followingIDs = [];
 
+  const minSelection = 3;
+
   // Data control
   export let data = null;
 
@@ -320,8 +322,9 @@
           disabled={alignedToSelection}
           type="button"
           class="btn btn-primary btn-sm"
-          on:click|preventDefault={() =>
-            (alignedIDs = getVicinityOfPoints(clickedIDs))}
+          on:click|preventDefault={clickedIDs.length > minSelection
+            ? alignedIDs = getVicinityOfPoints(clickedIDs)
+            : () => alert("Too Few Points Selected for Alignment!")}
         >
           Align</button
         >
