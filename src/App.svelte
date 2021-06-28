@@ -1,31 +1,31 @@
 <script>
-  import SynchronizedScatterplot from "./visualization/SynchronizedScatterplot.svelte";
-  import ScatterplotThumbnail from "./visualization/components/ScatterplotThumbnail.svelte";
-  import SpinnerButton from "./visualization/components/SpinnerButton.svelte";
-  import * as d3 from "d3";
-  import ColorSchemes from "./colorschemes";
+  import SynchronizedScatterplot from './visualization/SynchronizedScatterplot.svelte';
+  import ScatterplotThumbnail from './visualization/components/ScatterplotThumbnail.svelte';
+  import SpinnerButton from './visualization/components/SpinnerButton.svelte';
+  import * as d3 from 'd3';
+  import ColorSchemes from './colorschemes';
 
   export let model;
 
   // Creates a Svelte store (https://svelte.dev/tutorial/writable-stores) that syncs with the named Traitlet in widget.ts and example.py.
-  import { syncValue } from "./stores";
-  import { Dataset } from "./visualization/models/dataset.js";
-  import { onMount } from "svelte";
-  import { writable } from "svelte/store";
-  import ImageThumbnailViewer from "./visualization/components/ImageThumbnailViewer.svelte";
-  import TextThumbnailViewer from "./visualization/components/TextThumbnailViewer.svelte";
-  let data = syncValue(model, "data", {});
-  let isLoading = syncValue(model, "isLoading", true);
-  let loadingMessage = syncValue(model, "loadingMessage", "");
+  import { syncValue } from './stores';
+  import { Dataset } from './visualization/models/dataset.js';
+  import { onMount } from 'svelte';
+  import { writable } from 'svelte/store';
+  import ImageThumbnailViewer from './visualization/components/ImageThumbnailViewer.svelte';
+  import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
+  let data = syncValue(model, 'data', {});
+  let isLoading = syncValue(model, 'isLoading', true);
+  let loadingMessage = syncValue(model, 'loadingMessage', '');
 
-  let plotPadding = syncValue(model, "plotPadding", 10.0);
+  let plotPadding = syncValue(model, 'plotPadding', 10.0);
 
   let dataset = null;
-  let frameTransformations = syncValue(model, "frameTransformations", []);
-  let frameColors = syncValue(model, "frameColors", []);
-  let thumbnailData = syncValue(model, "thumbnailData", {});
+  let frameTransformations = syncValue(model, 'frameTransformations', []);
+  let frameColors = syncValue(model, 'frameColors', []);
+  let thumbnailData = syncValue(model, 'thumbnailData', {});
 
-  let colorScheme = syncValue(model, "colorScheme", "tableau");
+  let colorScheme = syncValue(model, 'colorScheme', 'tableau');
   let colorSchemeObject = null;
   $: {
     let newScheme = ColorSchemes.getColorScheme($colorScheme);
@@ -37,15 +37,15 @@
     $frameTransformations.length > 0 &&
     !!dataset
   ) {
-    console.log("Transforming", $frameTransformations);
+    console.log('Transforming', $frameTransformations);
     updateTransformations();
   }
 
   $: updateDataset($data);
 
   function updateDataset(rawData) {
-    if (!!rawData && !!rawData["data"]) {
-      dataset = new Dataset(rawData, "color", 3);
+    if (!!rawData && !!rawData['data']) {
+      dataset = new Dataset(rawData, 'color', 3);
       if (!!$frameTransformations && $frameTransformations.length > 0)
         updateTransformations(false);
     } else {
@@ -56,30 +56,30 @@
   function updateTransformations(animate = true) {
     dataset.transform($frameTransformations);
     if (!!canvas && animate) {
-      console.log("Updating frame", $currentFrame);
+      console.log('Updating frame', $currentFrame);
       canvas.animateDatasetUpdate();
     }
   }
 
   $: onMount(() => {
     // This logs if the widget is initialized successfully
-    console.log("Mounted DR widget successfully");
+    console.log('Mounted DR widget successfully');
   });
 
   let canvas;
 
-  let selectedIDs = syncValue(model, "selectedIDs", []);
+  let selectedIDs = syncValue(model, 'selectedIDs', []);
   $: console.log($selectedIDs);
 
-  let alignedIDs = syncValue(model, "alignedIDs", []);
+  let alignedIDs = syncValue(model, 'alignedIDs', []);
 
   let thumbnailID = null;
   let thumbnailNeighbors = [];
   let previewThumbnailID = null;
-  let previewThumbnailMessage = "";
+  let previewThumbnailMessage = '';
   let previewThumbnailNeighbors = [];
 
-  let currentFrame = syncValue(model, "currentFrame", 0);
+  let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = -1;
 
   function updateThumbnailID(id) {
@@ -87,7 +87,7 @@
     if (thumbnailID != null && dataset.frame($currentFrame).has(thumbnailID)) {
       thumbnailNeighbors = dataset
         .frame($currentFrame)
-        .get(thumbnailID, "highlightIndexes");
+        .get(thumbnailID, 'highlightIndexes');
     } else {
       thumbnailNeighbors = [];
     }
@@ -96,7 +96,7 @@
   function updatePreviewThumbnailID() {
     if (previewFrame == -1) {
       previewThumbnailID = null;
-      previewThumbnailMessage = "";
+      previewThumbnailMessage = '';
       previewThumbnailNeighbors = [];
     } else if (
       thumbnailID != null &&
@@ -105,12 +105,12 @@
       previewThumbnailID = thumbnailID;
       previewThumbnailNeighbors = dataset
         .frame(previewFrame)
-        .get(thumbnailID, "highlightIndexes");
+        .get(thumbnailID, 'highlightIndexes');
     } else {
       previewThumbnailID = null;
       if (thumbnailID != null)
         previewThumbnailMessage =
-          "The selected point is not present in the preview";
+          'The selected point is not present in the preview';
       previewThumbnailNeighbors = [];
     }
   }
@@ -142,7 +142,7 @@
 
   let spinner;
   $: if (!!spinner && !!$frameColors && $frameColors.length > 0) {
-    console.log("Spinner!");
+    console.log('Spinner!');
     setTimeout(() => {
       spinner.setColors(
         $frameColors.map((f) => ({
@@ -185,8 +185,8 @@
         width={600}
         height={600}
         backgroundColor={previewFrame != $currentFrame && previewFrame != -1
-          ? "#f8f8ff"
-          : "white"}
+          ? '#f8f8ff'
+          : 'white'}
         bind:clickedIDs={$selectedIDs}
         bind:alignedIDs={$alignedIDs}
         on:datahover={onScatterplotHover}
@@ -230,7 +230,7 @@
     {/if}
 
     {#if !!$thumbnailData}
-      {#if $thumbnailData.format == "text_descriptions"}
+      {#if $thumbnailData.format == 'text_descriptions'}
         <TextThumbnailViewer
           thumbnailData={$thumbnailData}
           width={200}
