@@ -322,7 +322,7 @@
           disabled={alignedToSelection}
           type="button"
           class="btn btn-primary btn-sm"
-          on:click|preventDefault={clickedIDs.length > minSelection
+          on:click|preventDefault={clickedIDs.length >= minSelection
             ? alignedIDs = getVicinityOfPoints(clickedIDs)
             : () => alert("Too Few Points Selected for Alignment!")}
         >
