@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import * as PIXI from 'pixi.js';
 
 /*
   A Loader-mimicking class that provides access to spritesheets already loaded
@@ -17,7 +17,7 @@ export class PixiInMemoryLoader {
    * @param {string} imageData raw base-64 encoded image data
    * @param {string} imageFormat the encoding of the image data
    */
-  add(name, spritesheetSpec, imageData, imageFormat = "image/png") {
+  add(name, spritesheetSpec, imageData, imageFormat = 'image/png') {
     let image = new Image();
     image.src = `data:${imageFormat};base64,${imageData}`;
 
@@ -32,7 +32,16 @@ export class PixiInMemoryLoader {
   }
 
   destroy() {
-    Object.values(this.resources).forEach((s) => s.destroy(true));
+    // Make sure the textures all get removed from the cache
+    Object.values(this.resources).forEach((s) => {
+      var baseTex;
+      Object.keys(s.textures).forEach((t) => {
+        PIXI.Texture.removeFromCache(t);
+        baseTex = s.textures[t].baseTexture; //they all have same base texture
+      });
+      PIXI.BaseTexture.removeFromCache(baseTex);
+      s.destroy(true);
+    });
     this.resources = {};
   }
 }

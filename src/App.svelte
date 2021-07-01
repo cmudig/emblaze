@@ -26,7 +26,7 @@
   let thumbnailData = syncValue(model, 'thumbnailData', {});
 
   let colorScheme = syncValue(model, 'colorScheme', 'tableau');
-  let colorSchemeObject = null;
+  let colorSchemeObject = ColorSchemes.getColorScheme($colorScheme);
   $: {
     let newScheme = ColorSchemes.getColorScheme($colorScheme);
     if (!!newScheme) colorSchemeObject = newScheme;
