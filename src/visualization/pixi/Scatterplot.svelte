@@ -155,8 +155,6 @@
 
   // Texture loading (for image labels)
 
-  let loadingSpritesheets = false;
-
   export function updateThumbnails() {
     if (!scatterplot || !data) return;
     loadSpritesheets();
@@ -171,13 +169,12 @@
       loader.destroy();
       scatterplot.setTextureLoader(null);
     }
-    if (!data || !data.spritesheets || loadingSpritesheets) return;
+    if (!data || !data.spritesheets) return;
 
     // All spritesheet data (JSON specs, images) are located in the
     // data.spritesheets object.
     loader = new PixiInMemoryLoader();
     let content = data.spritesheets;
-    loadingSpritesheets = true;
     Promise.all(
       Object.keys(content).map((name) => {
         loader.add(
@@ -193,11 +190,9 @@
           console.log(
             `Loaded ${Object.keys(content).length} spritesheets in-memory`
           );
-        loadingSpritesheets = false;
       })
       .catch((e) => {
         console.error('error loading spritesheets:', e);
-        loadingSpritesheets = false;
       });
     scatterplot.setTextureLoader(loader);
   }
