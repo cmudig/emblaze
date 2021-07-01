@@ -69,6 +69,7 @@
   let centerY;
   let centerID;
   export let inRadiusselect = false;
+  export let cancelRadiusselect = false;
   const defaultRadius = 25.0;
   export let selectionRadius = defaultRadius;
 
@@ -223,6 +224,11 @@
         mouseDown = false;
         lastX = 0;
         lastY = 0;
+
+        if (!!scatterplot.radiusselect) {
+          cancelRadiusselect = true;
+        }
+
         if (!mouseMoved) {
           handleClick(e);
           dispatch("click", e);
@@ -319,6 +325,15 @@
 
   function handleClick(event) {
     if (thumbnail) return;
+    
+    if (inRadiusselect) {
+      //cancelRadiusselect = true;
+      inRadiusselect = false;
+      scatterplot.endRadiusSelect();
+      cancelRadiusselect = false;
+      selectionRadius = defaultRadius;
+      //scatterplot.endRadiusSelect();
+    }
 
     scatterplot.clearInteractionMap();
 
@@ -329,7 +344,7 @@
     var el = getElementAtPoint(mouseX, mouseY);
     stateManager.selectElement(el, event.shiftKey);
 
-    if (!!el && el.type == "mark") {
+    if (!!el && el.type == "mark" && !scatterplot.radiusselect) {
       centerID = el.id;
     }
   }
@@ -431,23 +446,29 @@
       }
     } else {
       if (!!scatterplot.radiusselect) {
-        // if (!inRadiusselect) 
-        //   scatterplot.endRadiusSelect();
-        // }
         clickedIDs = marks
-          .filter((mark) => {
-            if (mark.attr("alpha") < 0.01) return false;
-            let x = Math.round(mark.attr("x"));
-            let y = Math.round(mark.attr("y"));
-            return scatterplot.radiusselect.circle.contains(x, y);
-          })
-          .map((mark) => mark.id);
+        .filter((mark) => {
+          if (mark.attr("alpha") < 0.01) return false;
+          let x = Math.round(mark.attr("x"));
+          let y = Math.round(mark.attr("y"));
+          return scatterplot.radiusselect.circle.contains(x, y);
+        })
+        .map((mark) => mark.id);
         dispatch("dataclick", clickedIDs);
         scatterplot.endRadiusSelect();
         selectionRadius = defaultRadius;
+        
       }
     }
   }
+
+  $: if (!!scatterplot && !!scatterplot.radiusselect && cancelRadiusselect) {
+    inRadiusselect = false;
+    scatterplot.endRadiusSelect();
+    cancelRadiusselect = false;
+    selectionRadius = defaultRadius;
+  }
+
 
   $: if (!!scatterplot) {
     if (inRadiusselect && !!scatterplot.radiusselect) {
@@ -501,7 +522,6 @@
     bind:selectedIDs={clickedIDs}
     bind:alignedIDs
     bind:previewProgress
-    bind:inRadiusselect
   />
   <ScatterplotViewportState
     bind:this={viewportManager}

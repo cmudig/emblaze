@@ -8,7 +8,7 @@
   import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
   import Scatterplot from './pixi/Scatterplot.svelte';
   import PreviewSlider from './components/PreviewSlider.svelte';
-
+  import PixiScatterplot from './pixi/PixiScatterplot';
   const dispatch = createEventDispatcher();
 
   let container;
@@ -126,6 +126,7 @@
   $: showRadiusselectButton = clickedIDs.length == 1;
   
   export let inRadiusselect = false;
+  export let cancelRadiusselect = false;
   export let selectionRadius = 30;
 
   // Reset button
@@ -270,6 +271,7 @@
     bind:data
     bind:scalesNeutral
     bind:inRadiusselect
+    bind:cancelRadiusselect
     bind:selectionRadius
     on:mouseover
     on:mouseout
@@ -283,11 +285,12 @@
     <div id="button-panel">
       {#if showRadiusselectButton && inRadiusselect}
         <input type=range bind:value={selectionRadius} min=0 max=250>
+        {selectionRadius} px
       {/if}
       {#if showRadiusselectButton && !inRadiusselect}
         <button 
           type="button"
-          class="btn btn-secondary btn-sm"
+          class="btn btn-primary btn-sm"
           on:click|preventDefault={() => (inRadiusselect = true)}>
           Start Radius Select
         </button>
@@ -296,13 +299,22 @@
       {#if showRadiusselectButton && inRadiusselect}
         <button 
           type="button"
-          class="btn btn-secondary btn-sm"
+          class="btn btn-primary btn-sm"
           on:click|preventDefault={() => (inRadiusselect = false)}>
           End Radius Select
         </button>
       {/if}
 
-      {#if showFilterButton}
+      {#if showRadiusselectButton && inRadiusselect}
+        <button 
+          type="button"
+          class="btn btn-secondary btn-sm"
+          on:click|preventDefault={() => {cancelRadiusselect = true;}}>
+          Cancel
+        </button>
+      {/if}
+
+      {#if showFilterButton && !inRadiusselect}
         <button
           type="button"
           class="btn btn-success btn-sm"
@@ -317,7 +329,7 @@
           {/if}
         </button>
       {/if}
-      {#if showAlignmentButton}
+      {#if showAlignmentButton && !inRadiusselect}
         <button
           disabled={alignedToSelection}
           type="button"
@@ -329,7 +341,7 @@
           Align</button
         >
       {/if}
-      {#if showResetButton}
+      {#if showResetButton && !inRadiusselect}
         <button
           transition:fade={{ duration: 100 }}
           type="button"

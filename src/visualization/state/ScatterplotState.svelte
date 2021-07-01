@@ -46,7 +46,7 @@
   // Mark styles may be specified in different formats for different renderers
   export let colorFormat = 'hex';
 
-  export let inRadiusselect = false;
+  
   // Constants
 
   const frameDuration = 4000;

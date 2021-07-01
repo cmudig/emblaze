@@ -259,8 +259,8 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
 
   this.endRadiusSelect = function () {
     if (!!this.radiusselect) {
-      //this.radiusselectContainer.removeChild(this.radiusselect);
-      this.radiusselectContainer.removeChildren();
+      this.radiusselectContainer.removeChild(this.radiusselect);
+      //this.radiusselectContainer.removeChildren();
       this.radiusselect = null;
     }
   };
