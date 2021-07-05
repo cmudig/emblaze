@@ -21,9 +21,11 @@ export default class PixiRadiusSelect extends PIXI.Graphics {
   _drawShape(dashed) {
     // Draw the path in reverse so the line dash moves
     let points = [];
-    for (let i = 0; i < 50; i++) {
-        let theta = ((2 * Math.PI) / 50.0) * i;
-        points.push([this.centerX + this.radius * Math.cos(theta), this.centerY + this.radius * Math.sin(theta)]);
+    let v = 100000.0;
+    for (let i = 0; i < 60; i++) {
+        let theta = ((2 * Math.PI) / 60.0) * i + v / (this.radius * 60.0);
+        points.push([this.centerX + this.radius * Math.cos(theta), 
+                     this.centerY + this.radius * Math.sin(theta)]);
     }
     let dashPattern = [2, 4]; // cumulative
     let currentDashPosition = 0;

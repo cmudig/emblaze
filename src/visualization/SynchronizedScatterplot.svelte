@@ -126,7 +126,7 @@
   $: showRadiusselectButton = clickedIDs.length == 1;
   
   export let inRadiusselect = false;
-  export let cancelRadiusselect = false;
+  //export let cancelRadiusselect = false;
   export let selectionRadius = 30;
 
   // Reset button
@@ -271,7 +271,6 @@
     bind:data
     bind:scalesNeutral
     bind:inRadiusselect
-    bind:cancelRadiusselect
     bind:selectionRadius
     on:mouseover
     on:mouseout
@@ -309,7 +308,7 @@
         <button 
           type="button"
           class="btn btn-secondary btn-sm"
-          on:click|preventDefault={() => {cancelRadiusselect = true;}}>
+          on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}>
           Cancel
         </button>
       {/if}

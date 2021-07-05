@@ -69,7 +69,6 @@
   let centerY;
   let centerID;
   export let inRadiusselect = false;
-  export let cancelRadiusselect = false;
   const defaultRadius = 25.0;
   export let selectionRadius = defaultRadius;
 
@@ -225,9 +224,6 @@
         lastX = 0;
         lastY = 0;
 
-        if (!!scatterplot.radiusselect) {
-          cancelRadiusselect = true;
-        }
 
         if (!mouseMoved) {
           handleClick(e);
@@ -327,12 +323,10 @@
     if (thumbnail) return;
     
     if (inRadiusselect) {
-      //cancelRadiusselect = true;
-      inRadiusselect = false;
-      scatterplot.endRadiusSelect();
-      cancelRadiusselect = false;
-      selectionRadius = defaultRadius;
-      //scatterplot.endRadiusSelect();
+      cancelRadiusSelect();
+      // inRadiusselect = false;
+      // scatterplot.endRadiusSelect();
+      // selectionRadius = defaultRadius;
     }
 
     scatterplot.clearInteractionMap();
@@ -432,6 +426,13 @@
     stateManager.animateDatasetUpdate();
   }
 
+  export function cancelRadiusSelect() {
+    inRadiusselect = false;
+    scatterplot.endRadiusSelect();
+    selectionRadius = defaultRadius;
+  }
+
+
   let viewportAnimating = false;
   $: if (!!scatterplot) {
     scatterplot.setInteractionEnabled(
@@ -460,13 +461,6 @@
         
       }
     }
-  }
-
-  $: if (!!scatterplot && !!scatterplot.radiusselect && cancelRadiusselect) {
-    inRadiusselect = false;
-    scatterplot.endRadiusSelect();
-    cancelRadiusselect = false;
-    selectionRadius = defaultRadius;
   }
 
 
