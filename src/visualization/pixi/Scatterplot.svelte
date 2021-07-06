@@ -324,9 +324,6 @@
     
     if (inRadiusselect) {
       cancelRadiusSelect();
-      // inRadiusselect = false;
-      // scatterplot.endRadiusSelect();
-      // selectionRadius = defaultRadius;
     }
 
     scatterplot.clearInteractionMap();
@@ -359,49 +356,12 @@
     stateManager.selectElement({ type: "mark", id: pointID }, multi);
   }
 
-  // function handleRadiusselect() {
-  //   //console.log("Entering handler!");
-  //   if (inRadiusselect) {
-  //     if (!scatterplot.radiusselect) {
-  //       scatterplot.startRadiusSelect(centerX, centerY, 75.0);
-  //     }
-  //   } else {
-  //     if (!!scatterplot.radiusselect) {
-  //       clickedIDs = marks
-  //         .filter((mark) => {
-  //           if (mark.attr("alpha") < 0.01) return false;
-  //           let x = Math.round(mark.attr("x"));
-  //           let y = Math.round(mark.attr("y"));
-  //           return scatterplot.radiusselect.circle.contains(x, y);
-  //         })
-  //         .map((mark) => mark.id);
-  //       dispatch("dataclick", clickedIDs);
-
-  //       scatterplot.endRadiusSelect();
-  //     }
-  //   }
-  // }
-
-  // function stopRadiusselect() {
-  //   clickedIDs = marks
-  //     .filter((mark) => {
-  //       if (mark.attr('alpha') < 0.01) return false;
-  //       let x = Math.round(mark.attr('x'));
-  //       let y = Math.round(mark.attr('y'));
-  //       return scatterplot.radiusselect.contains(x, y);
-  //     })
-  //     .map((mark) => mark.id);
-  //   dispatch('dataclick', clickedIDs);
-
-  //   scatterplot.endRadiusselect();
-  // }
 
   function onMultiselect(event) {
     if (!hoverable) {
-      //console.log("Not hoverable!");
       return;
     }
-    //console.log("Entering onMultiselect");
+    
     let map = scatterplot.makeMultiselectMap(
       pixiApp.renderer,
       actualWidth,

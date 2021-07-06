@@ -298,18 +298,15 @@
       {#if showRadiusselectButton && inRadiusselect}
         <button 
           type="button"
-          class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (inRadiusselect = false)}>
-          End Radius Select
-        </button>
-      {/if}
-
-      {#if showRadiusselectButton && inRadiusselect}
-        <button 
-          type="button"
           class="btn btn-secondary btn-sm"
           on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}>
           Cancel
+        </button>
+        <button 
+          type="button"
+          class="btn btn-primary btn-sm"
+          on:click|preventDefault={() => (inRadiusselect = false)}>
+          Select
         </button>
       {/if}
 

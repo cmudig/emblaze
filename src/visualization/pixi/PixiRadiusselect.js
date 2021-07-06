@@ -1,12 +1,15 @@
 import * as PIXI from "pixi.js";
 import { Circle } from "pixi.js";
 
+const v = 80.0;
+
 export default class PixiRadiusSelect extends PIXI.Graphics {
   centerID;
   centerX;
   centerY;
   radius;
   fillColor;
+  timeCounter;
 
   constructor(centerID, centerX, centerY, radius, fillColor) {
     super();
@@ -16,14 +19,14 @@ export default class PixiRadiusSelect extends PIXI.Graphics {
     this.radius = radius;
     this.fillColor = fillColor;
     this.circle = new Circle(centerX, centerY, radius);
+    this.timeCounter = 0;
   }
 
   _drawShape(dashed) {
     // Draw the path in reverse so the line dash moves
     let points = [];
-    let v = 100000.0;
     for (let i = 0; i < 60; i++) {
-        let theta = ((2 * Math.PI) / 60.0) * i + v / (this.radius * 60.0);
+        let theta = ((2 * Math.PI) / 60.0) * i + this.timeCounter * (v / (this.radius * 60.0));
         points.push([this.centerX + this.radius * Math.cos(theta), 
                      this.centerY + this.radius * Math.sin(theta)]);
     }
@@ -60,25 +63,13 @@ export default class PixiRadiusSelect extends PIXI.Graphics {
 
 
   update(centerX, centerY) {
+    this.timeCounter += 1;
     // 0x30cdfc
     this.centerX = centerX;
     this.centerY = centerY;
     this.circle = new Circle(this.centerX, this.centerY, this.radius);
-    // this.clear();
-    // this.beginFill(this.fillColor, 0.5);
-    // this.lineStyle(2, this.fillColor);
-    // for (let i = 0; i < 50; i += 2) {
-    //     this.arc(0, 0, this.radius, ((2 * Math.PI) / 50.0) * i, ((2 * Math.PI) / 50.0) * (i + 1));
-    // }
-    // //this.arc(0, 0, this.radius, 0, 2 * Math.PI);
-    // this.position = {x: this.centerX, y: this.centerY};
-    // // this.radiusselectContainer.addChild(circle);
-    // this.endFill();
+    
     this.clear();
-    // if (this.strokeColor != null) {
-    //   this.lineStyle(2, this.strokeColor, 0.6);
-    //   this._drawShape(true);
-    // }
     this.lineStyle(2, this.fillColor, 0.6);
     this._drawShape(true);
     this.lineStyle(0, this.fillColor, 0.0);
