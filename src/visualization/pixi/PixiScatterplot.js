@@ -13,9 +13,11 @@ import {
 } from "./PixiDecorations";
 import { PixiTextLabel, PixiImageLabel, PixiLabelContainer } from "./PixiLabel";
 import PixiMultiselect from "./PixiMultiselect";
+import PixiRadiusSelect from "./PixiRadiusSelect";
 import PixiPointSet from "./PixiPointSet";
 import PixiColorIDMap from "./PixiColorIDMap";
 import { approxEquals } from "../utils/helpers";
+//import { Circle } from "pixi.js";
 
 const TextLabelZIndex = 1000;
 const HiddenRFactor = 1.0;
@@ -26,6 +28,9 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
   this.marksContainer = new PIXI.Container();
   this.marksContainer.zIndex = 1;
   this.marksContainer.sortableChildren = true;
+
+  this.radiusselectContainer = new PIXI.Container();
+  this.radiusselectContainer.zIndex = 2;
 
   this.multiselectContainer = new PIXI.Container();
   this.multiselectContainer.zIndex = 2;
@@ -54,6 +59,7 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
   this.addTo = function (container, ticker, renderer) {
     container.addChild(this.marksContainer);
     container.addChild(this.multiselectContainer);
+    container.addChild(this.radiusselectContainer);
     this.labelContainer.renderer = renderer;
 
     ticker.add(this._tickerFn, this);
@@ -76,6 +82,11 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     this.updateDecorations();
     if (!!this.multiselect) {
       this.multiselect.update();
+    }
+
+    if (!!this.radiusselect) {
+      this.radiusselect.update(this.markSet.getMarkByID(this.radiusselect.centerID).attr("x"), 
+                               this.markSet.getMarkByID(this.radiusselect.centerID).attr("y"));
     }
   };
 
@@ -230,6 +241,36 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     this.interactionMap = null;
   };
 
+
+  // ================= Radius Selection
+  this.radiusselect = null;
+
+  this.startRadiusSelect = function (centerID, radius) {
+    if (!!this.radiusselect) {
+      this.endRadiusSelect();
+    }
+    
+    var centerX = this.markSet.getMarkByID(centerID).attr("x");
+    var centerY = this.markSet.getMarkByID(centerID).attr("y");
+    this.radiusselect = new PixiRadiusSelect(centerID, centerX, centerY, radius, 0x30cdfc);
+    this.radiusselectContainer.addChild(this.radiusselect);
+  };
+
+
+  this.endRadiusSelect = function () {
+    if (!!this.radiusselect) {
+      this.radiusselectContainer.removeChild(this.radiusselect);
+      //this.radiusselectContainer.removeChildren();
+      this.radiusselect = null;
+    }
+  };
+
+  this.updateRadiusSelect = function (newRadius) {
+    if (!!this.radiusselect) {
+      this.radiusselect.radius = newRadius;
+    }
+  };
+
   // ================= Selection
 
   this.multiselect = null;
@@ -245,7 +286,7 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
   // Adds a new point to the multiselect
   this.updateMultiselect = function (newPoint) {
     this.multiselect.addPoint(newPoint[0], newPoint[1]);
-    this._multiselectFBO = null;
+    //this._multiselectFBO = null;
   };
 
   // Removes and clears the multiselect
@@ -254,7 +295,7 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
       this.multiselectContainer.removeChild(this.multiselect);
       this.multiselect = null;
     }
-    this._multiselectFBO = null;
+    //this._multiselectFBO = null;
   };
 
   const HiddenMultiselectColor = 0x303030; // rgb(48, 48, 48)

@@ -8,7 +8,7 @@
   import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
   import Scatterplot from './pixi/Scatterplot.svelte';
   import PreviewSlider from './components/PreviewSlider.svelte';
-
+  import PixiScatterplot from './pixi/PixiScatterplot';
   const dispatch = createEventDispatcher();
 
   let container;
@@ -41,6 +41,8 @@
   export let alignedIDs = [];
   export let filter = new Set();
   let followingIDs = [];
+
+  const minSelection = 3;
 
   // Data control
   export let data = null;
@@ -118,6 +120,14 @@
   function clearFilter() {
     filter = new Set();
   }
+
+  // Radius select button
+  let showRadiusselectButton = false;
+  $: showRadiusselectButton = clickedIDs.length == 1;
+  
+  export let inRadiusselect = false;
+  //export let cancelRadiusselect = false;
+  export let selectionRadius = 30;
 
   // Reset button
   let showResetButton = false;
@@ -260,6 +270,8 @@
     bind:filter
     bind:data
     bind:scalesNeutral
+    bind:inRadiusselect
+    bind:selectionRadius
     on:mouseover
     on:mouseout
     on:mousedown
@@ -270,7 +282,35 @@
   />
   {#if !thumbnail}
     <div id="button-panel">
-      {#if showFilterButton}
+      {#if showRadiusselectButton && inRadiusselect}
+        <input type=range bind:value={selectionRadius} min=0 max=250>
+        {selectionRadius} px
+      {/if}
+      {#if showRadiusselectButton && !inRadiusselect}
+        <button 
+          type="button"
+          class="btn btn-primary btn-sm"
+          on:click|preventDefault={() => (inRadiusselect = true)}>
+          Start Radius Select
+        </button>
+      {/if}
+
+      {#if showRadiusselectButton && inRadiusselect}
+        <button 
+          type="button"
+          class="btn btn-secondary btn-sm"
+          on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}>
+          Cancel
+        </button>
+        <button 
+          type="button"
+          class="btn btn-primary btn-sm"
+          on:click|preventDefault={() => (inRadiusselect = false)}>
+          Select
+        </button>
+      {/if}
+
+      {#if showFilterButton && !inRadiusselect}
         <button
           type="button"
           class="btn btn-success btn-sm"
@@ -285,18 +325,19 @@
           {/if}
         </button>
       {/if}
-      {#if showAlignmentButton}
+      {#if showAlignmentButton && !inRadiusselect}
         <button
           disabled={alignedToSelection}
           type="button"
           class="btn btn-primary btn-sm"
-          on:click|preventDefault={() =>
-            (alignedIDs = getVicinityOfPoints(clickedIDs))}
+          on:click|preventDefault={clickedIDs.length >= minSelection
+            ? alignedIDs = getVicinityOfPoints(clickedIDs)
+            : () => alert("Too Few Points Selected for Alignment!")}
         >
           Align</button
         >
       {/if}
-      {#if showResetButton}
+      {#if showResetButton && !inRadiusselect}
         <button
           transition:fade={{ duration: 100 }}
           type="button"

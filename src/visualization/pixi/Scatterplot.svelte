@@ -11,6 +11,7 @@
   import ScatterplotViewportState from '../state/ScatterplotViewportState.svelte';
   import PixiScatterplot from './PixiScatterplot';
   import { PixiInMemoryLoader } from './PixiInMemoryLoader';
+  import Scatterplot from '../canvas/Scatterplot.svelte';
 
   export let padding = 0.3;
 
@@ -63,6 +64,13 @@
   let pixiApp;
   let loader;
   let scatterplot;
+  //export let showRadiusselect = false;
+  let centerX;
+  let centerY;
+  let centerID;
+  export let inRadiusselect = false;
+  const defaultRadius = 25.0;
+  export let selectionRadius = defaultRadius;
 
   onMount(() => {
     PIXI.settings.FILTER_RESOLUTION = window.devicePixelRatio;
@@ -224,6 +232,7 @@
         mouseDown = false;
         lastX = 0;
         lastY = 0;
+
         if (!mouseMoved) {
           handleClick(e);
           dispatch('click', e);
@@ -287,7 +296,10 @@
     } else if (!mouseDown) {
       let hoveredItem = getElementAtPoint(mouseX, mouseY);
       if (!!hoveredItem && hoveredItem.type == 'mark') {
+        // centerX = mouseX;
+        // centerY = mouseY;
         hoveredID = hoveredItem.id;
+        //handleRadiusselect();
       } else {
         hoveredID = null;
       }
@@ -318,13 +330,22 @@
   function handleClick(event) {
     if (thumbnail) return;
 
+    if (inRadiusselect) {
+      cancelRadiusSelect();
+    }
+
     scatterplot.clearInteractionMap();
 
     var rect = event.target.getBoundingClientRect();
     var mouseX = event.clientX - rect.left; //x position within the element.
     var mouseY = event.clientY - rect.top; //y position within the element.
+
     var el = getElementAtPoint(mouseX, mouseY);
     stateManager.selectElement(el, event.shiftKey);
+
+    if (!!el && el.type == 'mark' && !scatterplot.radiusselect) {
+      centerID = el.id;
+    }
   }
 
   // Selection
@@ -344,7 +365,9 @@
   }
 
   function onMultiselect(event) {
-    if (!hoverable) return;
+    if (!hoverable) {
+      return;
+    }
 
     let map = scatterplot.makeMultiselectMap(
       pixiApp.renderer,
@@ -370,11 +393,45 @@
     stateManager.animateDatasetUpdate();
   }
 
+  export function cancelRadiusSelect() {
+    inRadiusselect = false;
+    scatterplot.endRadiusSelect();
+    selectionRadius = defaultRadius;
+  }
+
   let viewportAnimating = false;
   $: if (!!scatterplot) {
     scatterplot.setInteractionEnabled(
       !viewportAnimating && !(mouseDown && mouseMoved)
     );
+  }
+
+  $: if (!!scatterplot) {
+    if (inRadiusselect) {
+      if (!scatterplot.radiusselect) {
+        scatterplot.startRadiusSelect(centerID, selectionRadius);
+      }
+    } else {
+      if (!!scatterplot.radiusselect) {
+        clickedIDs = marks
+          .filter((mark) => {
+            if (mark.attr('alpha') < 0.01) return false;
+            let x = Math.round(mark.attr('x'));
+            let y = Math.round(mark.attr('y'));
+            return scatterplot.radiusselect.circle.contains(x, y);
+          })
+          .map((mark) => mark.id);
+        dispatch('dataclick', clickedIDs);
+        scatterplot.endRadiusSelect();
+        selectionRadius = defaultRadius;
+      }
+    }
+  }
+
+  $: if (!!scatterplot) {
+    if (inRadiusselect && !!scatterplot.radiusselect) {
+      scatterplot.updateRadiusSelect(selectionRadius);
+    }
   }
 
   // Clear interaction map when filter is changed
