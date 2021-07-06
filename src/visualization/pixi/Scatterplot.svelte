@@ -80,6 +80,12 @@
     container.appendChild(view);
     initializeMouseHandlers(view);
 
+    // Read size of container when the view is fully laid out
+    setTimeout(() => {
+      actualWidth = container.clientWidth;
+      actualHeight = container.clientHeight;
+    }, 0);
+
     window.addEventListener('resize', handleResize);
   });
 

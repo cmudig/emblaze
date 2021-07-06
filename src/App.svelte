@@ -12,8 +12,11 @@
   import { Dataset } from './visualization/models/dataset.js';
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
+  import { fade } from 'svelte/transition';
   import ImageThumbnailViewer from './visualization/components/ImageThumbnailViewer.svelte';
   import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
+  import Legend from './visualization/components/Legend.svelte';
+
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
@@ -155,6 +158,8 @@
     }, 0);
   }
 
+  let showLegend = false;
+
   // Thumbnails
 
   $: if (!!dataset && !!canvas) {
@@ -171,7 +176,81 @@
     <i class="text-primary fa fa-spinner fa-spin" />
   </div>
 {:else}
-  <div style="display: flex; align-items: flex-start;">
+  <div class="vis-container">
+    <div class="thumbnail-container">
+      {#each [...d3.range(dataset.frameCount)] as i}
+        <div class="thumbnail-item">
+          <ScatterplotThumbnail
+            on:click={() => {
+              if (previewFrame == i) {
+                $currentFrame = i;
+                previewFrame = -1;
+              } else if ($currentFrame != i) previewFrame = i;
+              else if ($currentFrame == i) previewFrame = -1;
+            }}
+            isSelected={$currentFrame == i}
+            isPreviewing={previewFrame == i && previewFrame != $currentFrame}
+            colorScale={!!dataset
+              ? dataset.colorScale(colorSchemeObject)
+              : null}
+            data={dataset}
+            frame={!!dataset ? dataset.frame(i) : null}
+            accentColor={!!$frameColors && $frameColors.length > i
+              ? $frameColors[i]
+              : null}
+          />
+        </div>
+      {/each}
+    </div>
+
+    <div class="scatterplot">
+      <div class="scatterplot-parent">
+        <SynchronizedScatterplot
+          bind:this={canvas}
+          data={dataset}
+          padding={$plotPadding}
+          frame={$currentFrame}
+          {previewFrame}
+          hoverable
+          showPreviewControls
+          animateTransitions
+          backgroundColor={previewFrame != $currentFrame && previewFrame != -1
+            ? '#f8f8ff'
+            : 'white'}
+          bind:clickedIDs={$selectedIDs}
+          bind:alignedIDs={$alignedIDs}
+          on:datahover={onScatterplotHover}
+          on:dataclick={onScatterplotClick}
+          colorScheme={colorSchemeObject}
+        />
+        {#if showLegend}
+          <div
+            class="legend-container"
+            transition:fade
+            on:mouseout={() => {
+              showLegend = false;
+            }}
+          >
+            <Legend
+              colorScale={!!dataset
+                ? dataset.colorScale(colorSchemeObject)
+                : null}
+              type={colorSchemeObject.type || 'continuous'}
+            />
+          </div>
+        {:else}
+          <button
+            class="btn btn-light btn-sm legend-hoverable"
+            on:mouseover={() => {
+              showLegend = true;
+            }}>Legend</button
+          >
+        {/if}
+      </div>
+    </div>
+  </div>
+
+  <!--<div style="display: flex; align-items: flex-start;">
     <div class="scatterplot-container">
       <SynchronizedScatterplot
         bind:this={canvas}
@@ -257,15 +336,55 @@
         {/if}
       {/if}
     {/if}
-  </div>
+  </div>-->
 {/if}
 
 <style>
-  .scatterplot-container {
-    width: 602px;
-    height: 602px;
-    border: 1px solid #444;
+  .scatterplot {
+    height: 100%;
+    flex: 1 1;
+    min-width: 0;
   }
+
+  .scatterplot-parent {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    /*border: 1px solid #bbb;*/
+  }
+
+  .vis-container {
+    width: 100%;
+    height: 600px;
+    display: flex;
+    justify-items: stretch;
+    /*border: 2px solid #bbb;*/
+  }
+
+  .thumbnail-item {
+    border-bottom: 1px solid #bbb;
+  }
+
+  .thumbnail-container {
+    flex-shrink: 0;
+    overflow-y: scroll;
+    border: 1px solid #bbb;
+  }
+
+  .legend-hoverable {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    margin-bottom: 0 !important;
+  }
+  .legend-container {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    border-radius: 4px;
+    background-color: rgba(225, 225, 225, 0.8);
+  }
+
   .spinner-container {
     padding-left: 16px;
   }

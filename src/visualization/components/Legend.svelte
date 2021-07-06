@@ -1,13 +1,13 @@
 <script>
-  import * as d3 from "d3";
-  import * as d3legend from "d3-svg-legend";
-  import { onMount } from "svelte";
+  import * as d3 from 'd3';
+  import * as d3legend from 'd3-svg-legend';
+  import { onMount } from 'svelte';
 
   export let width = 600;
   export let height = 500;
   export let colorScale = null;
   export let numCells = 10; // for continuous
-  export let type = "categorical";
+  export let type = 'categorical';
 
   let container;
   let svg;
@@ -23,55 +23,64 @@
 
     if (!colorScale) return;
 
+    let totalWidth;
+    let totalHeight;
+    if (type == 'categorical') {
+      totalWidth = 300;
+      totalHeight = colorScale.domain().length * 25 - 5 + 20;
+    } else if (type == 'continuous') {
+      totalWidth = 30 * numCells + 1 * (numCells - 1) + 40;
+      totalHeight = 100;
+    }
+
     svg = d3
       .select(container)
-      .append("svg")
-      .style("width", width)
-      .style("height", height)
-      .style("font-family", "sans-serif");
+      .append('svg')
+      .style('width', totalWidth)
+      .style('height', totalHeight)
+      .style('font-family', 'sans-serif');
 
-    if (type == "categorical") {
+    if (type == 'categorical') {
       //let domainLabels = colorScale.domain();
       svg
-        .append("g")
-        .attr("class", "legendOrdinal")
-        .attr("transform", "translate(20, 20)");
+        .append('g')
+        .attr('class', 'legendOrdinal')
+        .attr('transform', 'translate(20, 20)');
 
       let legendOrdinal = d3legend
         .legendColor()
-        .shape("circle")
-        .shapePadding(10)
+        .shape('circle')
+        .shapePadding(5)
         .shapeRadius(10)
-        .orient("vertical")
+        .orient('vertical')
         .scale(colorScale);
 
-      svg.select(".legendOrdinal").call(legendOrdinal);
-    } else if (type == "continuous") {
-      let totalWidth = 30 * numCells + 1 * (numCells - 1);
+      svg.select('.legendOrdinal').call(legendOrdinal);
+    } else if (type == 'continuous') {
       svg
-        .append("g")
-        .attr("class", "legendLinear")
-        .attr(
-          "transform",
-          "translate(" + (width / 2 - totalWidth / 2).toFixed(1) + ",20)"
-        );
+        .append('g')
+        .attr('class', 'legendLinear')
+        .attr('transform', 'translate(20,20)');
 
       let legendLinear = d3legend
         .legendColor()
         .shapeWidth(30)
         .shapePadding(1)
         .cells(numCells)
-        .orient("horizontal")
+        .orient('horizontal')
         .scale(colorScale);
 
-      svg.select(".legendLinear").call(legendLinear);
+      svg.select('.legendLinear').call(legendLinear);
     }
   }
 
   onMount(() => {
-    console.log("updating mount");
+    console.log('updating mount');
     update();
   });
 </script>
 
-<div bind:this={container} style="width: {width}px; height: {height}px;" />
+<div
+  bind:this={container}
+  style="position: relative; max-width: {width}px; max-height: {height}px;"
+/>

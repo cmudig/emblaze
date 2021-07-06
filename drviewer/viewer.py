@@ -143,7 +143,7 @@ class DRViewer(DOMWidget):
         for emb in self.embeddings:
             transformations.append(affine_to_matrix(emb.align_to(
                 self.embeddings[self.currentFrame], 
-                ids=list(set(point_ids + peripheral_points)),
+                ids=list(set(point_ids)),
                 base_transform=base_transform,
                 return_transform=True,
                 allow_flips=False)).tolist())
