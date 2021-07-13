@@ -124,7 +124,7 @@
   // Radius select button
   let showRadiusselectButton = false;
   $: showRadiusselectButton = clickedIDs.length == 1;
-  
+
   export let inRadiusselect = false;
   //export let cancelRadiusselect = false;
   export let selectionRadius = 30;
@@ -283,29 +283,32 @@
   {#if !thumbnail}
     <div id="button-panel">
       {#if showRadiusselectButton && inRadiusselect}
-        <input type=range bind:value={selectionRadius} min=0 max=250>
+        <input type="range" bind:value={selectionRadius} min="0" max="250" />
         {selectionRadius} px
       {/if}
       {#if showRadiusselectButton && !inRadiusselect}
-        <button 
+        <button
           type="button"
           class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (inRadiusselect = true)}>
+          on:click|preventDefault={() => (inRadiusselect = true)}
+        >
           Start Radius Select
         </button>
       {/if}
 
       {#if showRadiusselectButton && inRadiusselect}
-        <button 
+        <button
           type="button"
           class="btn btn-secondary btn-sm"
-          on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}>
+          on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}
+        >
           Cancel
         </button>
-        <button 
+        <button
           type="button"
           class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (inRadiusselect = false)}>
+          on:click|preventDefault={() => (inRadiusselect = false)}
+        >
           Select
         </button>
       {/if}
@@ -331,8 +334,11 @@
           type="button"
           class="btn btn-primary btn-sm"
           on:click|preventDefault={clickedIDs.length >= minSelection
-            ? alignedIDs = getVicinityOfPoints(clickedIDs)
-            : () => alert("Too Few Points Selected for Alignment!")}
+            ? (alignedIDs = getVicinityOfPoints(clickedIDs))
+            : () =>
+                alert(
+                  `You must select at least ${minSelection} points to align.`
+                )}
         >
           Align</button
         >

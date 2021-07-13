@@ -2,66 +2,105 @@
   export let width = 200;
   export let height = 600;
 
-  export let thumbnailData = null;
-  export let primaryTitle = "Selected item";
-  export let secondaryTitle = "Neighbors";
-  export let primaryThumbnail = null;
-  export let secondaryThumbnails = [];
+  export let dataset = null;
+  export let primaryTitle = 'Selection';
+  export let secondaryTitle = 'Neighbors';
+  export let thumbnailIDs = [];
   export let secondaryDiff = []; // list of IDs to use as references
-  export let diffColor = "green";
+  export let diffColor = 'green';
   export let frame = -1;
-  export let message = "";
+  export let message = '';
 
-  let primaryText = "";
-  let secondaryTexts = [];
+  let secondaryIDs = [];
 
   let _secondaryDiff = new Set();
   $: _secondaryDiff = new Set(secondaryDiff);
 
   function makeThumbnailInfo(id, secondary, diff) {
-    if (!thumbnailData || !id) return "";
-    let item = thumbnailData.items["" + id];
-    if (!item) return "";
+    if (!dataset || !id || frame < 0) return '';
+    let item = dataset.frame(frame).get(id, 'label');
+    if (!item) return '';
 
-    let color = "black";
+    let color = 'black';
     if (secondary && diff.size > 0 && !diff.has(id)) {
       color = diffColor;
     }
-    let infoText = `<p style="color: ${color}">` + (item.name || "") + "</p>";
+    let infoText = `<p style="color: ${color}">` + (item.text || '') + '</p>';
     if (!secondary && !!item.description) {
       infoText +=
         '<p style="color: grey;">' +
-        item.description.replace("\n", '</p><p style="color: grey;">') +
-        "</p>";
-    }
-    if (!secondary && frame >= 0 && !!item.frames && !!item.frames[frame]) {
-      infoText += "<p><strong>In frame " + frame + ":</strong></p>";
-      infoText +=
-        '<p style="color: grey;">' +
-        item.frames[frame].replace("\n", '</p><p style="color: grey;">') +
-        "</p>";
+        item.description.replace('\n', '</p><p style="color: grey;">') +
+        '</p>';
     }
     return infoText;
   }
 
-  $: secondaryTexts = secondaryThumbnails.map((t) =>
-    makeThumbnailInfo(t, true, _secondaryDiff)
-  );
-
-  $: primaryText = makeThumbnailInfo(primaryThumbnail, false);
+  $: if (thumbnailIDs.length == 1 && frame >= 0) {
+    secondaryIDs = dataset
+      .frame(frame)
+      .get(thumbnailIDs[0], 'highlightIndexes');
+  } else {
+    secondaryIDs = [];
+  }
 </script>
 
-<div style="width: {width}px; height: {height}px;">
-  <h4>{primaryTitle}</h4>
-  {#if !!message}
-    <p>{message}</p>
+<div class="thumbnail-parent" style="width: {width}px; height: {height}px;">
+  {#if thumbnailIDs.length == 0}
+    <div class="no-selection">
+      Click to select points in the scatter plot, or Shift + drag to select a
+      region.
+    </div>
+  {:else}
+    <div class="header-bar">
+      {primaryTitle}
+    </div>
+    <div class="thumbnails-container">
+      {#if !!message}
+        <p>{message}</p>
+      {/if}
+      {#each thumbnailIDs as id}
+        <div class="thumbnail-row">
+          {@html makeThumbnailInfo(id, false)}
+        </div>
+      {/each}
+    </div>
   {/if}
-  {@html primaryText}
-  <h4>{secondaryTitle}</h4>
-  {#each secondaryTexts as text}
-    {@html text}
-  {/each}
+  {#if secondaryIDs.length > 0}
+    <div class="header-bar">
+      {secondaryTitle}
+    </div>
+    <div class="thumbnails-container">
+      {#each secondaryIDs as id}
+        <div class="thumbnail-row">
+          {@html makeThumbnailInfo(id, true, _secondaryDiff)}
+        </div>
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
+  .thumbnail-parent {
+    overflow-y: scroll;
+  }
+  .no-selection {
+    width: 100%;
+    text-align: center;
+    margin-top: 80px;
+    color: #999;
+    padding: 0 24px;
+  }
+  .thumbnail-row {
+    padding: 4px 6px;
+  }
+  .thumbnails-container {
+    padding: 12px;
+  }
+  .header-bar {
+    background-color: #ddd;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 10pt;
+    text-transform: uppercase;
+  }
 </style>

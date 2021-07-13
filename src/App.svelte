@@ -22,6 +22,7 @@
   let loadingMessage = syncValue(model, 'loadingMessage', '');
 
   let plotPadding = syncValue(model, 'plotPadding', 10.0);
+  let height = 600; // can make this reactive later
 
   let dataset = null;
   let frameTransformations = syncValue(model, 'frameTransformations', []);
@@ -32,6 +33,7 @@
   let colorSchemeObject = ColorSchemes.getColorScheme($colorScheme);
   $: {
     let newScheme = ColorSchemes.getColorScheme($colorScheme);
+    console.log('New color scheme:', newScheme, colorSchemeObject);
     if (!!newScheme) colorSchemeObject = newScheme;
   }
 
@@ -76,7 +78,8 @@
 
   let alignedIDs = syncValue(model, 'alignedIDs', []);
 
-  let thumbnailID = null;
+  let thumbnailIDs = [];
+  let thumbnailHover = false;
   let thumbnailNeighbors = [];
   let previewThumbnailID = null;
   let previewThumbnailMessage = '';
@@ -84,17 +87,6 @@
 
   let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = -1;
-
-  function updateThumbnailID(id) {
-    thumbnailID = id;
-    if (thumbnailID != null && dataset.frame($currentFrame).has(thumbnailID)) {
-      thumbnailNeighbors = dataset
-        .frame($currentFrame)
-        .get(thumbnailID, 'highlightIndexes');
-    } else {
-      thumbnailNeighbors = [];
-    }
-  }
 
   function updatePreviewThumbnailID() {
     if (previewFrame == -1) {
@@ -119,21 +111,18 @@
   }
 
   function onScatterplotHover(e) {
-    if (e.detail != null) updateThumbnailID(e.detail);
-    else if (canvas.clickedIDs.length == 1)
-      updateThumbnailID(canvas.clickedIDs[0]);
-    else updateThumbnailID(null);
+    if (e.detail != null) {
+      thumbnailIDs = [e.detail];
+      thumbnailHover = true;
+    } else {
+      thumbnailIDs = $selectedIDs;
+      thumbnailHover = false;
+    }
   }
 
-  function onScatterplotClick(e) {
-    if (e.detail.length != 1) updateThumbnailID(null);
-    else updateThumbnailID(e.detail[0]);
-  }
-
-  let oldFrame = 0;
-  $: if (oldFrame != $currentFrame) {
-    updateThumbnailID(thumbnailID);
-    oldFrame = $currentFrame;
+  $: {
+    thumbnailIDs = $selectedIDs;
+    thumbnailHover = false;
   }
 
   let oldPreviewFrame = -1;
@@ -220,7 +209,6 @@
           bind:clickedIDs={$selectedIDs}
           bind:alignedIDs={$alignedIDs}
           on:datahover={onScatterplotHover}
-          on:dataclick={onScatterplotClick}
           colorScheme={colorSchemeObject}
         />
         {#if showLegend}
@@ -248,95 +236,23 @@
         {/if}
       </div>
     </div>
-  </div>
-
-  <!--<div style="display: flex; align-items: flex-start;">
-    <div class="scatterplot-container">
-      <SynchronizedScatterplot
-        bind:this={canvas}
-        data={dataset}
-        padding={$plotPadding}
-        frame={$currentFrame}
-        {previewFrame}
-        hoverable
-        showPreviewControls
-        animateTransitions
-        width={600}
-        height={600}
-        backgroundColor={previewFrame != $currentFrame && previewFrame != -1
-          ? '#f8f8ff'
-          : 'white'}
-        bind:clickedIDs={$selectedIDs}
-        bind:alignedIDs={$alignedIDs}
-        on:datahover={onScatterplotHover}
-        on:dataclick={onScatterplotClick}
-        colorScheme={colorSchemeObject}
-      />
-    </div>
-    <div class="spinner-container">
-      <SpinnerButton
-        bind:this={spinner}
-        width={120}
-        height={120}
-        selectedIndex={$currentFrame}
-        on:hover={(e) => (previewFrame = e.detail != null ? e.detail : -1)}
-        on:select={(e) => ($currentFrame = e.detail)}
-      />
-    </div>
-    {#if !!dataset}
-      <div
-        style="margin-left: 24px; height: 600px; display: flex; flex-wrap: wrap; flex-direction: column; align-content: flex-start; width: 240px;"
-      >
-        {#each [...d3.range(dataset.frameCount)] as i}
-          <ScatterplotThumbnail
-            on:click={() => {
-              if (previewFrame == i) {
-                $currentFrame = i;
-                previewFrame = -1;
-              } else if ($currentFrame != i) previewFrame = i;
-              else if ($currentFrame == i) previewFrame = -1;
-            }}
-            isSelected={$currentFrame == i}
-            isPreviewing={previewFrame == i && previewFrame != $currentFrame}
-            colorScale={!!dataset
-              ? dataset.colorScale(colorSchemeObject)
-              : null}
-            data={dataset}
-            frame={!!dataset ? dataset.frame(i) : null}
-          />
-        {/each}
-      </div>
-    {/if}
-
     {#if !!$thumbnailData}
-      {#if $thumbnailData.format == 'text_descriptions'}
-        <TextThumbnailViewer
-          thumbnailData={$thumbnailData}
-          width={200}
-          height={600}
-          frame={$currentFrame}
-          diffColor="red"
-          primaryThumbnail={thumbnailID}
-          secondaryThumbnails={thumbnailNeighbors}
-          secondaryDiff={previewThumbnailNeighbors}
-        />
-        {#if previewFrame != -1 && previewFrame != currentFrame}
+      <div class="sidebar">
+        {#if $thumbnailData.format == 'text_descriptions'}
           <TextThumbnailViewer
-            thumbnailData={$thumbnailData}
-            width={200}
+            {dataset}
+            primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
+            width={300}
             height={600}
-            primaryTitle="Preview"
-            frame={previewFrame}
-            diffColor="green"
-            message={previewThumbnailMessage}
-            primaryThumbnail={previewThumbnailID}
-            secondaryThumbnails={previewThumbnailNeighbors}
-            secondaryDiff={thumbnailNeighbors}
+            frame={$currentFrame}
+            diffColor="red"
+            {thumbnailIDs}
+            secondaryDiff={previewThumbnailNeighbors}
           />
         {/if}
-      {/if}
+      </div>
     {/if}
-  </div>-->
+  </div>
 {/if}
 
 <style>
@@ -385,7 +301,9 @@
     background-color: rgba(225, 225, 225, 0.8);
   }
 
-  .spinner-container {
-    padding-left: 16px;
+  .sidebar {
+    width: 300px;
+    height: 600px;
+    border: 1px solid #bbb;
   }
 </style>
