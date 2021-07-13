@@ -1,8 +1,10 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
+  export let fillWidth = false;
+  export let placeholder = 'Search...';
   let autocomplete;
   let autocompleteDropdownVisible = false;
   let autocompleteDropdown;
@@ -28,15 +30,16 @@
 
   function onPointSelectorItemClick(itemID) {
     selectedItem = itemID;
-    dispatch("change", itemID);
+    dispatch('change', itemID);
   }
 
   $: if (selectedItem != null) autocompleteText = selectedItem.toString();
 </script>
 
-<div>
+<div class="autocomplete-container" style={fillWidth ? 'width: 100%;' : ''}>
   <input
     type="text"
+    {placeholder}
     bind:this={autocomplete}
     bind:value={autocompleteText}
     data-toggle="dropdown"
@@ -44,6 +47,7 @@
     on:blur={() => {
       setTimeout(() => (autocompleteDropdownVisible = false), 100);
     }}
+    style={fillWidth ? 'width: 100%;' : ''}
   />
   <ul
     class="dropdown-menu"
@@ -63,6 +67,12 @@
 </div>
 
 <style>
+  .autocomplete-container {
+    position: relative;
+  }
+  .dropdown-item {
+    padding: 4px 12px;
+  }
   .dropdown-item:hover {
     background-color: #ddd;
     cursor: pointer;

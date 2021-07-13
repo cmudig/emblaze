@@ -16,6 +16,7 @@
   import ImageThumbnailViewer from './visualization/components/ImageThumbnailViewer.svelte';
   import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
   import Legend from './visualization/components/Legend.svelte';
+  import Autocomplete from './visualization/components/Autocomplete.svelte';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -157,6 +158,28 @@
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
   }
+
+  // Autocomplete
+
+  let pointSelectorOptions = [];
+
+  function updatePointSelectorOptions() {
+    if (dataset == null || $currentFrame < 0) return;
+    let frame = dataset.frame($currentFrame);
+    pointSelectorOptions = frame.getIDs().map((itemID) => {
+      if (!!frame.get(itemID, 'label')) {
+        return {
+          value: itemID,
+          text: `${itemID} - ${frame.get(itemID, 'label').text}`,
+        };
+      }
+      return { value: itemID, text: itemID.toString() };
+    });
+  }
+
+  $: if (dataset != null && $currentFrame >= 0) {
+    updatePointSelectorOptions();
+  }
 </script>
 
 {#if $isLoading}
@@ -236,22 +259,31 @@
         {/if}
       </div>
     </div>
-    {#if !!$thumbnailData}
-      <div class="sidebar">
-        {#if $thumbnailData.format == 'text_descriptions'}
-          <TextThumbnailViewer
-            {dataset}
-            primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
-            width={300}
-            height={600}
-            frame={$currentFrame}
-            diffColor="red"
-            {thumbnailIDs}
-            secondaryDiff={previewThumbnailNeighbors}
-          />
-        {/if}
+    <div class="sidebar">
+      <div class="action-toolbar">
+        <Autocomplete
+          placeholder="Search for a point..."
+          options={pointSelectorOptions}
+          fillWidth={true}
+          on:change={(e) => ($selectedIDs = [e.detail])}
+        />
       </div>
-    {/if}
+      {#if !!$thumbnailData}
+        <div class="thumbnail-sidebar">
+          {#if $thumbnailData.format == 'text_descriptions'}
+            <TextThumbnailViewer
+              {dataset}
+              primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
+              frame={$currentFrame}
+              diffColor="red"
+              {thumbnailIDs}
+              secondaryDiff={previewThumbnailNeighbors}
+            />
+          {/if}
+        </div>
+      {/if}
+    </div>
+    <div class="toolbar" />
   </div>
 {/if}
 
@@ -304,6 +336,19 @@
   .sidebar {
     width: 300px;
     height: 600px;
+    display: flex;
+    flex-direction: column;
+    margin-right: 8px;
+  }
+
+  .thumbnail-sidebar {
     border: 1px solid #bbb;
+    flex-grow: 1;
+  }
+  .action-toolbar {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    padding: 4px;
   }
 </style>

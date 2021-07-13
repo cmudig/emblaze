@@ -1,6 +1,6 @@
 <script>
-  export let width = 200;
-  export let height = 600;
+  export let width = null;
+  export let height = null;
 
   export let dataset = null;
   export let primaryTitle = 'Selection';
@@ -44,7 +44,12 @@
   }
 </script>
 
-<div class="thumbnail-parent" style="width: {width}px; height: {height}px;">
+<div
+  class="thumbnail-parent"
+  style="width: {!!width ? `${width}px` : '100%'}; height: {!!height
+    ? `${height}px`
+    : '100%'};"
+>
   {#if thumbnailIDs.length == 0}
     <div class="no-selection">
       Click to select points in the scatter plot, or Shift + drag to select a
