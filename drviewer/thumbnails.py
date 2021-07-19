@@ -66,7 +66,7 @@ class ImageThumbnails(Thumbnails):
     Defines a set of image thumbnails. All thumbnails are scaled to the same
     dimensions to fit in a set of spritesheets.
     """
-    def __init__(self, images, ids=None, grid_dimensions=None, image_size=None):
+    def __init__(self, images, ids=None, grid_dimensions=None, image_size=None, names=None, descriptions=None):
         """
         Args:
             images: An array of images, each represented as a numpy array. The
@@ -81,13 +81,42 @@ class ImageThumbnails(Thumbnails):
                 If this is not defined, images will be resized to a maximum of
                 MAX_IMAGE_DIM x MAX_IMAGE_DIM, maintaining aspect ratio if all
                 images are the same size.
+            names: If provided, adds text names to each point. Names are assumed
+                to be in the same order as images.
+            descriptions: Similar to names, but these descriptions may be longer
+                and only show on the currently selected point(s).
         """
         super().__init__("spritesheet")
         self.make_spritesheets(images, ids or np.arange(len(images)), grid_dimensions, image_size)
         
+        if names is not None:
+            self.text_data = ColumnarData({
+                Field.NAME: names
+            }, ids)
+            if descriptions is not None:
+                self.text_data.set_field(Field.DESCRIPTION, descriptions)
+        elif descriptions is not None:
+            self.text_data = ColumnarData({
+                Field.DESCRIPTION: descriptions
+            }, ids)
+        else:
+            self.text_data = None
+        
     def to_json(self):
         result = super().to_json()
         result["spritesheets"] = self.spritesheets
+        if self.text_data is not None:
+            names = self.text_data.field(Field.NAME)
+            descriptions = self.text_data.field(Field.DESCRIPTION)
+            result["items"] = {
+                id_val: {
+                    "id": id_val,
+                    "name": str(names[i]) if names is not None else "",
+                    "description": str(descriptions[i]) if descriptions is not None else "",
+                    "frames": {} # Not implemented
+                } for i, id_val in enumerate(self.text_data.ids)
+            }
+
         return result
 
     def make_spritesheets(self, images, ids, grid_dimensions=None, image_size=None):

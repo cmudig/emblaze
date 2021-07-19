@@ -13,8 +13,7 @@
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import { fade } from 'svelte/transition';
-  import ImageThumbnailViewer from './visualization/components/ImageThumbnailViewer.svelte';
-  import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
+  import DefaultThumbnailViewer from './visualization/components/DefaultThumbnailViewer.svelte';
   import Legend from './visualization/components/Legend.svelte';
   import Autocomplete from './visualization/components/Autocomplete.svelte';
 
@@ -73,6 +72,7 @@
   });
 
   let canvas;
+  let thumbnailViewer;
 
   let selectedIDs = syncValue(model, 'selectedIDs', []);
   $: console.log($selectedIDs);
@@ -89,28 +89,6 @@
   let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = -1;
 
-  function updatePreviewThumbnailID() {
-    if (previewFrame == -1) {
-      previewThumbnailID = null;
-      previewThumbnailMessage = '';
-      previewThumbnailNeighbors = [];
-    } else if (
-      thumbnailID != null &&
-      dataset.frame(previewFrame).has(thumbnailID)
-    ) {
-      previewThumbnailID = thumbnailID;
-      previewThumbnailNeighbors = dataset
-        .frame(previewFrame)
-        .get(thumbnailID, 'highlightIndexes');
-    } else {
-      previewThumbnailID = null;
-      if (thumbnailID != null)
-        previewThumbnailMessage =
-          'The selected point is not present in the preview';
-      previewThumbnailNeighbors = [];
-    }
-  }
-
   function onScatterplotHover(e) {
     if (e.detail != null) {
       thumbnailIDs = [e.detail];
@@ -124,13 +102,6 @@
   $: {
     thumbnailIDs = $selectedIDs;
     thumbnailHover = false;
-  }
-
-  let oldPreviewFrame = -1;
-
-  $: if (oldPreviewFrame != previewFrame) {
-    updatePreviewThumbnailID();
-    oldPreviewFrame = previewFrame;
   }
 
   let spinner;
@@ -157,6 +128,7 @@
       dataset.addThumbnails($thumbnailData);
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
+    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
   }
 
   // Autocomplete
@@ -270,16 +242,15 @@
       </div>
       {#if !!$thumbnailData}
         <div class="thumbnail-sidebar">
-          {#if $thumbnailData.format == 'text_descriptions'}
-            <TextThumbnailViewer
-              {dataset}
-              primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
-              frame={$currentFrame}
-              diffColor="red"
-              {thumbnailIDs}
-              secondaryDiff={previewThumbnailNeighbors}
-            />
-          {/if}
+          <DefaultThumbnailViewer
+            bind:this={thumbnailViewer}
+            {dataset}
+            primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
+            frame={$currentFrame}
+            {previewFrame}
+            diffColor="red"
+            {thumbnailIDs}
+          />
         </div>
       {/if}
     </div>
@@ -344,6 +315,7 @@
   .thumbnail-sidebar {
     border: 1px solid #bbb;
     flex-grow: 1;
+    overflow-y: scroll;
   }
   .action-toolbar {
     display: flex;

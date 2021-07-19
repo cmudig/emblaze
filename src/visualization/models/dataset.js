@@ -226,30 +226,38 @@ export class Dataset {
 
   // Adds metadata to each point based on the given thumbnails.json data
   addThumbnails(thumbnailData) {
-    if (thumbnailData.format == 'spritesheet') {
-      this.spritesheets = thumbnailData.spritesheets;
-      let positionData = {};
-      Object.keys(this.spritesheets).forEach((sheet) =>
-        Object.keys(this.spritesheets[sheet].spec.frames).forEach((id) => {
-          positionData[id] = { sheet, texture: id };
-        })
-      );
-      this.thumbnailData = new ColumnarData(
-        {
-          sheet: { array: Array },
-          texture: { array: Array },
-        },
-        positionData
-      );
-    } else if (thumbnailData.format == 'text_descriptions') {
-      this.spritesheets = null;
-      let positionData = {};
+    if (!thumbnailData) return;
+
+    let positionData = {};
+    if (!!thumbnailData.items) {
       Object.keys(thumbnailData.items).forEach((id) => {
         positionData[id] = {
           text: thumbnailData.items[id].name,
           description: thumbnailData.items[id].description,
         };
       });
+    }
+
+    if (!!thumbnailData.spritesheets) {
+      this.spritesheets = thumbnailData.spritesheets;
+      Object.keys(this.spritesheets).forEach((sheet) =>
+        Object.keys(this.spritesheets[sheet].spec.frames).forEach((id) => {
+          if (!positionData[id]) positionData[id] = {};
+          positionData[id].sheet = sheet;
+          positionData[id].texture = id;
+        })
+      );
+      this.thumbnailData = new ColumnarData(
+        {
+          sheet: { array: Array },
+          texture: { array: Array },
+          text: { array: Array },
+          description: { array: Array },
+        },
+        positionData
+      );
+    } else {
+      this.spritesheets = null;
       this.thumbnailData = new ColumnarData(
         {
           text: { array: Array },
@@ -258,6 +266,7 @@ export class Dataset {
         positionData
       );
     }
+
     if (!!this.thumbnailData)
       this.frames.forEach((f) => f.linkData('label', this.thumbnailData));
   }
