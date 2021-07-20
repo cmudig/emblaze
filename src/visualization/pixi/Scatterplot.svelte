@@ -74,6 +74,7 @@
 
   onMount(() => {
     PIXI.settings.FILTER_RESOLUTION = window.devicePixelRatio;
+    console.log('on scatteprlot mount');
     pixiApp = new PIXI.Application({
       antialias: true,
       transparent: true,
@@ -121,7 +122,9 @@
     }
   });
 
-  $: if (!!marks && !!pixiApp) {
+  let oldMarks = null;
+  $: if (!!marks && marks !== oldMarks) {
+    oldMarks = marks;
     setupScatterplot();
   }
 
@@ -174,7 +177,10 @@
     loadSpritesheets();
   }
 
-  $: if (!!scatterplot) {
+  let oldScatterplot;
+  $: if (!!scatterplot && scatterplot !== oldScatterplot) {
+    console.log('scatterplot updating thumbnails');
+    oldScatterplot = scatterplot;
     loadSpritesheets();
   }
 

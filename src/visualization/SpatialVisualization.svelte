@@ -1,12 +1,11 @@
 <script>
-  import * as d3 from "d3";
-  import SynchronizedScatterplot from "./SynchronizedScatterplot.svelte";
-  import ImageThumbnailViewer from "./components/ImageThumbnailViewer.svelte";
-  import Legend from "./components/Legend.svelte";
-  import TextThumbnailViewer from "./components/TextThumbnailViewer.svelte";
-  import Autocomplete from "./components/Autocomplete.svelte";
+  import * as d3 from 'd3';
+  import SynchronizedScatterplot from './SynchronizedScatterplot.svelte';
+  import DefaultThumbnailViewer from './components/DefaultThumbnailViewer.svelte';
+  import Legend from './components/Legend.svelte';
+  import Autocomplete from './components/Autocomplete.svelte';
 
-  export let colorScheme = { name: "turbo", value: d3.interpolateTurbo };
+  export let colorScheme = { name: 'turbo', value: d3.interpolateTurbo };
 
   let colorScale;
 
@@ -27,6 +26,11 @@
   let hoveredID = null;
 
   let canvases = [];
+
+  export function updateThumbnails() {
+    canvases.forEach((c) => c.updateThumbnails());
+    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
+  }
 
   function updateThumbnailID(id, frame) {
     thumbnailID = id;
@@ -62,7 +66,7 @@
     pointSelectorOptions = Object.keys(data.frame(0)).map((itemID) => {
       if (
         !!thumbnailData &&
-        thumbnailData.format == "text_descriptions" &&
+        thumbnailData.format == 'text_descriptions' &&
         !!thumbnailData.items[itemID]
       ) {
         return {
@@ -133,33 +137,19 @@
     </div>
     {#if !!thumbnailData}
       <div style="flex: 0 0 auto;">
-        {#if thumbnailData.format == "imagegrid"}
-          <ImageThumbnailViewer
-            bind:this={thumbnailViewer}
-            {thumbnailData}
-            width={200}
-            height={600}
-            baseURL={thumbnailsURL}
-            primaryThumbnail={thumbnailID}
-            secondaryThumbnails={thumbnailNeighbors}
-          />
-        {:else if thumbnailData.format == "text_descriptions"}
-          <TextThumbnailViewer
-            bind:this={thumbnailViewer}
-            {thumbnailData}
-            width={200}
-            height={600}
-            frame={0}
-            diffColor="red"
-            primaryThumbnail={thumbnailID}
-            secondaryThumbnails={thumbnailNeighbors}
-          />
-        {/if}
+        <DefaultThumbnailViewer
+          bind:this={thumbnailViewer}
+          dataset={data}
+          width={200}
+          height={600}
+          frame={0}
+          thumbnailIDs={[thumbnailID]}
+        />
       </div>
     {/if}
   </div>
 
-  <Legend {colorScale} type={colorScheme.type || "continuous"} />
+  <Legend {colorScale} type={colorScheme.type || 'continuous'} />
 </div>
 
 <style>

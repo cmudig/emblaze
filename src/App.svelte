@@ -248,7 +248,6 @@
             primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
             frame={$currentFrame}
             {previewFrame}
-            diffColor="red"
             {thumbnailIDs}
           />
         </div>

@@ -44,7 +44,7 @@
 
   function getThumbnailInfo(id, inFrame = -1) {
     inFrame = inFrame >= 0 ? inFrame : frame;
-    if (!dataset || !id || inFrame < 0) return '';
+    if (!dataset || id === null || inFrame < 0) return null;
 
     let info = dataset.frame(inFrame).get(id, 'label');
     if (!info) return null;

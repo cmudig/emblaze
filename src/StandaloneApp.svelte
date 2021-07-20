@@ -71,6 +71,9 @@
         if (!!thumbnailJSON) {
           thumbnailData = thumbnailJSON;
           data.addThumbnails(thumbnailData);
+          setTimeout(() => {
+            if (!!visualization) visualization.updateThumbnails();
+          }, 0);
           thumbnailsURL = '/datasets/' + datasetName + '/supplementary';
         }
       }
