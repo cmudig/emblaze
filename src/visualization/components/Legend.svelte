@@ -2,6 +2,7 @@
   import * as d3 from 'd3';
   import * as d3legend from 'd3-svg-legend';
   import { onMount } from 'svelte';
+  import { getTextWidth } from '../utils/helpers';
 
   export let width = 600;
   export let height = 500;
@@ -9,13 +10,20 @@
   export let numCells = 10; // for continuous
   export let type = 'categorical';
 
+  export let fontSize = 12;
+  export let fontWeight = 'normal';
+  export let fontFamily = 'sans-serif';
+
+  const CategoryRadius = 8;
+  const CategoryPadding = 8;
+  const ContinuousWidth = 30;
+  const ContinuousPadding = 1;
+
   let container;
   let svg;
 
-  let oldColorScale = null;
-  $: if (oldColorScale != colorScale && !!container) {
+  $: if (!!colorScale && width > 0 && height > 0 && !!container) {
     update();
-    oldColorScale = colorScale;
   }
 
   function update() {
@@ -26,11 +34,31 @@
     let totalWidth;
     let totalHeight;
     if (type == 'categorical') {
-      totalWidth = 300;
-      totalHeight = colorScale.domain().length * 25 - 5 + 20;
+      console.log(
+        colorScale.domain(),
+        getTextWidth(
+          colorScale.range()[0],
+          `${fontWeight} ${fontSize}pt ${fontFamily}`
+        )
+      );
+      totalWidth =
+        Math.max(
+          ...colorScale
+            .domain()
+            .map((v) =>
+              getTextWidth(v, `${fontWeight} ${fontSize}pt ${fontFamily}`)
+            )
+        ) +
+        CategoryRadius * 2 +
+        40;
+      totalHeight =
+        colorScale.domain().length * (CategoryRadius * 2 + CategoryPadding) -
+        CategoryPadding +
+        40;
     } else if (type == 'continuous') {
-      totalWidth = 30 * numCells + 1 * (numCells - 1) + 40;
-      totalHeight = 100;
+      totalWidth =
+        ContinuousWidth * numCells + ContinuousPadding * (numCells - 1) + 40;
+      totalHeight = 60;
     }
 
     svg = d3
@@ -38,7 +66,9 @@
       .append('svg')
       .style('width', totalWidth)
       .style('height', totalHeight)
-      .style('font-family', 'sans-serif');
+      .style('font-size', `${fontSize}pt`)
+      .style('font-weight', fontWeight)
+      .style('font-family', fontFamily);
 
     if (type == 'categorical') {
       //let domainLabels = colorScale.domain();
@@ -50,8 +80,8 @@
       let legendOrdinal = d3legend
         .legendColor()
         .shape('circle')
-        .shapePadding(5)
-        .shapeRadius(10)
+        .shapeRadius(CategoryRadius)
+        .shapePadding(CategoryPadding)
         .orient('vertical')
         .scale(colorScale);
 
@@ -64,8 +94,8 @@
 
       let legendLinear = d3legend
         .legendColor()
-        .shapeWidth(30)
-        .shapePadding(1)
+        .shapeWidth(ContinuousWidth)
+        .shapePadding(ContinuousPadding)
         .cells(numCells)
         .orient('horizontal')
         .scale(colorScale);
@@ -75,12 +105,19 @@
   }
 
   onMount(() => {
-    console.log('updating mount');
-    update();
+    setTimeout(update, 0);
   });
 </script>
 
 <div
   bind:this={container}
-  style="position: relative; max-width: {width}px; max-height: {height}px;"
+  class="legend-container"
+  style="max-width: {width}px; max-height: {height}px;"
 />
+
+<style>
+  .legend-container {
+    position: relative;
+    pointer-events: none;
+  }
+</style>

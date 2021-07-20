@@ -334,7 +334,7 @@
           type="button"
           class="btn btn-primary btn-sm"
           on:click|preventDefault={clickedIDs.length >= minSelection
-            ? (alignedIDs = getVicinityOfPoints(clickedIDs))
+            ? () => (alignedIDs = getVicinityOfPoints(clickedIDs))
             : () =>
                 alert(
                   `You must select at least ${minSelection} points to align.`

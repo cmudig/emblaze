@@ -119,7 +119,7 @@
     }, 0);
   }
 
-  let showLegend = false;
+  let showLegend = true;
 
   // Thumbnails
 
@@ -207,13 +207,7 @@
           colorScheme={colorSchemeObject}
         />
         {#if showLegend}
-          <div
-            class="legend-container"
-            transition:fade
-            on:mouseout={() => {
-              showLegend = false;
-            }}
-          >
+          <div class="legend-container">
             <Legend
               colorScale={!!dataset
                 ? dataset.colorScale(colorSchemeObject)
@@ -221,13 +215,6 @@
               type={colorSchemeObject.type || 'continuous'}
             />
           </div>
-        {:else}
-          <button
-            class="btn btn-light btn-sm legend-hoverable"
-            on:mouseover={() => {
-              showLegend = true;
-            }}>Legend</button
-          >
         {/if}
       </div>
     </div>
@@ -289,18 +276,13 @@
     border: 1px solid #bbb;
   }
 
-  .legend-hoverable {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-    margin-bottom: 0 !important;
-  }
   .legend-container {
     position: absolute;
-    bottom: 12px;
-    right: 12px;
+    top: 12px;
+    left: 12px;
     border-radius: 4px;
-    background-color: rgba(225, 225, 225, 0.8);
+    background-color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
   }
 
   .sidebar {
