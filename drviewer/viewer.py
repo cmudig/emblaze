@@ -18,6 +18,9 @@ from .utils import Field, matrix_to_affine, affine_to_matrix
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
+from datetime import datetime
+import json
+import glob
 import threading
 import multiprocessing as mp
 from functools import partial
@@ -55,6 +58,13 @@ class DRViewer(DOMWidget):
     thumbnails = Instance(Thumbnails, allow_none=True)
     # JSON-serializable dictionary of thumbnail info
     thumbnailData = Dict({}).tag(sync=True)
+
+    saveSelectionFlag = Bool(False).tag(sync=True)
+    selectionName = Unicode("").tag(sync=True)
+    selectionDescription = Unicode("").tag(sync=True)
+
+    loadSelectionFlag = Bool(False).tag(sync=True)
+    selectionList = List([]).tag(sync=True)
     
     def __init__(self, *args, **kwargs):
         """
@@ -64,7 +74,41 @@ class DRViewer(DOMWidget):
         super(DRViewer, self).__init__(*args, **kwargs)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
         self.isLoading = False
-        
+        self.saveSelectionFlag = False
+        self.loadSelectionFlag = False
+        self.selectionList = []
+
+
+    @observe("saveSelectionFlag")
+    def _observe_save_selection(self, change):
+        if change.new is not None:
+            newSelection = { }
+            newSelection["selectedIDs"] = self.selectedIDs
+            newSelection["alignedIDs"] = self.alignedIDs
+            newSelection["selectionDescription"] = self.selectionDescription
+            newSelection["currentFrame"] = self.currentFrame
+            now = datetime.now()
+            dateTime = now.strftime("%Y-%m-%d %H:%M:%S")
+            with open(dateTime + ' ' + self.selectionName + '.selection', 'w') as outfile:
+                json.dump(newSelection, outfile)
+            
+            self.saveSelectionFlag = False
+            self.selectionName = ""
+            self.selectionDescription = ""
+
+    @observe("loadSelectionFlag")
+    def _observe_load_selection(self, change):
+        if change.new is not None:
+            tmpList = []
+            # self.selectionList = []
+            for file in glob.glob("*.selection"):
+                with open(file, "r") as jsonFile:
+                    data = json.load(jsonFile)
+                    data['selectionName'] = file.split('.')[0]
+                    tmpList.append(data)
+            self.selectionList = tmpList
+            self.loadSelectionFlag = False
+
     @observe("embeddings")
     def _observe_embeddings(self, change):
         embeddings = change.new

@@ -13,6 +13,8 @@
   import { writable } from 'svelte/store';
   import ImageThumbnailViewer from './visualization/components/ImageThumbnailViewer.svelte';
   import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
+  import Modal from "./visualization/components/Modal.svelte";
+  import Sidebar from "./visualization/components/Sidebar.svelte"
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
@@ -67,9 +69,12 @@
   let canvas;
 
   let selectedIDs = syncValue(model, 'selectedIDs', []);
-  $: console.log($selectedIDs);
+  //$: console.log($selectedIDs);
+
 
   let alignedIDs = syncValue(model, 'alignedIDs', []);
+  $: console.log($alignedIDs);
+
 
   let thumbnailID = null;
   let thumbnailNeighbors = [];
@@ -79,6 +84,20 @@
 
   let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = -1;
+
+  let saveSelectionFlag = syncValue(model, "saveSelectionFlag", false);
+  let selectionName = syncValue(model, "selectionName", "");
+  let selectionDescription = syncValue(model, "selectionDescription", "");
+  let isOpenDialogue = false;
+	let nameField = "";
+	let descriptionField = "";
+	let name = "";
+	let description = "";
+
+  let isOpenSidebar = false;
+  let loadSelectionFlag = syncValue(model, "loadSelectionFlag", false);
+  let selectionList = syncValue(model, "selectionList", []);
+  $: console.log("selectionList: ", $selectionList);
 
   function updateThumbnailID(id) {
     thumbnailID = id;
@@ -125,6 +144,13 @@
     else updateThumbnailID(e.detail[0]);
   }
 
+  function handleLoadSelection(event) {
+    $selectedIDs = event.detail.selectedIDs;
+    $alignedIDs = event.detail.alignedIDs;
+    $currentFrame = event.detail.currentFrame;
+    isOpenSidebar = false;
+	}
+
   let oldFrame = 0;
   $: if (oldFrame != $currentFrame) {
     updateThumbnailID(thumbnailID);
@@ -169,6 +195,46 @@
     <i class="text-primary fa fa-spinner fa-spin" />
   </div>
 {:else}
+  <Sidebar bind:show={isOpenSidebar} bind:data={$selectionList} on:loadSelection={handleLoadSelection} />
+
+  <Modal visible={isOpenDialogue} width={400}>
+    <div class="modal-header">
+  <!--         <h5 class="modal-title">Save Selection History</h5> -->
+        <button type="button" class="close" on:click={() => (isOpenDialogue = false)}>
+        <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="name-of-selection" class="col-form-label">Name of Selection:</label>
+            <br>
+            <input type="text" class="form-control" id="name-of-selection" bind:value={nameField}>
+          </div>
+          <div class="form-group">
+            <label for="description" class="col-form-label">Description:</label>
+            <br>
+            <textarea class="form-control" id="description" bind:value={descriptionField}></textarea>
+          </div>
+        </form>
+      <p>Summary:</p>
+      <ul>
+        <li>{$selectedIDs.length} points selected</li>
+        <li>Aligned to {$alignedIDs.length} points</li>
+        <li>Frame {$currentFrame}</li>
+      </ul> 
+      </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" on:click={() => (isOpenDialogue = false)}>Close</button>
+        <button type="button" class="btn btn-primary" on:click={() => {$selectionDescription = descriptionField; 
+                                                                       $selectionName = nameField;
+                                                                       $saveSelectionFlag = true;
+                                                                       isOpenDialogue = false;
+                                                                       nameField = "";
+                                                                       descriptionField = "";}}>Save changes</button>
+    </div>
+  </Modal>
+
   <div style="display: flex; align-items: flex-start;">
     <div class="scatterplot-container">
       <SynchronizedScatterplot
@@ -193,14 +259,23 @@
       />
     </div>
     <div class="spinner-container">
-      <SpinnerButton
-        bind:this={spinner}
-        width={120}
-        height={120}
-        selectedIndex={$currentFrame}
-        on:hover={(e) => (previewFrame = e.detail != null ? e.detail : -1)}
-        on:select={(e) => ($currentFrame = e.detail)}
-      />
+      {#if $selectedIDs.length > 0}
+        <button 
+          type="button"
+          class="btn btn-primary btn-sm"
+          on:click|preventDefault={() => (isOpenDialogue = true)}>
+          Save Selection
+        </button>
+      {/if}
+      
+      <button 
+          type="button"
+          class="btn btn-primary btn-sm"
+          on:click|preventDefault={() => {$loadSelectionFlag = true;
+                                          isOpenSidebar = true;}}>
+          Load Selection
+      </button>
+       
     </div>
     {#if !!dataset}
       <div
