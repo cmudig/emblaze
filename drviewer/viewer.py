@@ -9,6 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
+from numpy.core.fromnumeric import sort
 from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, observe
 from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
@@ -103,10 +104,10 @@ class DRViewer(DOMWidget):
             # self.selectionList = []
             for file in glob.glob("*.selection"):
                 with open(file, "r") as jsonFile:
-                    data = json.load(jsonFile)
-                    data['selectionName'] = file.split('.')[0]
+                    data = json.load(jsonFile)                                
+                    data["selectionName"] = file.split('.')[0]
                     tmpList.append(data)
-            self.selectionList = tmpList
+            self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"].split(' ')[-1], reverse=True)
             self.loadSelectionFlag = False
 
     @observe("embeddings")

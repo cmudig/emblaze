@@ -15,6 +15,7 @@
   import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
   import Modal from "./visualization/components/Modal.svelte";
   import Sidebar from "./visualization/components/Sidebar.svelte"
+import { dataset_dev } from 'svelte/internal';
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
@@ -145,6 +146,25 @@
   }
 
   function handleLoadSelection(event) {
+    for (const id of event.detail.selectedIDs) {
+      if (id < 0 || id >= dataset.length) {
+        alert("Invalid Selected IDs in Selection!");
+        return;
+      }
+    }
+
+    for (const id of event.detail.alignedIDs) {
+      if (id < 0 || id >= dataset.length) {
+        alert("Invalid Aligned IDs in Selection!");
+        return;
+      }
+    }
+
+    if (event.detail.currentFrame < 0 || event.detail.currentFrame >= dataset.frameCount) {
+      alert("Invalid Frame ID in Selection!");
+      return;
+    }
+
     $selectedIDs = event.detail.selectedIDs;
     $alignedIDs = event.detail.alignedIDs;
     $currentFrame = event.detail.currentFrame;

@@ -3,8 +3,8 @@
 		<button on:click|preventDefault={() => show = false}>
             Close Sidebar
         </button>
-        {#each data as entry, i}
-		    <Collapsible entry={entry} idx={i} on:loadSelection />
+        {#each data as entry}
+		    <Collapsible entry={entry} on:loadSelection />
 		{/each}
   </nav>
 {/if}
