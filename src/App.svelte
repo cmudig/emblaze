@@ -223,6 +223,7 @@
         <Autocomplete
           placeholder="Search for a point..."
           options={pointSelectorOptions}
+          maxOptions={10}
           fillWidth={true}
           on:change={(e) => ($selectedIDs = [e.detail])}
         />

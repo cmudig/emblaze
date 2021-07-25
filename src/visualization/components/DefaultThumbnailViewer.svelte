@@ -242,7 +242,7 @@
 
 <style>
   .no-selection {
-    width: 100%;
+    max-width: 100%;
     text-align: center;
     margin-top: 80px;
     color: #999;

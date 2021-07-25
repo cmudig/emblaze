@@ -64,8 +64,8 @@
     svg = d3
       .select(container)
       .append('svg')
-      .style('width', totalWidth)
-      .style('height', totalHeight)
+      .style('width', `${totalWidth}px`)
+      .style('height', `${totalHeight}px`)
       .style('font-size', `${fontSize}pt`)
       .style('font-weight', fontWeight)
       .style('font-family', fontFamily);
