@@ -289,7 +289,7 @@
       {#if showRadiusselectButton && !inRadiusselect}
         <button
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
           on:click|preventDefault={() => (inRadiusselect = true)}
         >
           Start Radius Select
@@ -299,14 +299,14 @@
       {#if showRadiusselectButton && inRadiusselect}
         <button
           type="button"
-          class="btn btn-secondary btn-sm"
+          class="btn btn-secondary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
           on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}
         >
           Cancel
         </button>
         <button
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
           on:click|preventDefault={() => (inRadiusselect = false)}
         >
           Select
@@ -316,7 +316,7 @@
       {#if showFilterButton && !inRadiusselect}
         <button
           type="button"
-          class="btn btn-success btn-sm"
+          class="btn btn-success btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
           on:click|preventDefault={filter.size > 0
             ? clearFilter
             : () => filterToSelection()}
@@ -332,7 +332,7 @@
         <button
           disabled={alignedToSelection}
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
           on:click|preventDefault={clickedIDs.length >= minSelection
             ? () => (alignedIDs = getVicinityOfPoints(clickedIDs))
             : () =>
@@ -347,7 +347,7 @@
         <button
           transition:fade={{ duration: 100 }}
           type="button"
-          class="btn btn-dark btn-sm"
+          class="btn btn-dark btn-sm jp-Dialog-button jp-mod-warn jp-mod-styled"
           on:click|preventDefault={(e) => {
             reset();
             dispatch('reset');
@@ -440,5 +440,9 @@
     align-items: center;
     background-color: rgba(255, 255, 255, 0.8);
     border-radius: 4px;
+  }
+
+  .jp-Dialog-button.jp-mod-styled {
+    margin-right: 2px !important;
   }
 </style>
