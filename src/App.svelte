@@ -292,12 +292,14 @@
     display: flex;
     flex-direction: column;
     margin-right: 8px;
+    box-sizing: border-box;
   }
 
   .thumbnail-sidebar {
     border: 1px solid #bbb;
     flex-grow: 1;
     overflow-y: scroll;
+    box-sizing: border-box;
   }
   .action-toolbar {
     display: flex;

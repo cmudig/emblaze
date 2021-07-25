@@ -244,22 +244,24 @@
   .no-selection {
     max-width: 100%;
     text-align: center;
-    margin-top: 80px;
     color: #999;
-    padding: 0 24px;
+    padding: 80px 24px 0 24px;
   }
   .thumbnail-row {
     padding: 4px 6px;
     display: flex;
     align-items: center;
+    box-sizing: border-box;
   }
   .thumbnails-container {
     padding: 12px 4px;
+    box-sizing: border-box;
   }
   .column-container {
     display: flex;
     justify-content: stretch;
     width: 100%;
+    box-sizing: border-box;
   }
   .thumbnail-column {
     flex: 1 1 auto;
