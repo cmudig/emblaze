@@ -1,18 +1,18 @@
 export function scaleCanvas(c, w, h) {
   // Scales the canvas for the device screen resolution
   var result = c
-    .attr("width", w * window.devicePixelRatio)
-    .attr("height", h * window.devicePixelRatio)
-    .style("width", w + "px")
-    .style("height", h + "px");
+    .attr('width', w * window.devicePixelRatio)
+    .attr('height', h * window.devicePixelRatio)
+    .style('width', w + 'px')
+    .style('height', h + 'px');
 
-  var context = c.node().getContext("2d");
+  var context = c.node().getContext('2d');
   context.scale(window.devicePixelRatio, window.devicePixelRatio);
   return result;
 }
 
 // Function to create new colours for the hidden canvas.
-export function ColorIDMap(format = "css") {
+export function ColorIDMap(format = 'css') {
   this.nextColor = 1;
   this.format = format; // "css" or "hex"
 
@@ -27,8 +27,8 @@ export function ColorIDMap(format = "css") {
       ret.push((this.nextColor & 0xff0000) >> 16); // B
       this.nextColor += 5;
     }
-    if (this.format == "css") return "rgb(" + ret.join(",") + ")";
-    else if (this.format == "hex") return this.nextColor;
+    if (this.format == 'css') return 'rgb(' + ret.join(',') + ')';
+    else if (this.format == 'hex') return this.nextColor;
   };
 
   this.id = function (id, obj = null) {
@@ -45,7 +45,7 @@ export function ColorIDMap(format = "css") {
 
 export function colorWithOpacity(stringVal, opacity) {
   var rgb = stringVal.substring(4, stringVal.length - 1);
-  return "rgba(" + rgb + ", " + opacity + ")";
+  return 'rgba(' + rgb + ', ' + opacity + ')';
 }
 
 export function shuffle(array) {
@@ -74,7 +74,7 @@ export function getWithFallback(obj, attrName, fallback) {
 }
 
 export function approxEquals(obj1, obj2) {
-  if (typeof obj1 == "number" && typeof obj2 == "number") {
+  if (typeof obj1 == 'number' && typeof obj2 == 'number') {
     return Math.abs(obj1 - obj2) <= 0.001;
   }
   return obj1 == obj2;
@@ -140,6 +140,10 @@ export function distance2(a, b) {
   let dx = a.x - b.x;
   let dy = a.y - b.y;
   return dx * dx + dy * dy;
+}
+
+export function euclideanDistance(a, b) {
+  return Math.sqrt(distance2(a, b));
 }
 
 export class ValueHistory {

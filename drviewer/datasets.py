@@ -90,16 +90,22 @@ class Embedding(ColumnarData):
     A single set of high-dimensional embeddings, which can be represented as an
     n x k 2D numpy array (n = number of points, k = dimensionality).
     """
-    def __init__(self, data, ids=None, label=None, metric='euclidean'):
+    def __init__(self, data, ids=None, label=None, metric='euclidean', parent=None):
         super().__init__(data, ids)
         assert Field.POSITION in data, "Field.POSITION is required"
         assert Field.COLOR in data, "Field.COLOR is required"
         self.label = label
         self.metric = metric
         self._distances = {}
+        self.parent = parent # keep track of where this embedding came from
 
     def copy(self):
-        return Embedding(self.data, self.ids, label=self.label, metric=self.metric)
+        return Embedding(self.data, self.ids, label=self.label, metric=self.metric, parent=self)
+    
+    def get_root(self):
+        """Returns the root parent of this embedding."""
+        if self.parent is None: return self
+        return self.parent.get_root()
     
     def dimension(self):
         """Returns the dimensionality of the Field.POSITION field."""

@@ -29,6 +29,7 @@
   export let hoveredID = null;
   export let selectedIDs = [];
   export let alignedIDs = [];
+  export let tentativeSelectedIDs = []; // preview a selection before executing
 
   export let frame = null;
   export let previewFrame = null;
@@ -46,7 +47,6 @@
   // Mark styles may be specified in different formats for different renderers
   export let colorFormat = 'hex';
 
-  
   // Constants
 
   const frameDuration = 4000;
@@ -335,9 +335,11 @@
   var prevHoverID = null;
   var prevSelectedIDs = [];
   var prevAlignedIDs = [];
+  var prevTentativeSelectedIDs = [];
   let starGraphPool;
   let previewLinePool;
   let selectionDecorationPool;
+  let tentativeSelectionDecorationPool;
   let alignDecorationPool;
   let labelPool;
 
@@ -357,6 +359,13 @@
     );
     prevHoverID = hoveredID;
     prevSelectedIDs = selectedIDs;
+  }
+
+  $: if (!!marks && prevTentativeSelectedIDs != tentativeSelectedIDs) {
+    updateTentativeSelectionVisibility(
+      prevTentativeSelectedIDs,
+      tentativeSelectedIDs
+    );
   }
 
   export function selectElement(element, multi) {
@@ -493,6 +502,28 @@
             color: '007bff',
             lineWidth: 2.0,
             zIndex: SelectionOutlineZIndex,
+          });
+        },
+        show: async (element) => marks.addDecoration(element),
+        hide: async (element) => marks.removeDecoration(element),
+        destroy: () => {},
+      },
+      true
+    );
+
+    tentativeSelectionDecorationPool = new AnimationPool(
+      {
+        create: (nodeID) => {
+          let mark = marks.getMarkByID(nodeID);
+          if (!mark) return null;
+          return new Decoration('outline', [mark], {
+            r: {
+              valueFn: () => mark.attr('r') + 3.0,
+            },
+            color: '007bff',
+            lineWidth: 2.0,
+            zIndex: SelectionOutlineZIndex,
+            pulseDuration: 2.0,
           });
         },
         show: async (element) => marks.addDecoration(element),
@@ -644,5 +675,15 @@
       if (!labeledPoints.has(key)) labelPool.hide(key);
     });
     labeledPoints.forEach((id) => labelPool.show(id));
+  }
+
+  function updateTentativeSelectionVisibility(
+    oldTentativeIDs,
+    newTentativeIDs
+  ) {
+    Object.keys(tentativeSelectionDecorationPool.getAll()).forEach((id) => {
+      tentativeSelectionDecorationPool.hide(id);
+    });
+    newTentativeIDs.forEach((id) => tentativeSelectionDecorationPool.show(id));
   }
 </script>

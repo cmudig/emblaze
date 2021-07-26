@@ -39,6 +39,7 @@
   export let hoveredID = null;
   export let clickedIDs = [];
   export let alignedIDs = [];
+  export let tentativeSelectedIDs = [];
   export let filter = new Set();
   let followingIDs = [];
 
@@ -124,10 +125,20 @@
   // Radius select button
   let showRadiusselectButton = false;
   $: showRadiusselectButton = clickedIDs.length == 1;
-  
+
   export let inRadiusselect = false;
-  //export let cancelRadiusselect = false;
-  export let selectionRadius = 30;
+  const DefaultSelectionRadius = 30;
+  export let selectionRadius = DefaultSelectionRadius;
+  let selectionOrder = [];
+  // Async function that takes a point ID and distance metric,
+  // and returns a list of [id, distance] pairs in sorted order
+  export let selectionOrderFn = null;
+  export let selectionUnit = 'pixels';
+  export let selectionUnits = ['pixels', 'cosine'];
+  let selectionMin = 0;
+  let selectionMax = 0;
+  let selectionStep = 1;
+  let selectionOrderLoading = false;
 
   // Reset button
   let showResetButton = false;
@@ -149,6 +160,7 @@
   $: alignmentText = getAlignmentText(
     alignedIDs,
     clickedIDs,
+    tentativeSelectedIDs,
     alignedToSelection
   );
 
@@ -171,9 +183,23 @@
     return pointIDs.length > 1 ? ` and ${pointIDs.length - 1} others` : '';
   }
 
-  function getAlignmentText(alignPoints, clickPoints, alignedToSelectedPoints) {
-    if ((alignPoints.length == 0 && clickPoints.length == 0) || thumbnail) {
+  function getAlignmentText(
+    alignPoints,
+    clickPoints,
+    tentativePoints,
+    alignedToSelectedPoints
+  ) {
+    if (
+      (alignPoints.length == 0 &&
+        clickPoints.length == 0 &&
+        tentativePoints.length == 0) ||
+      thumbnail
+    ) {
       return '';
+    }
+
+    if (tentativePoints.length > 0) {
+      return `Selecting ${tentativePoints.length} points`;
     }
 
     if (clickPoints.length == 0 && alignPoints.length > 0) {
@@ -266,12 +292,25 @@
     bind:clickedIDs
     bind:hoveredID
     bind:alignedIDs
+    bind:tentativeSelectedIDs
     bind:followingIDs
     bind:filter
     bind:data
     bind:scalesNeutral
     bind:inRadiusselect
     bind:selectionRadius
+    bind:selectionUnit
+    bind:selectionMin
+    bind:selectionMax
+    bind:selectionStep
+    selectionOrderFn={!!selectionOrderFn
+      ? async (id, metric) => {
+          selectionOrderLoading = true;
+          let result = await selectionOrderFn(id, metric);
+          selectionOrderLoading = false;
+          return result;
+        }
+      : null}
     on:mouseover
     on:mouseout
     on:mousedown
@@ -282,32 +321,49 @@
   />
   {#if !thumbnail}
     <div id="button-panel">
-      {#if showRadiusselectButton && inRadiusselect}
-        <input type=range bind:value={selectionRadius} min=0 max=250>
-        {selectionRadius} px
-      {/if}
       {#if showRadiusselectButton && !inRadiusselect}
-        <button 
+        <button
           type="button"
           class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (inRadiusselect = true)}>
+          on:click|preventDefault={() => {
+            inRadiusselect = true;
+            selectionRadius = DefaultSelectionRadius;
+          }}
+        >
           Start Radius Select
         </button>
-      {/if}
-
-      {#if showRadiusselectButton && inRadiusselect}
-        <button 
-          type="button"
-          class="btn btn-secondary btn-sm"
-          on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}>
-          Cancel
-        </button>
-        <button 
-          type="button"
-          class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (inRadiusselect = false)}>
-          Select
-        </button>
+      {:else if showRadiusselectButton && inRadiusselect}
+        {#if selectionOrderLoading}
+          Loading selection metric...
+        {:else}
+          <input
+            type="range"
+            bind:value={selectionRadius}
+            min={selectionMin}
+            max={selectionMax}
+            step={selectionStep}
+          />
+          {Math.round(selectionRadius * 100) / 100}
+          <select bind:value={selectionUnit}>
+            {#each selectionUnits as unit}
+              <option value={unit}>{unit}</option>
+            {/each}
+          </select>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            on:click|preventDefault={() => (inRadiusselect = false)}
+          >
+            Select
+          </button>
+        {/if}
       {/if}
 
       {#if showFilterButton && !inRadiusselect}
@@ -331,8 +387,8 @@
           type="button"
           class="btn btn-primary btn-sm"
           on:click|preventDefault={clickedIDs.length >= minSelection
-            ? alignedIDs = getVicinityOfPoints(clickedIDs)
-            : () => alert("Too Few Points Selected for Alignment!")}
+            ? (alignedIDs = getVicinityOfPoints(clickedIDs))
+            : () => alert('Too Few Points Selected for Alignment!')}
         >
           Align</button
         >
