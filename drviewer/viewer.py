@@ -10,7 +10,7 @@ TODO: Add module docstring
 
 from ipywidgets import DOMWidget
 from numpy.core.fromnumeric import sort
-from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, observe
+from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, Set, observe
 from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
@@ -29,6 +29,7 @@ import numpy as np
 import affine
 import base64
 import os
+
 
 class DRViewer(DOMWidget):
     """TODO: Add docstring here
@@ -50,6 +51,7 @@ class DRViewer(DOMWidget):
     currentFrame = Integer(0).tag(sync=True)
     selectedIDs = List([]).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
+    filterList = List([]).tag(sync=True)
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
@@ -86,6 +88,7 @@ class DRViewer(DOMWidget):
             newSelection = { }
             newSelection["selectedIDs"] = self.selectedIDs
             newSelection["alignedIDs"] = self.alignedIDs
+            newSelection["filterList"] = self.filterList
             newSelection["selectionDescription"] = self.selectionDescription
             newSelection["currentFrame"] = self.currentFrame
             now = datetime.now()
@@ -104,7 +107,7 @@ class DRViewer(DOMWidget):
             # self.selectionList = []
             for file in glob.glob("*.selection"):
                 with open(file, "r") as jsonFile:
-                    data = json.load(jsonFile)                                
+                    data = json.load(jsonFile)                            
                     data["selectionName"] = file.split('.')[0]
                     tmpList.append(data)
             self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"].split(' ')[-1], reverse=True)

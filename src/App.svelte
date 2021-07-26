@@ -15,7 +15,7 @@
   import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
   import Modal from "./visualization/components/Modal.svelte";
   import Sidebar from "./visualization/components/Sidebar.svelte"
-import { dataset_dev } from 'svelte/internal';
+  import { dataset_dev } from 'svelte/internal';
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
@@ -98,7 +98,11 @@ import { dataset_dev } from 'svelte/internal';
   let isOpenSidebar = false;
   let loadSelectionFlag = syncValue(model, "loadSelectionFlag", false);
   let selectionList = syncValue(model, "selectionList", []);
-  $: console.log("selectionList: ", $selectionList);
+  //$: console.log("selectionList: ", $selectionList);
+
+  let filter = new Set();
+  let filterList = syncValue(model, "filterList", []);
+  //$: console.log("filterList: ", $filterList);
 
   function updateThumbnailID(id) {
     thumbnailID = id;
@@ -160,6 +164,13 @@ import { dataset_dev } from 'svelte/internal';
       }
     }
 
+    for (const id of event.detail.filter) {
+      if (id < 0 || id >= dataset.length) {
+        alert("Invalid Filtered IDs in Selection!");
+        return;
+      }
+    }
+
     if (event.detail.currentFrame < 0 || event.detail.currentFrame >= dataset.frameCount) {
       alert("Invalid Frame ID in Selection!");
       return;
@@ -167,6 +178,7 @@ import { dataset_dev } from 'svelte/internal';
 
     $selectedIDs = event.detail.selectedIDs;
     $alignedIDs = event.detail.alignedIDs;
+    filter = event.detail.filter;
     $currentFrame = event.detail.currentFrame;
     isOpenSidebar = false;
 	}
@@ -241,6 +253,7 @@ import { dataset_dev } from 'svelte/internal';
       <ul>
         <li>{$selectedIDs.length} points selected</li>
         <li>Aligned to {$alignedIDs.length} points</li>
+        <li>Filtered {filter.size} points</li>
         <li>Frame {$currentFrame}</li>
       </ul> 
       </div>
@@ -248,6 +261,7 @@ import { dataset_dev } from 'svelte/internal';
         <button type="button" class="btn btn-secondary" on:click={() => (isOpenDialogue = false)}>Close</button>
         <button type="button" class="btn btn-primary" on:click={() => {$selectionDescription = descriptionField; 
                                                                        $selectionName = nameField;
+                                                                       $filterList = Array.from(filter);
                                                                        $saveSelectionFlag = true;
                                                                        isOpenDialogue = false;
                                                                        nameField = "";
@@ -273,6 +287,7 @@ import { dataset_dev } from 'svelte/internal';
           : 'white'}
         bind:clickedIDs={$selectedIDs}
         bind:alignedIDs={$alignedIDs}
+        bind:filter={filter}
         on:datahover={onScatterplotHover}
         on:dataclick={onScatterplotClick}
         {colorScheme}
