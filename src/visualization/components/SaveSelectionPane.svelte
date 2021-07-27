@@ -39,12 +39,12 @@
 <div class="dialog-footer">
   <button
     type="button"
-    class="dialog-footer-button btn btn-secondary"
+    class="dialog-footer-button btn btn-secondary jp-Dialog-button jp-mod-reject jp-mod-styled"
     on:click={() => dispatch('cancel')}>Cancel</button
   >
   <button
     type="button"
-    class="dialog-footer-button btn btn-primary"
+    class="dialog-footer-button btn btn-primary jp-Dialog-button jp-mod-accept jp-mod-styled"
     on:click={() => dispatch('save')}
     >Save
   </button>
@@ -54,10 +54,12 @@
   .dialog-footer {
     display: flex;
     justify-content: flex-end;
+    padding-top: 12px;
   }
 
   .dialog-footer-button {
     margin-left: 12px;
+    margin-right: 0 !important;
   }
 
   .summary-info {

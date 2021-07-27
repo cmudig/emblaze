@@ -317,6 +317,7 @@
             : 'white'}
           bind:clickedIDs={$selectedIDs}
           bind:alignedIDs={$alignedIDs}
+          bind:filter
           on:datahover={onScatterplotHover}
           colorScheme={colorSchemeObject}
         />
@@ -368,7 +369,7 @@
       <div class="action-toolbar">
         <button
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
           on:click|preventDefault={openSaveSelectionDialog}
           disabled={$selectedIDs.length == 0 &&
             $alignedIDs.length == 0 &&
@@ -451,5 +452,10 @@
     height: 48px;
     padding: 4px 0;
     flex: 0 0 auto;
+  }
+
+  .jp-Dialog-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>
