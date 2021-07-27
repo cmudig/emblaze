@@ -124,7 +124,7 @@
   // Radius select button
   let showRadiusselectButton = false;
   $: showRadiusselectButton = clickedIDs.length == 1;
-  
+
   export let inRadiusselect = false;
   //export let cancelRadiusselect = false;
   export let selectionRadius = 30;
@@ -283,29 +283,32 @@
   {#if !thumbnail}
     <div id="button-panel">
       {#if showRadiusselectButton && inRadiusselect}
-        <input type=range bind:value={selectionRadius} min=0 max=250>
+        <input type="range" bind:value={selectionRadius} min="0" max="250" />
         {selectionRadius} px
       {/if}
       {#if showRadiusselectButton && !inRadiusselect}
-        <button 
+        <button
           type="button"
-          class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (inRadiusselect = true)}>
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
+          on:click|preventDefault={() => (inRadiusselect = true)}
+        >
           Start Radius Select
         </button>
       {/if}
 
       {#if showRadiusselectButton && inRadiusselect}
-        <button 
+        <button
           type="button"
-          class="btn btn-secondary btn-sm"
-          on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}>
+          class="btn btn-secondary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
+          on:click|preventDefault={() => scatterplot.cancelRadiusSelect()}
+        >
           Cancel
         </button>
-        <button 
+        <button
           type="button"
-          class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (inRadiusselect = false)}>
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
+          on:click|preventDefault={() => (inRadiusselect = false)}
+        >
           Select
         </button>
       {/if}
@@ -313,7 +316,7 @@
       {#if showFilterButton && !inRadiusselect}
         <button
           type="button"
-          class="btn btn-success btn-sm"
+          class="btn btn-success btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
           on:click|preventDefault={filter.size > 0
             ? clearFilter
             : () => filterToSelection()}
@@ -329,10 +332,13 @@
         <button
           disabled={alignedToSelection}
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
           on:click|preventDefault={clickedIDs.length >= minSelection
-            ? (() => alignedIDs = getVicinityOfPoints(clickedIDs))
-            : (() => alert("Too Few Points Selected for Alignment!"))}
+            ? () => (alignedIDs = getVicinityOfPoints(clickedIDs))
+            : () =>
+                alert(
+                  `You must select at least ${minSelection} points to align.`
+                )}
         >
           Align</button
         >
@@ -341,7 +347,7 @@
         <button
           transition:fade={{ duration: 100 }}
           type="button"
-          class="btn btn-dark btn-sm"
+          class="btn btn-dark btn-sm jp-Dialog-button jp-mod-warn jp-mod-styled"
           on:click|preventDefault={(e) => {
             reset();
             dispatch('reset');
@@ -434,5 +440,9 @@
     align-items: center;
     background-color: rgba(255, 255, 255, 0.8);
     border-radius: 4px;
+  }
+
+  .jp-Dialog-button.jp-mod-styled {
+    margin-right: 2px !important;
   }
 </style>

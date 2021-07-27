@@ -3,6 +3,7 @@
   import ScatterplotThumbnail from './visualization/components/ScatterplotThumbnail.svelte';
   import SpinnerButton from './visualization/components/SpinnerButton.svelte';
   import * as d3 from 'd3';
+  import ColorSchemes from './colorschemes';
 
   export let model;
 
@@ -11,27 +12,32 @@
   import { Dataset } from './visualization/models/dataset.js';
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
-  import ImageThumbnailViewer from './visualization/components/ImageThumbnailViewer.svelte';
-  import TextThumbnailViewer from './visualization/components/TextThumbnailViewer.svelte';
-  import Modal from "./visualization/components/Modal.svelte";
-  import Sidebar from "./visualization/components/Sidebar.svelte"
-  import { dataset_dev } from 'svelte/internal';
+  import { fade } from 'svelte/transition';
+  import DefaultThumbnailViewer from './visualization/components/DefaultThumbnailViewer.svelte';
+  import Legend from './visualization/components/Legend.svelte';
+  import Autocomplete from './visualization/components/Autocomplete.svelte';
+  import Modal from './visualization/components/Modal.svelte';
+  import Sidebar from './visualization/components/Sidebar.svelte';
+
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
 
   let plotPadding = syncValue(model, 'plotPadding', 10.0);
+  let height = 600; // can make this reactive later
 
   let dataset = null;
   let frameTransformations = syncValue(model, 'frameTransformations', []);
   let frameColors = syncValue(model, 'frameColors', []);
   let thumbnailData = syncValue(model, 'thumbnailData', {});
 
-  let colorScheme = {
-    name: 'tableau',
-    value: d3.schemeTableau10,
-    type: 'categorical',
-  };
+  let colorScheme = syncValue(model, 'colorScheme', 'tableau');
+  let colorSchemeObject = ColorSchemes.getColorScheme($colorScheme);
+  $: {
+    let newScheme = ColorSchemes.getColorScheme($colorScheme);
+    console.log('New color scheme:', newScheme, colorSchemeObject);
+    if (!!newScheme) colorSchemeObject = newScheme;
+  }
 
   $: if (
     !!$frameTransformations &&
@@ -68,16 +74,16 @@
   });
 
   let canvas;
+  let thumbnailViewer;
 
   let selectedIDs = syncValue(model, 'selectedIDs', []);
   //$: console.log($selectedIDs);
 
-
   let alignedIDs = syncValue(model, 'alignedIDs', []);
   $: console.log($alignedIDs);
 
-
-  let thumbnailID = null;
+  let thumbnailIDs = [];
+  let thumbnailHover = false;
   let thumbnailNeighbors = [];
   let previewThumbnailID = null;
   let previewThumbnailMessage = '';
@@ -86,93 +92,61 @@
   let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = -1;
 
-  let saveSelectionFlag = syncValue(model, "saveSelectionFlag", false);
-  let selectionName = syncValue(model, "selectionName", "");
-  let selectionDescription = syncValue(model, "selectionDescription", "");
+  let saveSelectionFlag = syncValue(model, 'saveSelectionFlag', false);
+  let selectionName = syncValue(model, 'selectionName', '');
+  let selectionDescription = syncValue(model, 'selectionDescription', '');
   let isOpenDialogue = false;
-	let nameField = "";
-	let descriptionField = "";
-	let name = "";
-	let description = "";
+  let nameField = '';
+  let descriptionField = '';
+  let name = '';
+  let description = '';
 
   let isOpenSidebar = false;
-  let loadSelectionFlag = syncValue(model, "loadSelectionFlag", false);
-  let selectionList = syncValue(model, "selectionList", []);
+  let loadSelectionFlag = syncValue(model, 'loadSelectionFlag', false);
+  let selectionList = syncValue(model, 'selectionList', []);
   //$: console.log("selectionList: ", $selectionList);
 
   let filter = new Set();
-  let filterList = syncValue(model, "filterList", []);
+  let filterList = syncValue(model, 'filterList', []);
   //$: console.log("filterList: ", $filterList);
 
-  function updateThumbnailID(id) {
-    thumbnailID = id;
-    if (thumbnailID != null && dataset.frame($currentFrame).has(thumbnailID)) {
-      thumbnailNeighbors = dataset
-        .frame($currentFrame)
-        .get(thumbnailID, 'highlightIndexes');
-    } else {
-      thumbnailNeighbors = [];
-    }
-  }
-
-  function updatePreviewThumbnailID() {
-    if (previewFrame == -1) {
-      previewThumbnailID = null;
-      previewThumbnailMessage = '';
-      previewThumbnailNeighbors = [];
-    } else if (
-      thumbnailID != null &&
-      dataset.frame(previewFrame).has(thumbnailID)
-    ) {
-      previewThumbnailID = thumbnailID;
-      previewThumbnailNeighbors = dataset
-        .frame(previewFrame)
-        .get(thumbnailID, 'highlightIndexes');
-    } else {
-      previewThumbnailID = null;
-      if (thumbnailID != null)
-        previewThumbnailMessage =
-          'The selected point is not present in the preview';
-      previewThumbnailNeighbors = [];
-    }
-  }
-
   function onScatterplotHover(e) {
-    if (e.detail != null) updateThumbnailID(e.detail);
-    else if (canvas.clickedIDs.length == 1)
-      updateThumbnailID(canvas.clickedIDs[0]);
-    else updateThumbnailID(null);
-  }
-
-  function onScatterplotClick(e) {
-    if (e.detail.length != 1) updateThumbnailID(null);
-    else updateThumbnailID(e.detail[0]);
+    if (e.detail != null) {
+      thumbnailIDs = [e.detail];
+      thumbnailHover = true;
+    } else {
+      thumbnailIDs = $selectedIDs;
+      thumbnailHover = false;
+    }
   }
 
   function handleLoadSelection(event) {
     for (const id of event.detail.selectedIDs) {
       if (id < 0 || id >= dataset.length) {
-        alert("Invalid Selected IDs in Selection!");
+        alert('Invalid Selected IDs in Selection!');
         return;
       }
     }
 
     for (const id of event.detail.alignedIDs) {
       if (id < 0 || id >= dataset.length) {
-        alert("Invalid Aligned IDs in Selection!");
+        alert('Invalid Aligned IDs in Selection!');
         return;
       }
     }
 
     for (const id of event.detail.filter) {
       if (id < 0 || id >= dataset.length) {
-        alert("Invalid Filtered IDs in Selection!");
+        alert('Invalid Filtered IDs in Selection!');
         return;
       }
     }
 
-    if (event.detail.currentFrame < 0 || event.detail.currentFrame >= dataset.frameCount) {
-      alert("Invalid Frame ID in Selection!");
+    if (
+      event.detail.currentFrame < 0 ||
+      event.detail.currentFrame >= dataset.frameCount
+    ) {
+      alert('Invalid Frame ID in Selection!');
       return;
     }
 
@@ -181,7 +155,7 @@
     filter = event.detail.filter;
     $currentFrame = event.detail.currentFrame;
     isOpenSidebar = false;
-	}
+  }
 
   let oldFrame = 0;
   $: if (oldFrame != $currentFrame) {
@@ -189,11 +163,9 @@
     oldFrame = $currentFrame;
   }
 
-  let oldPreviewFrame = -1;
-
-  $: if (oldPreviewFrame != previewFrame) {
-    updatePreviewThumbnailID();
-    oldPreviewFrame = previewFrame;
+  $: {
+    thumbnailIDs = $selectedIDs;
+    thumbnailHover = false;
   }
 
   let spinner;
@@ -211,6 +183,8 @@
     }, 0);
   }
 
+  let showLegend = true;
+
   // Thumbnails
 
   $: if (!!dataset && !!canvas) {
@@ -218,6 +192,29 @@
       dataset.addThumbnails($thumbnailData);
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
+    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
+  }
+
+  // Autocomplete
+
+  let pointSelectorOptions = [];
+
+  function updatePointSelectorOptions() {
+    if (dataset == null || $currentFrame < 0) return;
+    let frame = dataset.frame($currentFrame);
+    pointSelectorOptions = frame.getIDs().map((itemID) => {
+      if (!!frame.get(itemID, 'label')) {
+        return {
+          value: itemID,
+          text: `${itemID} - ${frame.get(itemID, 'label').text}`,
+        };
+      }
+      return { value: itemID, text: itemID.toString() };
+    });
+  }
+
+  $: if (dataset != null && $currentFrame >= 0) {
+    updatePointSelectorOptions();
   }
 </script>
 
@@ -227,96 +224,81 @@
     <i class="text-primary fa fa-spinner fa-spin" />
   </div>
 {:else}
-  <Sidebar bind:show={isOpenSidebar} bind:data={$selectionList} on:loadSelection={handleLoadSelection} />
+  <Sidebar
+    bind:show={isOpenSidebar}
+    bind:data={$selectionList}
+    on:loadSelection={handleLoadSelection}
+  />
 
   <Modal visible={isOpenDialogue} width={400}>
     <div class="modal-header">
-  <!--         <h5 class="modal-title">Save Selection History</h5> -->
-        <button type="button" class="close" on:click={() => (isOpenDialogue = false)}>
+      <!--         <h5 class="modal-title">Save Selection History</h5> -->
+      <button
+        type="button"
+        class="close"
+        on:click={() => (isOpenDialogue = false)}
+      >
         <span aria-hidden="true">&times;</span>
-        </button>
+      </button>
     </div>
     <div class="modal-body">
-        <form>
-          <div class="form-group">
-            <label for="name-of-selection" class="col-form-label">Name of Selection:</label>
-            <br>
-            <input type="text" class="form-control" id="name-of-selection" bind:value={nameField}>
-          </div>
-          <div class="form-group">
-            <label for="description" class="col-form-label">Description:</label>
-            <br>
-            <textarea class="form-control" id="description" bind:value={descriptionField}></textarea>
-          </div>
-        </form>
+      <form>
+        <div class="form-group">
+          <label for="name-of-selection" class="col-form-label"
+            >Name of Selection:</label
+          >
+          <br />
+          <input
+            type="text"
+            class="form-control"
+            id="name-of-selection"
+            bind:value={nameField}
+          />
+        </div>
+        <div class="form-group">
+          <label for="description" class="col-form-label">Description:</label>
+          <br />
+          <textarea
+            class="form-control"
+            id="description"
+            bind:value={descriptionField}
+          />
+        </div>
+      </form>
       <p>Summary:</p>
       <ul>
         <li>{$selectedIDs.length} points selected</li>
         <li>Aligned to {$alignedIDs.length} points</li>
         <li>Filtered {filter.size} points</li>
         <li>Frame {$currentFrame}</li>
-      </ul> 
-      </div>
+      </ul>
+    </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" on:click={() => (isOpenDialogue = false)}>Close</button>
-        <button type="button" class="btn btn-primary" on:click={() => {$selectionDescription = descriptionField; 
-                                                                       $selectionName = nameField;
-                                                                       $filterList = Array.from(filter);
-                                                                       $saveSelectionFlag = true;
-                                                                       isOpenDialogue = false;
-                                                                       nameField = "";
-                                                                       descriptionField = "";}}>Save changes</button>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        on:click={() => (isOpenDialogue = false)}>Close</button
+      >
+      <button
+        type="button"
+        class="btn btn-primary"
+        on:click={() => {
+          $selectionDescription = descriptionField;
+          $selectionName = nameField;
+          $filterList = Array.from(filter);
+          $saveSelectionFlag = true;
+          isOpenDialogue = false;
+          nameField = '';
+          descriptionField = '';
+        }}>Save changes</button
+      >
     </div>
   </Modal>
 
-  <div style="display: flex; align-items: flex-start;">
-    <div class="scatterplot-container">
-      <SynchronizedScatterplot
-        bind:this={canvas}
-        data={dataset}
-        padding={$plotPadding}
-        frame={$currentFrame}
-        {previewFrame}
-        hoverable
-        showPreviewControls
-        animateTransitions
-        width={600}
-        height={600}
-        backgroundColor={previewFrame != $currentFrame && previewFrame != -1
-          ? '#f8f8ff'
-          : 'white'}
-        bind:clickedIDs={$selectedIDs}
-        bind:alignedIDs={$alignedIDs}
-        bind:filter={filter}
-        on:datahover={onScatterplotHover}
-        on:dataclick={onScatterplotClick}
-        {colorScheme}
-      />
-    </div>
-    <div class="spinner-container">
-      {#if $selectedIDs.length > 0}
-        <button 
-          type="button"
-          class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (isOpenDialogue = true)}>
-          Save Selection
-        </button>
-      {/if}
-      
-      <button 
-          type="button"
-          class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => {$loadSelectionFlag = true;
-                                          isOpenSidebar = true;}}>
-          Load Selection
-      </button>
-       
-    </div>
-    {#if !!dataset}
-      <div
-        style="margin-left: 24px; height: 600px; display: flex; flex-wrap: wrap; flex-direction: column; align-content: flex-start; width: 240px;"
-      >
-        {#each [...d3.range(dataset.frameCount)] as i}
+  <div class="vis-container">
+    <div class="thumbnail-container">
+      {#each [...d3.range(dataset.frameCount)] as i}
+        <div class="thumbnail-item">
           <ScatterplotThumbnail
             on:click={() => {
               if (previewFrame == i) {
@@ -327,52 +309,156 @@
             }}
             isSelected={$currentFrame == i}
             isPreviewing={previewFrame == i && previewFrame != $currentFrame}
-            colorScale={!!dataset ? dataset.colorScale(colorScheme) : null}
+            colorScale={!!dataset
+              ? dataset.colorScale(colorSchemeObject)
+              : null}
             data={dataset}
             frame={!!dataset ? dataset.frame(i) : null}
+            accentColor={!!$frameColors && $frameColors.length > i
+              ? $frameColors[i]
+              : null}
           />
-        {/each}
-      </div>
-    {/if}
+        </div>
+      {/each}
+    </div>
 
-    {#if !!$thumbnailData}
-      {#if $thumbnailData.format == 'text_descriptions'}
-        <TextThumbnailViewer
-          thumbnailData={$thumbnailData}
-          width={200}
-          height={600}
+    <div class="scatterplot">
+      <div class="scatterplot-parent">
+        <SynchronizedScatterplot
+          bind:this={canvas}
+          data={dataset}
+          padding={$plotPadding}
           frame={$currentFrame}
-          diffColor="red"
-          primaryThumbnail={thumbnailID}
-          secondaryThumbnails={thumbnailNeighbors}
-          secondaryDiff={previewThumbnailNeighbors}
+          {previewFrame}
+          hoverable
+          showPreviewControls
+          animateTransitions
+          backgroundColor={previewFrame != $currentFrame && previewFrame != -1
+            ? '#f8f8ff'
+            : 'white'}
+          bind:clickedIDs={$selectedIDs}
+          bind:alignedIDs={$alignedIDs}
+          on:datahover={onScatterplotHover}
+          colorScheme={colorSchemeObject}
         />
-        {#if previewFrame != -1 && previewFrame != currentFrame}
-          <TextThumbnailViewer
-            thumbnailData={$thumbnailData}
-            width={200}
-            height={600}
-            primaryTitle="Preview"
-            frame={previewFrame}
-            diffColor="green"
-            message={previewThumbnailMessage}
-            primaryThumbnail={previewThumbnailID}
-            secondaryThumbnails={previewThumbnailNeighbors}
-            secondaryDiff={thumbnailNeighbors}
-          />
+        {#if showLegend}
+          <div class="legend-container">
+            <Legend
+              colorScale={!!dataset
+                ? dataset.colorScale(colorSchemeObject)
+                : null}
+              type={colorSchemeObject.type || 'continuous'}
+            />
+          </div>
         {/if}
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="action-toolbar">
+        <Autocomplete
+          placeholder="Search for a point..."
+          options={pointSelectorOptions}
+          maxOptions={10}
+          fillWidth={true}
+          on:change={(e) => ($selectedIDs = [e.detail])}
+        />
+      </div>
+      {#if !!$thumbnailData}
+        <div class="thumbnail-sidebar">
+          <DefaultThumbnailViewer
+            bind:this={thumbnailViewer}
+            {dataset}
+            primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
+            frame={$currentFrame}
+            {previewFrame}
+            {thumbnailIDs}
+          />
+        </div>
       {/if}
-    {/if}
+      {#if $selectedIDs.length > 0}
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          on:click|preventDefault={() => (isOpenDialogue = true)}
+        >
+          Save Selection
+        </button>
+      {/if}
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        on:click|preventDefault={() => {
+          $loadSelectionFlag = true;
+          isOpenSidebar = true;
+        }}
+      >
+        Load Selection
+      </button>
+    </div>
+    <div class="toolbar" />
   </div>
 {/if}
 
 <style>
-  .scatterplot-container {
-    width: 602px;
-    height: 602px;
-    border: 1px solid #444;
+  .scatterplot {
+    height: 100%;
+    flex: 1 1;
+    min-width: 0;
   }
-  .spinner-container {
-    padding-left: 16px;
+
+  .scatterplot-parent {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    /*border: 1px solid #bbb;*/
+  }
+
+  .vis-container {
+    width: 100%;
+    height: 600px;
+    display: flex;
+    justify-items: stretch;
+    /*border: 2px solid #bbb;*/
+  }
+
+  .thumbnail-item {
+    border-bottom: 1px solid #bbb;
+  }
+
+  .thumbnail-container {
+    flex-shrink: 0;
+    overflow-y: scroll;
+    border: 1px solid #bbb;
+  }
+
+  .legend-container {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+  }
+
+  .sidebar {
+    width: 300px;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    margin-right: 8px;
+    box-sizing: border-box;
+  }
+
+  .thumbnail-sidebar {
+    border: 1px solid #bbb;
+    flex-grow: 1;
+    overflow-y: scroll;
+    box-sizing: border-box;
+  }
+  .action-toolbar {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    padding: 4px;
   }
 </style>

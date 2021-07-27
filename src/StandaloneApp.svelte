@@ -4,6 +4,7 @@
   import { Dataset, PreviewMode } from './visualization/models/dataset';
   import TemporalVisualization from './visualization/TemporalVisualization.svelte';
   import SpatialVisualization from './visualization/SpatialVisualization.svelte';
+  import ColorSchemes from './colorschemes';
 
   let datasetOptions = ['mnist-umap'];
   let datasetName = 'mnist-umap';
@@ -11,19 +12,7 @@
   let colorChannel = 'constant';
   let colorChannelOptions = ['constant'];
 
-  let colorSchemeOptions = [
-    { name: 'turbo', value: d3.interpolateTurbo },
-    { name: 'tableau', value: d3.schemeTableau10, type: 'categorical' },
-    { name: 'plasma', value: d3.interpolatePlasma },
-    { name: 'magma', value: d3.interpolateMagma },
-    { name: 'viridis', value: d3.interpolateViridis },
-    { name: 'red-blue', value: d3.interpolateRdBu },
-    { name: 'blues', value: d3.interpolateBlues },
-    { name: 'greens', value: d3.interpolateGreens },
-    { name: 'reds', value: d3.interpolateReds },
-    { name: 'rainbow', value: d3.interpolateRainbow },
-  ];
-  let colorScheme = colorSchemeOptions[0];
+  let colorScheme = ColorSchemes.getColorScheme('tableau');
 
   let useHalos = false;
 
@@ -82,6 +71,9 @@
         if (!!thumbnailJSON) {
           thumbnailData = thumbnailJSON;
           data.addThumbnails(thumbnailData);
+          setTimeout(() => {
+            if (!!visualization) visualization.updateThumbnails();
+          }, 0);
           thumbnailsURL = '/datasets/' + datasetName + '/supplementary';
         }
       }
@@ -113,9 +105,7 @@
       (colorType == 'string' || colorType == 'object') &&
       colorScheme.type != 'categorical'
     ) {
-      colorScheme = colorSchemeOptions.filter(
-        (o) => o.type == 'categorical'
-      )[0];
+      colorScheme = ColorSchemes.defaultColorScheme('categorical');
     }
   }
 
@@ -165,7 +155,7 @@
         {/each}
       </select>
       <select bind:value={colorScheme} class="config-item">
-        {#each colorSchemeOptions as opt}
+        {#each ColorSchemes.allColorSchemes as opt}
           <option value={opt}>{opt.name}</option>
         {/each}
       </select>

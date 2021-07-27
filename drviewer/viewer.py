@@ -15,7 +15,7 @@ from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
-from .utils import Field, matrix_to_affine, affine_to_matrix
+from .utils import Field, matrix_to_affine, affine_to_matrix, DataType
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
@@ -69,6 +69,9 @@ class DRViewer(DOMWidget):
     loadSelectionFlag = Bool(False).tag(sync=True)
     selectionList = List([]).tag(sync=True)
     
+    # Name of a color scheme (e.g. tableau, turbo, reds)
+    colorScheme = Unicode("tableau").tag(sync=True)
+    
     def __init__(self, *args, **kwargs):
         """
         embeddings: An EmbeddingSet object.
@@ -80,7 +83,7 @@ class DRViewer(DOMWidget):
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
-
+        self.colorScheme = self.detect_color_scheme()
 
     @observe("saveSelectionFlag")
     def _observe_save_selection(self, change):
@@ -112,7 +115,17 @@ class DRViewer(DOMWidget):
                     tmpList.append(data)
             self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"].split(' ')[-1], reverse=True)
             self.loadSelectionFlag = False
-
+        
+    def detect_color_scheme(self):
+        """
+        Returns a default color scheme for the given type of data.
+        """
+        if len(self.embeddings) == 0:
+            return "tableau"
+        if self.embeddings[0].guess_data_type(Field.COLOR) == DataType.CATEGORICAL:
+            return "tableau"
+        return "plasma"
+        
     @observe("embeddings")
     def _observe_embeddings(self, change):
         embeddings = change.new
@@ -177,7 +190,7 @@ class DRViewer(DOMWidget):
         for emb in self.embeddings:
             transformations.append(affine_to_matrix(emb.align_to(
                 self.embeddings[self.currentFrame], 
-                ids=list(set(point_ids + peripheral_points)),
+                ids=list(set(point_ids)),
                 base_transform=base_transform,
                 return_transform=True,
                 allow_flips=False)).tolist())

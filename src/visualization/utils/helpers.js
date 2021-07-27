@@ -1,18 +1,18 @@
 export function scaleCanvas(c, w, h) {
   // Scales the canvas for the device screen resolution
   var result = c
-    .attr("width", w * window.devicePixelRatio)
-    .attr("height", h * window.devicePixelRatio)
-    .style("width", w + "px")
-    .style("height", h + "px");
+    .attr('width', w * window.devicePixelRatio)
+    .attr('height', h * window.devicePixelRatio)
+    .style('width', w + 'px')
+    .style('height', h + 'px');
 
-  var context = c.node().getContext("2d");
+  var context = c.node().getContext('2d');
   context.scale(window.devicePixelRatio, window.devicePixelRatio);
   return result;
 }
 
 // Function to create new colours for the hidden canvas.
-export function ColorIDMap(format = "css") {
+export function ColorIDMap(format = 'css') {
   this.nextColor = 1;
   this.format = format; // "css" or "hex"
 
@@ -27,8 +27,8 @@ export function ColorIDMap(format = "css") {
       ret.push((this.nextColor & 0xff0000) >> 16); // B
       this.nextColor += 5;
     }
-    if (this.format == "css") return "rgb(" + ret.join(",") + ")";
-    else if (this.format == "hex") return this.nextColor;
+    if (this.format == 'css') return 'rgb(' + ret.join(',') + ')';
+    else if (this.format == 'hex') return this.nextColor;
   };
 
   this.id = function (id, obj = null) {
@@ -45,7 +45,7 @@ export function ColorIDMap(format = "css") {
 
 export function colorWithOpacity(stringVal, opacity) {
   var rgb = stringVal.substring(4, stringVal.length - 1);
-  return "rgba(" + rgb + ", " + opacity + ")";
+  return 'rgba(' + rgb + ', ' + opacity + ')';
 }
 
 export function shuffle(array) {
@@ -74,7 +74,7 @@ export function getWithFallback(obj, attrName, fallback) {
 }
 
 export function approxEquals(obj1, obj2) {
-  if (typeof obj1 == "number" && typeof obj2 == "number") {
+  if (typeof obj1 == 'number' && typeof obj2 == 'number') {
     return Math.abs(obj1 - obj2) <= 0.001;
   }
   return obj1 == obj2;
@@ -153,4 +153,43 @@ export class ValueHistory {
     });
     return changed;
   }
+}
+
+export function base64ToBlob(b64Data, contentType = '', sliceSize = 512) {
+  const byteCharacters = atob(b64Data);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  const blob = new Blob(byteArrays, { type: contentType });
+  return blob;
+}
+
+/**
+ * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
+ *
+ * @param {String} text The text to be rendered.
+ * @param {String} font The css font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
+ *
+ * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
+ */
+export function getTextWidth(text, font) {
+  // re-use canvas object for better performance
+  var canvas =
+    getTextWidth.canvas ||
+    (getTextWidth.canvas = document.createElement('canvas'));
+  var context = canvas.getContext('2d');
+  context.font = font;
+  var metrics = context.measureText(text);
+  return metrics.width;
 }

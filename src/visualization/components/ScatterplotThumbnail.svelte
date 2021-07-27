@@ -9,18 +9,31 @@
   export let frame;
   export let isSelected = false;
   export let isPreviewing = false;
+  export let accentColor = null; // list of three values [h, s, l]
 
   let canvasBG = 'white';
   let isHovering = false;
   let isClicking = false;
 
   $: {
-    if (isClicking) {
-      canvasBG = 'skyblue';
-    } else if (isHovering) {
-      canvasBG = isSelected ? 'deepskyblue' : 'skyblue';
+    if (!!accentColor) {
+      let alpha = 0.4;
+      if (isClicking) {
+        alpha = 0.5;
+      } else if (isHovering) {
+        alpha = isSelected ? 0.7 : 0.4;
+      } else {
+        alpha = isSelected ? 0.7 : 0.0;
+      }
+      canvasBG = `hsla(${accentColor[0]}, ${accentColor[1]}%, ${accentColor[2]}%, ${alpha})`;
     } else {
-      canvasBG = isSelected ? 'deepskyblue' : 'white';
+      if (isClicking) {
+        canvasBG = 'skyblue';
+      } else if (isHovering) {
+        canvasBG = isSelected ? 'deepskyblue' : 'skyblue';
+      } else {
+        canvasBG = isSelected ? 'deepskyblue' : 'white';
+      }
     }
   }
 
@@ -46,7 +59,9 @@
 <div
   class="thumbnail-container"
   class:preview-frame={isPreviewing}
-  style="background-color: {canvasBG};"
+  style="background-color: {canvasBG}; {!!accentColor
+    ? `border-right: 6px solid hsl(${accentColor[0]}, ${accentColor[1]}%, ${accentColor[2]}%);`
+    : ''}"
   on:mouseover={onMouseover}
   on:mousedown={onMousedown}
   on:mouseup={onMouseup}
@@ -69,12 +84,11 @@
 <style>
   .thumbnail-container {
     width: 100px;
+    height: 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-radius: 8px;
-    margin: 8px;
-    padding: 8px;
+    justify-content: center;
   }
   .thumbnail-name {
     color: #555;
