@@ -1,6 +1,6 @@
-import * as d3 from "d3";
-import * as math from "mathjs";
-import { transformPoint } from "../utils/helpers.js";
+import * as d3 from 'd3';
+import * as math from 'mathjs';
+import { transformPoint } from '../utils/helpers.js';
 import {
   ColumnarData,
   ColumnarFrame,
@@ -8,18 +8,18 @@ import {
   NeighborPreview,
   PrecomputedPreview,
   ProjectionPreview,
-} from "./frames";
+} from './frames';
 
 export const PreviewMode = {
-  PROJECTION_SIMILARITY: "projectionNeighborSimilarity",
-  NEIGHBOR_SIMILARITY: "neighborSimilarity",
-  PRECOMPUTED: "precomputed",
+  PROJECTION_SIMILARITY: 'projectionNeighborSimilarity',
+  NEIGHBOR_SIMILARITY: 'neighborSimilarity',
+  PRECOMPUTED: 'precomputed',
 };
 
 export class Dataset {
   frames = [];
   frameTransformations = [];
-  colorKey = "color";
+  colorKey = 'color';
   r = 4.0;
   length = 0; // number of points
   frameCount = 0;
@@ -32,7 +32,7 @@ export class Dataset {
 
   constructor(rawData, colorKey, r = 4.0) {
     let frameSource;
-    if (rawData["data"]) {
+    if (rawData['data']) {
       // There are other keys
       frameSource = rawData.data;
       this.previews = rawData.previews;
@@ -42,7 +42,7 @@ export class Dataset {
     } else {
       // Old format
       frameSource = rawData;
-      this.frameLabels = frameSource.map((f, i) => "Frame " + (i + 1));
+      this.frameLabels = frameSource.map((f, i) => 'Frame ' + (i + 1));
     }
     this.colorKey = colorKey;
     this.r = r;
@@ -67,7 +67,7 @@ export class Dataset {
         return {
           x: point[0],
           y: point[1],
-          color: this.colorKey == "constant" ? 0.0 : el[this.colorKey] || 0.0,
+          color: this.colorKey == 'constant' ? 0.0 : el[this.colorKey] || 0.0,
           alpha: el.alpha != undefined ? el.alpha : 1.0,
           highlight: el.highlight.map((h) => parseInt(h)),
           r: this.r,
@@ -89,7 +89,7 @@ export class Dataset {
       let minVal = 1e9;
       let maxVal = -1e9;
       this.frames.forEach((frame) => {
-        let field = frame.getField("x");
+        let field = frame.getField('x');
         minVal = field.reduce((curr, val) => Math.min(curr, val), minVal);
         maxVal = field.reduce((curr, val) => Math.max(curr, val), maxVal);
       });
@@ -103,7 +103,7 @@ export class Dataset {
       let minVal = 1e9;
       let maxVal = -1e9;
       this.frames.forEach((frame) => {
-        let field = frame.getField("y");
+        let field = frame.getField('y');
         minVal = field.reduce((curr, val) => Math.min(curr, val), minVal);
         maxVal = field.reduce((curr, val) => Math.max(curr, val), maxVal);
       });
@@ -116,14 +116,14 @@ export class Dataset {
     if (categorical) {
       let uniqueColors = new Set();
       this.frames.forEach((frame) => {
-        frame.getField("color").forEach((c) => uniqueColors.add(c));
+        frame.getField('color').forEach((c) => uniqueColors.add(c));
       });
       this._colorExtent = Array.from(uniqueColors).sort();
     } else {
       let minVal = 1e9;
       let maxVal = -1e9;
       this.frames.forEach((frame, f) => {
-        let field = frame.getField("color");
+        let field = frame.getField('color');
         minVal = field.reduce((curr, val) => Math.min(curr, val), minVal);
         maxVal = field.reduce((curr, val) => Math.max(curr, val), maxVal);
       });
@@ -136,8 +136,8 @@ export class Dataset {
   // object can have a 'type' property (either "continuous" or "categorical"),
   // as well as a 'value' property that defines a d3 color scale function.
   colorScale(scheme) {
-    let colorType = scheme.type || "continuous";
-    if (colorType == "categorical") {
+    let colorType = scheme.type || 'continuous';
+    if (colorType == 'categorical') {
       return d3.scaleOrdinal(scheme.value).domain(this.getColorExtent(true));
     }
     return d3.scaleSequential(scheme.value).domain(this.getColorExtent());
@@ -149,7 +149,7 @@ export class Dataset {
       let frameObj = frame.byID(id);
       if (!frameObj) return;
       Object.keys(frameObj).forEach((col) => {
-        if (col == "id") return;
+        if (col == 'id') return;
         if (!obj.hasOwnProperty(col)) obj[col] = {};
         obj[col][f] = frameObj[col];
       });
@@ -226,41 +226,54 @@ export class Dataset {
 
   // Adds metadata to each point based on the given thumbnails.json data
   addThumbnails(thumbnailData) {
-    if (thumbnailData.format == "spritesheet") {
+    if (!thumbnailData) return;
+
+    let positionData = {};
+    if (!!thumbnailData.items) {
+      Object.keys(thumbnailData.items).forEach((id) => {
+        positionData[id] = {
+          text: thumbnailData.items[id].name,
+          description: thumbnailData.items[id].description,
+        };
+      });
+    }
+
+    if (!!thumbnailData.spritesheets) {
       this.spritesheets = thumbnailData.spritesheets;
-      let positionData = {};
       Object.keys(this.spritesheets).forEach((sheet) =>
         Object.keys(this.spritesheets[sheet].spec.frames).forEach((id) => {
-          positionData[id] = { sheet, texture: id };
+          if (!positionData[id]) positionData[id] = {};
+          positionData[id].sheet = sheet;
+          positionData[id].texture = id;
         })
       );
       this.thumbnailData = new ColumnarData(
         {
           sheet: { array: Array },
           texture: { array: Array },
+          text: { array: Array },
+          description: { array: Array },
         },
         positionData
       );
-    } else if (thumbnailData.format == "text_descriptions") {
+    } else {
       this.spritesheets = null;
-      let positionData = {};
-      Object.keys(thumbnailData.items).forEach((id) => {
-        positionData[id] = { text: thumbnailData.items[id].name };
-      });
       this.thumbnailData = new ColumnarData(
         {
           text: { array: Array },
+          description: { array: Array },
         },
         positionData
       );
     }
+
     if (!!this.thumbnailData)
-      this.frames.forEach((f) => f.linkData("label", this.thumbnailData));
+      this.frames.forEach((f) => f.linkData('label', this.thumbnailData));
   }
 
   removeThumbnails() {
     this.spritesheets = null;
     this.thumbnailData = null;
-    this.frames.forEach((f) => f.removeComputedField("label"));
+    this.frames.forEach((f) => f.removeComputedField('label'));
   }
 }

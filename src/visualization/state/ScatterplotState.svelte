@@ -560,21 +560,21 @@
           let mark = marks.getMarkByID(nodeID);
           let dataItem = frame.byID(nodeID);
           if (!mark || !dataItem || !dataItem.label) return null;
-          if (!!dataItem.label.text) {
-            return new Decoration('text', [mark], {
-              color: 'black',
-              text: dataItem.label.text,
-              priority: { valueFn: () => _getLabelPriority(mark) },
-              textScale: 1.0,
-              alpha: 0.0,
-            });
-          } else if (!!dataItem.label.sheet) {
+          if (!!dataItem.label.sheet) {
             return new Decoration('image', [mark], {
               color: null,
               labelInfo: dataItem.label,
               priority: { valueFn: () => _getLabelPriority(mark) },
               alpha: 0.0,
               maxDim: 200.0, // maximum width or height
+            });
+          } else if (!!dataItem.label.text) {
+            return new Decoration('text', [mark], {
+              color: 'black',
+              text: dataItem.label.text,
+              priority: { valueFn: () => _getLabelPriority(mark) },
+              textScale: 1.0,
+              alpha: 0.0,
             });
           }
         },

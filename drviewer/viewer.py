@@ -14,7 +14,7 @@ from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
-from .utils import Field, matrix_to_affine, affine_to_matrix
+from .utils import Field, matrix_to_affine, affine_to_matrix, DataType
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
@@ -60,6 +60,9 @@ class DRViewer(DOMWidget):
     selectionUnit = Unicode("").tag(sync=True)
     selectionOrderRequest = Dict({}).tag(sync=True)
     selectionOrder = List([]).tag(sync=True)
+
+    # Name of a color scheme (e.g. tableau, turbo, reds)
+    colorScheme = Unicode("tableau").tag(sync=True)
     
     def __init__(self, *args, **kwargs):
         """
@@ -69,6 +72,17 @@ class DRViewer(DOMWidget):
         super(DRViewer, self).__init__(*args, **kwargs)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
         self.isLoading = False
+        self.colorScheme = self.detect_color_scheme()
+        
+    def detect_color_scheme(self):
+        """
+        Returns a default color scheme for the given type of data.
+        """
+        if len(self.embeddings) == 0:
+            return "tableau"
+        if self.embeddings[0].guess_data_type(Field.COLOR) == DataType.CATEGORICAL:
+            return "tableau"
+        return "plasma"
         
     @observe("embeddings")
     def _observe_embeddings(self, change):
@@ -140,7 +154,7 @@ class DRViewer(DOMWidget):
         for emb in self.embeddings:
             transformations.append(affine_to_matrix(emb.align_to(
                 self.embeddings[self.currentFrame], 
-                ids=list(set(point_ids + peripheral_points)),
+                ids=list(set(point_ids)),
                 base_transform=base_transform,
                 return_transform=True,
                 allow_flips=False)).tolist())

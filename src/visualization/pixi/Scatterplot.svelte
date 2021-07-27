@@ -12,7 +12,6 @@
   import PixiScatterplot from './PixiScatterplot';
   import { PixiInMemoryLoader } from './PixiInMemoryLoader';
   import Scatterplot from '../canvas/Scatterplot.svelte';
-  import { selection } from 'd3';
 
   export let padding = 0.3;
 
@@ -81,6 +80,7 @@
 
   onMount(() => {
     PIXI.settings.FILTER_RESOLUTION = window.devicePixelRatio;
+    console.log('on scatteprlot mount');
     pixiApp = new PIXI.Application({
       antialias: true,
       transparent: true,
@@ -94,6 +94,12 @@
     let view = pixiApp.view;
     container.appendChild(view);
     initializeMouseHandlers(view);
+
+    // Read size of container when the view is fully laid out
+    setTimeout(() => {
+      actualWidth = container.clientWidth;
+      actualHeight = container.clientHeight;
+    }, 0);
 
     window.addEventListener('resize', handleResize);
   });
@@ -122,7 +128,9 @@
     }
   });
 
-  $: if (!!marks && !!pixiApp) {
+  let oldMarks = null;
+  $: if (!!marks && marks !== oldMarks) {
+    oldMarks = marks;
     setupScatterplot();
   }
 
@@ -175,7 +183,10 @@
     loadSpritesheets();
   }
 
-  $: if (!!scatterplot) {
+  let oldScatterplot;
+  $: if (!!scatterplot && scatterplot !== oldScatterplot) {
+    console.log('scatterplot updating thumbnails');
+    oldScatterplot = scatterplot;
     loadSpritesheets();
   }
 
@@ -199,13 +210,16 @@
           content[name].imageFormat || 'image/png'
         );
       })
-    ).then(() => {
-      if (!!loader)
-        console.log(
-          `Loaded ${Object.keys(content).length} spritesheets in-memory`
-        );
-      console.log(loader.resources['img_0.json'].textures);
-    });
+    )
+      .then(() => {
+        if (!!loader)
+          console.log(
+            `Loaded ${Object.keys(content).length} spritesheets in-memory`
+          );
+      })
+      .catch((e) => {
+        console.error('error loading spritesheets:', e);
+      });
     scatterplot.setTextureLoader(loader);
   }
 
@@ -340,10 +354,6 @@
 
     var el = getElementAtPoint(mouseX, mouseY);
     stateManager.selectElement(el, event.shiftKey);
-
-    /*if (!!el && el.type == 'mark' && !scatterplot.radiusselect) {
-      centerID = el.id;
-    }*/
   }
 
   // Selection
@@ -470,6 +480,7 @@
   }
 
   function idsWithinSelectionRadius(unit) {
+    if (!scatterplot || !scatterplot.radiusselect) return [];
     if (unit == 'pixels') {
       return marks
         .filter((mark) => {
@@ -519,6 +530,7 @@
     if (inRadiusselect) {
       if (!scatterplot.radiusselect) {
         scatterplot.startRadiusSelect(clickedIDs[0], selectionRadius);
+        tentativeSelectedIDs = idsWithinSelectionRadius(selectionUnit);
       }
     } else {
       if (!!scatterplot.radiusselect) {
