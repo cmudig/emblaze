@@ -39,7 +39,7 @@
        style="font-size:12px"
        on:click={() => dispatch('loadSelection', {selectedIDs: entry["selectedIDs"],
                                                   alignedIDs: entry["alignedIDs"],
-												  filter: new Set(entry["filterList"]),
+												  filterList: entry["filterList"],
                                                   currentFrame: entry["currentFrame"]})}>
 	   Load Selection
 	</button>

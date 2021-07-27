@@ -150,37 +150,39 @@
   }
 
   function handleLoadSelection(event) {
-    for (const id of event.detail.selectedIDs) {
-      if (id < 0 || id >= dataset.length) {
-        alert("Invalid Selected IDs in Selection!");
-        return;
-      }
-    }
 
-    for (const id of event.detail.alignedIDs) {
-      if (id < 0 || id >= dataset.length) {
-        alert("Invalid Aligned IDs in Selection!");
-        return;
-      }
-    }
-
-    for (const id of event.detail.filter) {
-      if (id < 0 || id >= dataset.length) {
-        alert("Invalid Filtered IDs in Selection!");
-        return;
-      }
-    }
+    // function filterFn(id) {
+    //   return dataset.frame(event.detail.currentFrame).has(id);
+    // }
 
     if (event.detail.currentFrame < 0 || event.detail.currentFrame >= dataset.frameCount) {
       alert("Invalid Frame ID in Selection!");
-      return;
     }
+    else {
+    
+      if (!event.detail.selectedIDs.every(id => dataset.frame(event.detail.currentFrame).has(id))) {
+        alert("Invalid SelectedIDs in Selection!");
+      }
 
-    $selectedIDs = event.detail.selectedIDs;
-    $alignedIDs = event.detail.alignedIDs;
-    filter = event.detail.filter;
-    $currentFrame = event.detail.currentFrame;
-    isOpenSidebar = false;
+      if (!event.detail.alignedIDs.every(id => dataset.frame(event.detail.currentFrame).has(id))) {
+        alert("Invalid AlignedIDs in Selection!");
+      }
+
+      if (!event.detail.filterList.every(id => dataset.frame(event.detail.currentFrame).has(id))) {
+        alert("Invalid Filter IDs in Selection!");
+      }
+
+      $currentFrame = event.detail.currentFrame;
+      $selectedIDs = event.detail.selectedIDs.filter(id => dataset.frame(event.detail.currentFrame).has(id));
+      $alignedIDs = event.detail.alignedIDs.filter(id => dataset.frame(event.detail.currentFrame).has(id));
+      filter = new Set(event.detail.filterList.filter(id => dataset.frame(event.detail.currentFrame).has(id)));
+
+      isOpenSidebar = false;
+
+      
+
+    }
+    
 	}
 
   let oldFrame = 0;
