@@ -359,7 +359,7 @@ class EmbeddingSet:
 
         return EmbeddingSet(lo_ds, align=align and not pre_aligned)
     
-    def compute_neighbors(self, n_neighbors=10, metric='euclidean'):
+    def compute_neighbors(self, n_neighbors=10, metric=None):
         """
         Computes and saves a set of nearest neighbors in each embedding set according
         to the Field.POSITION values. This can be accessed after completing this
