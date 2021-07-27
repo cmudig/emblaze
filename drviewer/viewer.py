@@ -51,7 +51,7 @@ class DRViewer(DOMWidget):
     currentFrame = Integer(0).tag(sync=True)
     selectedIDs = List([]).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
-    filterList = List([]).tag(sync=True)
+    filterIDs = List([]).tag(sync=True)
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
@@ -91,7 +91,7 @@ class DRViewer(DOMWidget):
             newSelection = { }
             newSelection["selectedIDs"] = self.selectedIDs
             newSelection["alignedIDs"] = self.alignedIDs
-            newSelection["filterList"] = self.filterList
+            newSelection["filterIDs"] = self.filterIDs
             newSelection["selectionDescription"] = self.selectionDescription
             newSelection["currentFrame"] = self.currentFrame
             now = datetime.now()

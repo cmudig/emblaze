@@ -41,7 +41,7 @@
 
   export let marks = null;
   export let colorMap; // For hidden IDs
-  export let filter = new Set();
+  export let filterIDs = [];
 
   // Mark styles may be specified in different formats for different renderers
   export let colorFormat = 'hex';
@@ -317,8 +317,10 @@
 
   // Filter
 
-  let prevFilter = null;
+  let filter = new Set();
+  $: filter = new Set(filterIDs);
 
+  let prevFilter = null;
   $: if (prevFilter !== filter) {
     if (prevFilter != null) {
       marks.animateComputed('alpha', interpolateTo, defaultDuration);

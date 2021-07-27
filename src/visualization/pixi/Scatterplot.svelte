@@ -32,7 +32,7 @@
   export let hoveredID = null;
   export let clickedIDs = [];
   export let alignedIDs = [];
-  export let filter = new Set();
+  export let filterIDs = [];
   export let followingIDs = [];
 
   export let data = null;
@@ -441,10 +441,10 @@
   }
 
   // Clear interaction map when filter is changed
-  let prevFilter = null;
-  $: if (prevFilter !== filter) {
+  let prevFilterIDs = null;
+  $: if (prevFilterIDs !== filterIDs) {
     if (!!scatterplot) scatterplot.clearInteractionMap();
-    prevFilter = filter;
+    prevFilterIDs = filterIDs;
   }
 
   function rescale() {
@@ -480,7 +480,7 @@
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}
     yScale={!!viewportManager ? (y) => viewportManager.scaleY(y) : null}
     bind:marks
-    bind:filter
+    bind:filterIDs
     bind:hoveredID
     bind:selectedIDs={clickedIDs}
     bind:alignedIDs

@@ -39,7 +39,8 @@
   export let hoveredID = null;
   export let clickedIDs = [];
   export let alignedIDs = [];
-  export let filter = new Set();
+  export let filterIDs = [];
+
   let followingIDs = [];
 
   const minSelection = 3;
@@ -72,7 +73,7 @@
   function updateSelection() {
     if (clickedIDs.length > 0) {
       showVicinityOfClickedPoint();
-      if (filter.size > 0) filterToSelection(true);
+      if (filterIDs.length > 0) filterToSelection(true);
     } else {
       followingIDs = [];
     }
@@ -90,15 +91,16 @@
   }
 
   // Filter button
+
   let showFilterButton = false;
-  $: showFilterButton = clickedIDs.length > 0 || filter.size > 0;
+  $: showFilterButton = clickedIDs.length > 0 || filterIDs.length > 0;
 
   function filterToSelection(append = false) {
     let newFilter = getFilterPoints(clickedIDs);
     if (append) {
-      filter.forEach((id) => newFilter.add(id));
+      filterIDs.forEach((id) => newFilter.add(id));
     }
-    filter = newFilter;
+    filterIDs = Array.from(newFilter);
   }
 
   function getFilterPoints(selection) {
@@ -118,7 +120,7 @@
   }
 
   function clearFilter() {
-    filter = new Set();
+    filterIDs = [];
   }
 
   // Radius select button
@@ -210,7 +212,7 @@
     clickedIDs = [];
     alignedIDs = [];
     followingIDs = [];
-    filter = new Set();
+    filterIDs = [];
     scatterplot.reset();
   }
 
@@ -267,7 +269,7 @@
     bind:hoveredID
     bind:alignedIDs
     bind:followingIDs
-    bind:filter
+    bind:filterIDs
     bind:data
     bind:scalesNeutral
     bind:inRadiusselect
@@ -317,11 +319,11 @@
         <button
           type="button"
           class="btn btn-success btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
-          on:click|preventDefault={filter.size > 0
+          on:click|preventDefault={filterIDs.length > 0
             ? clearFilter
             : () => filterToSelection()}
         >
-          {#if filter.size > 0}
+          {#if filterIDs.length > 0}
             Show All
           {:else}
             Isolate

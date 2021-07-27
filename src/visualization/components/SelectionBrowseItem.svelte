@@ -14,8 +14,8 @@
     <p class="detail">{entry['selectionDescription']}</p>
     <p class="detail summary-text">
       Frame {entry.currentFrame}, {entry.selectedIDs.length} selected, {entry
-        .alignedIDs.length} aligned, {entry.filterList.size > 0
-        ? `${entry.filterList.size} filtered`
+        .alignedIDs.length} aligned, {entry.filterIDs.length > 0
+        ? `${entry.filterIDs.length} filtered`
         : 'no filter'}
     </p>
     <button

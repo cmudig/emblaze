@@ -113,9 +113,7 @@
   let selectionList = syncValue(model, 'selectionList', []);
   //$: console.log("selectionList: ", $selectionList);
 
-  let filter = new Set();
-  let filterList = syncValue(model, 'filterList', []);
-  //$: console.log("filterList: ", $filterList);
+  let filterIDs = syncValue(model, 'filterIDs', []);
 
   function onScatterplotHover(e) {
     if (e.detail != null) {
@@ -136,7 +134,6 @@
   }
 
   function saveSelection(event) {
-    $filterList = Array.from(filter);
     $saveSelectionFlag = true;
     isOpenDialogue = false;
   }
@@ -156,13 +153,12 @@
     } else {
       let invalidSelected = !event.detail.selectedIDs.every(filterFn);
       let invalidAligned = !event.detail.alignedIDs.every(filterFn);
-      let invalidFilter = !event.detail.filterList.every(filterFn);
+      let invalidFilter = !event.detail.filterIDs.every(filterFn);
 
       $currentFrame = event.detail.currentFrame;
       $selectedIDs = event.detail.selectedIDs.filter(filterFn);
       $alignedIDs = event.detail.alignedIDs.filter(filterFn);
-      filter = new Set(event.detail.filterList.filter(filterFn));
-      isOpenSidebar = false;
+      $filterIDs = event.detail.filterIDs.filter(filterFn);
 
       if (invalidSelected || invalidAligned || invalidFilter) {
         let messages = [];
@@ -256,8 +252,8 @@
         </p>
         <p>
           <strong>Filter:</strong>
-          {#if filter.size > 0}
-            {filter.size} points
+          {#if $filterIDs.length > 0}
+            {$filterIDs.length} points
           {:else}
             No filter
           {/if}
@@ -317,7 +313,7 @@
             : 'white'}
           bind:clickedIDs={$selectedIDs}
           bind:alignedIDs={$alignedIDs}
-          bind:filter
+          bind:filterIDs={$filterIDs}
           on:datahover={onScatterplotHover}
           colorScheme={colorSchemeObject}
         />
@@ -373,7 +369,7 @@
           on:click|preventDefault={openSaveSelectionDialog}
           disabled={$selectedIDs.length == 0 &&
             $alignedIDs.length == 0 &&
-            filter.size == 0}
+            $filterIDs.length == 0}
         >
           Save Selection
         </button>
