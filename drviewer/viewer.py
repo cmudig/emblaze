@@ -87,7 +87,7 @@ class DRViewer(DOMWidget):
 
     @observe("saveSelectionFlag")
     def _observe_save_selection(self, change):
-        if change.new is not None:
+        if change.new:
             newSelection = { }
             newSelection["selectedIDs"] = self.selectedIDs
             newSelection["alignedIDs"] = self.alignedIDs
@@ -102,19 +102,27 @@ class DRViewer(DOMWidget):
             self.saveSelectionFlag = False
             self.selectionName = ""
             self.selectionDescription = ""
+            self.refresh_saved_selections()
 
     @observe("loadSelectionFlag")
     def _observe_load_selection(self, change):
-        if change.new is not None:
-            tmpList = []
-            # self.selectionList = []
-            for file in glob.glob("*.selection"):
-                with open(file, "r") as jsonFile:
-                    data = json.load(jsonFile)                            
-                    data["selectionName"] = file.split('.')[0]
-                    tmpList.append(data)
-            self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"], reverse=True)
-            self.loadSelectionFlag = False
+        if change.new:
+            self.refresh_saved_selections()
+            
+    def refresh_saved_selections(self):
+        """
+        Updates the selectionList property, which is displayed in the sidebar
+        under the Saved tab.
+        """
+        tmpList = []
+        # self.selectionList = []
+        for file in glob.glob("*.selection"):
+            with open(file, "r") as jsonFile:
+                data = json.load(jsonFile)                            
+                data["selectionName"] = file.split('.')[0]
+                tmpList.append(data)
+        self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"], reverse=True)
+        self.loadSelectionFlag = False
         
     def detect_color_scheme(self):
         """
