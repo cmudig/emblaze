@@ -17,7 +17,8 @@
   import Legend from './visualization/components/Legend.svelte';
   import Autocomplete from './visualization/components/Autocomplete.svelte';
   import Modal from './visualization/components/Modal.svelte';
-  import Sidebar from './visualization/components/Sidebar.svelte';
+  import SelectionBrowser from './visualization/components/Sidebar.svelte';
+  import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -120,47 +121,55 @@
     }
   }
 
+  // Saving and loading selections
+
+  function openSaveSelectionDialog() {
+    $selectionName = '';
+    $selectionDescription = '';
+    isOpenDialogue = true;
+  }
+
+  function saveSelection(event) {
+    $filterList = Array.from(filter);
+    $saveSelectionFlag = true;
+    isOpenDialogue = false;
+  }
+
   function handleLoadSelection(event) {
-    for (const id of event.detail.selectedIDs) {
-      if (id < 0 || id >= dataset.length) {
-        alert('Invalid Selected IDs in Selection!');
-        return;
-      }
-    }
-
-    for (const id of event.detail.alignedIDs) {
-      if (id < 0 || id >= dataset.length) {
-        alert('Invalid Aligned IDs in Selection!');
-        return;
-      }
-    }
-
-    for (const id of event.detail.filter) {
-      if (id < 0 || id >= dataset.length) {
-        alert('Invalid Filtered IDs in Selection!');
-        return;
-      }
+    function filterFn(id) {
+      return dataset.frame(event.detail.currentFrame).has(id);
     }
 
     if (
       event.detail.currentFrame < 0 ||
       event.detail.currentFrame >= dataset.frameCount
     ) {
-      alert('Invalid Frame ID in Selection!');
-      return;
+      alert(
+        'This saved selection has an invalid frame number and cannot be loaded.'
+      );
+    } else {
+      let invalidSelected = !event.detail.selectedIDs.every(filterFn);
+      let invalidAligned = !event.detail.alignedIDs.every(filterFn);
+      let invalidFilter = !event.detail.filterList.every(filterFn);
+
+      $currentFrame = event.detail.currentFrame;
+      $selectedIDs = event.detail.selectedIDs.filter(filterFn);
+      $alignedIDs = event.detail.alignedIDs.filter(filterFn);
+      filter = new Set(event.detail.filterList.filter(filterFn));
+      isOpenSidebar = false;
+
+      if (invalidSelected || invalidAligned || invalidFilter) {
+        let messages = [];
+        if (invalidSelected) messages.push('invalid selected IDs');
+        if (invalidAligned) messages.push('invalid aligned IDs');
+        if (invalidFilter) messages.push('invalid filter IDs');
+        alert(
+          'This saved selection had the following issues: ' +
+            messages.join(', ') +
+            '. The remainder of the selection was loaded.'
+        );
+      }
     }
-
-    $selectedIDs = event.detail.selectedIDs;
-    $alignedIDs = event.detail.alignedIDs;
-    filter = event.detail.filter;
-    $currentFrame = event.detail.currentFrame;
-    isOpenSidebar = false;
-  }
-
-  let oldFrame = 0;
-  $: if (oldFrame != $currentFrame) {
-    updateThumbnailID(thumbnailID);
-    oldFrame = $currentFrame;
   }
 
   $: {
@@ -224,75 +233,36 @@
     <i class="text-primary fa fa-spinner fa-spin" />
   </div>
 {:else}
-  <Sidebar
-    bind:show={isOpenSidebar}
-    bind:data={$selectionList}
-    on:loadSelection={handleLoadSelection}
-  />
-
   <Modal visible={isOpenDialogue} width={400}>
-    <div class="modal-header">
-      <!--         <h5 class="modal-title">Save Selection History</h5> -->
-      <button
-        type="button"
-        class="close"
-        on:click={() => (isOpenDialogue = false)}
-      >
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-    <div class="modal-body">
-      <form>
-        <div class="form-group">
-          <label for="name-of-selection" class="col-form-label"
-            >Name of Selection:</label
-          >
-          <br />
-          <input
-            type="text"
-            class="form-control"
-            id="name-of-selection"
-            bind:value={nameField}
-          />
-        </div>
-        <div class="form-group">
-          <label for="description" class="col-form-label">Description:</label>
-          <br />
-          <textarea
-            class="form-control"
-            id="description"
-            bind:value={descriptionField}
-          />
-        </div>
-      </form>
-      <p>Summary:</p>
-      <ul>
-        <li>{$selectedIDs.length} points selected</li>
-        <li>Aligned to {$alignedIDs.length} points</li>
-        <li>Filtered {filter.size} points</li>
-        <li>Frame {$currentFrame}</li>
-      </ul>
-    </div>
-    <div class="modal-footer">
-      <button
-        type="button"
-        class="btn btn-secondary"
-        on:click={() => (isOpenDialogue = false)}>Close</button
-      >
-      <button
-        type="button"
-        class="btn btn-primary"
-        on:click={() => {
-          $selectionDescription = descriptionField;
-          $selectionName = nameField;
-          $filterList = Array.from(filter);
-          $saveSelectionFlag = true;
-          isOpenDialogue = false;
-          nameField = '';
-          descriptionField = '';
-        }}>Save changes</button
-      >
-    </div>
+    <SaveSelectionPane
+      bind:name={$selectionName}
+      bind:description={$selectionDescription}
+      on:cancel={() => (isOpenDialogue = false)}
+      on:save={saveSelection}
+    >
+      <div slot="summary">
+        <p>
+          <strong>Frame number:</strong>
+          {$currentFrame}
+        </p>
+        <p>
+          <strong>Filter:</strong>
+          {#if filter.size > 0}
+            {filter.size} points
+          {:else}
+            No filter
+          {/if}
+        </p>
+        <p>
+          <strong>Selected:</strong>
+          {$selectedIDs.length} points
+        </p>
+        <p>
+          <strong>Aligned:</strong>
+          {$alignedIDs.length} points
+        </p>
+      </div>
+    </SaveSelectionPane>
   </Modal>
 
   <div class="vis-container">
@@ -363,8 +333,14 @@
           on:change={(e) => ($selectedIDs = [e.detail])}
         />
       </div>
-      {#if !!$thumbnailData}
-        <div class="thumbnail-sidebar">
+      <div class="sidebar-content">
+        {#if isOpenSidebar}
+          <SelectionBrowser
+            bind:data={$selectionList}
+            on:close={() => (isOpenSidebar = false)}
+            on:loadSelection={handleLoadSelection}
+          />
+        {:else if !!$thumbnailData}
           <DefaultThumbnailViewer
             bind:this={thumbnailViewer}
             {dataset}
@@ -373,13 +349,13 @@
             {previewFrame}
             {thumbnailIDs}
           />
-        </div>
-      {/if}
+        {/if}
+      </div>
       {#if $selectedIDs.length > 0}
         <button
           type="button"
           class="btn btn-primary btn-sm"
-          on:click|preventDefault={() => (isOpenDialogue = true)}
+          on:click|preventDefault={openSaveSelectionDialog}
         >
           Save Selection
         </button>
@@ -449,7 +425,7 @@
     box-sizing: border-box;
   }
 
-  .thumbnail-sidebar {
+  .sidebar-content {
     border: 1px solid #bbb;
     flex-grow: 1;
     overflow-y: scroll;

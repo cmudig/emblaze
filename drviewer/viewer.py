@@ -113,7 +113,7 @@ class DRViewer(DOMWidget):
                     data = json.load(jsonFile)                            
                     data["selectionName"] = file.split('.')[0]
                     tmpList.append(data)
-            self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"].split(' ')[-1], reverse=True)
+            self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"], reverse=True)
             self.loadSelectionFlag = False
         
     def detect_color_scheme(self):
