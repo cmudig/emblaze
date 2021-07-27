@@ -17,7 +17,7 @@
   import Legend from './visualization/components/Legend.svelte';
   import Autocomplete from './visualization/components/Autocomplete.svelte';
   import Modal from './visualization/components/Modal.svelte';
-  import SelectionBrowser from './visualization/components/Sidebar.svelte';
+  import SelectionBrowser from './visualization/components/SelectionBrowser.svelte';
   import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
 
   let data = syncValue(model, 'data', {});
@@ -197,8 +197,11 @@
   // Thumbnails
 
   $: if (!!dataset && !!canvas) {
-    if (!!$thumbnailData && !!$thumbnailData.format)
-      dataset.addThumbnails($thumbnailData);
+    updateThumbnails($thumbnailData);
+  }
+
+  function updateThumbnails(td) {
+    if (!!td && !!td.format) dataset.addThumbnails(td);
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
     if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();

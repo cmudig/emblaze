@@ -477,8 +477,8 @@
     {previewInfo}
     colorScale={(c) => colorScale(c)}
     colorFormat="rgbArray"
-    xScale={(x) => viewportManager.scaleX(x)}
-    yScale={(y) => viewportManager.scaleY(y)}
+    xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}
+    yScale={!!viewportManager ? (y) => viewportManager.scaleY(y) : null}
     bind:marks
     bind:filter
     bind:hoveredID
