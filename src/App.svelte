@@ -19,6 +19,7 @@
   import Modal from './visualization/components/Modal.svelte';
   import SelectionBrowser from './visualization/components/SelectionBrowser.svelte';
   import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
+  import SegmentedControl from './visualization/components/SegmentedControl.svelte';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -102,8 +103,13 @@
   let name = '';
   let description = '';
 
-  let isOpenSidebar = false;
+  const SidebarPanes = {
+    CURRENT: 0,
+    SAVED: 1,
+  };
+  let visibleSidebarPane = SidebarPanes.CURRENT; // 0 = current, 1 = saved
   let loadSelectionFlag = syncValue(model, 'loadSelectionFlag', false);
+  $: $loadSelectionFlag = visibleSidebarPane == SidebarPanes.SAVED;
   let selectionList = syncValue(model, 'selectionList', []);
   //$: console.log("selectionList: ", $selectionList);
 
@@ -327,7 +333,7 @@
       </div>
     </div>
     <div class="sidebar">
-      <div class="action-toolbar">
+      <div class="search-bar">
         <Autocomplete
           placeholder="Search for a point..."
           options={pointSelectorOptions}
@@ -336,14 +342,19 @@
           on:change={(e) => ($selectedIDs = [e.detail])}
         />
       </div>
+      <div class="action-toolbar">
+        <SegmentedControl
+          bind:selected={visibleSidebarPane}
+          options={['Current', 'Saved']}
+        />
+      </div>
       <div class="sidebar-content">
-        {#if isOpenSidebar}
+        {#if visibleSidebarPane == SidebarPanes.SAVED}
           <SelectionBrowser
             bind:data={$selectionList}
-            on:close={() => (isOpenSidebar = false)}
             on:loadSelection={handleLoadSelection}
           />
-        {:else if !!$thumbnailData}
+        {:else if visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
           <DefaultThumbnailViewer
             bind:this={thumbnailViewer}
             {dataset}
@@ -354,25 +365,18 @@
           />
         {/if}
       </div>
-      {#if $selectedIDs.length > 0}
+      <div class="action-toolbar">
         <button
           type="button"
           class="btn btn-primary btn-sm"
           on:click|preventDefault={openSaveSelectionDialog}
+          disabled={$selectedIDs.length == 0 &&
+            $alignedIDs.length == 0 &&
+            filter.size == 0}
         >
           Save Selection
         </button>
-      {/if}
-      <button
-        type="button"
-        class="btn btn-primary btn-sm"
-        on:click|preventDefault={() => {
-          $loadSelectionFlag = true;
-          isOpenSidebar = true;
-        }}
-      >
-        Load Selection
-      </button>
+      </div>
     </div>
     <div class="toolbar" />
   </div>
@@ -434,10 +438,18 @@
     overflow-y: scroll;
     box-sizing: border-box;
   }
+  .search-bar {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 4px;
+    flex: 0 0 auto;
+  }
   .action-toolbar {
     display: flex;
     align-items: center;
     height: 48px;
-    padding: 4px;
+    padding: 4px 0;
+    flex: 0 0 auto;
   }
 </style>

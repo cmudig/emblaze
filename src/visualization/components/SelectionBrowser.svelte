@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
 
-  import Collapsible from './Collapsible';
+  import SelectionBrowseItem from './SelectionBrowseItem';
 
   const dispatch = createEventDispatcher();
   export let data = [];
@@ -12,7 +12,7 @@
     Close Sidebar
   </button>
   {#each data as entry}
-    <Collapsible {entry} on:loadSelection />
+    <SelectionBrowseItem {entry} on:loadSelection />
   {/each}
 </div>
 
