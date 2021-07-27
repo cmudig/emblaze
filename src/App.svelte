@@ -151,35 +151,32 @@
 
   function handleLoadSelection(event) {
 
-    // function filterFn(id) {
-    //   return dataset.frame(event.detail.currentFrame).has(id);
-    // }
+    function filterFn(id) {
+      return dataset.frame(event.detail.currentFrame).has(id);
+    }
 
     if (event.detail.currentFrame < 0 || event.detail.currentFrame >= dataset.frameCount) {
       alert("Invalid Frame ID in Selection!");
     }
     else {
     
-      if (!event.detail.selectedIDs.every(id => dataset.frame(event.detail.currentFrame).has(id))) {
+      if (!event.detail.selectedIDs.every(filterFn)) {
         alert("Invalid SelectedIDs in Selection!");
       }
 
-      if (!event.detail.alignedIDs.every(id => dataset.frame(event.detail.currentFrame).has(id))) {
+      if (!event.detail.alignedIDs.every(filterFn)) {
         alert("Invalid AlignedIDs in Selection!");
       }
 
-      if (!event.detail.filterList.every(id => dataset.frame(event.detail.currentFrame).has(id))) {
+      if (!event.detail.filterList.every(filterFn)) {
         alert("Invalid Filter IDs in Selection!");
       }
 
       $currentFrame = event.detail.currentFrame;
-      $selectedIDs = event.detail.selectedIDs.filter(id => dataset.frame(event.detail.currentFrame).has(id));
-      $alignedIDs = event.detail.alignedIDs.filter(id => dataset.frame(event.detail.currentFrame).has(id));
-      filter = new Set(event.detail.filterList.filter(id => dataset.frame(event.detail.currentFrame).has(id)));
-
+      $selectedIDs = event.detail.selectedIDs.filter(filterFn);
+      $alignedIDs = event.detail.alignedIDs.filter(filterFn);
+      filter = new Set(event.detail.filterList.filter(filterFn));
       isOpenSidebar = false;
-
-      
 
     }
     
