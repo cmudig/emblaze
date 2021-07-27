@@ -84,6 +84,17 @@ class ColumnarData:
     def set_field(self, field, values):
         assert self.length == len(values), "Field '{}' has mismatched length (expected {}, got {})".format(field, self.length, len(values))
         self.data[field] = np.array(values)
+        
+    def guess_data_type(self, field):
+        """
+        Guesses the likely data type for the given field, returning either
+        DataType.CATEGORICAL or DataType.CONTINUOUS.
+        """
+        if field not in self.data:
+            return None
+        if len(np.unique(self.data[field])) >= 12:
+            return DataType.CONTINUOUS
+        return DataType.CATEGORICAL
     
 class Embedding(ColumnarData):
     """

@@ -1,8 +1,7 @@
 <script>
   import * as d3 from 'd3';
-  import ImageThumbnailViewer from './components/ImageThumbnailViewer.svelte';
   import Legend from './components/Legend.svelte';
-  import TextThumbnailViewer from './components/TextThumbnailViewer.svelte';
+  import DefaultThumbnailViewer from './components/DefaultThumbnailViewer.svelte';
   import Autocomplete from './components/Autocomplete.svelte';
   import ScatterplotThumbnail from './components/ScatterplotThumbnail.svelte';
   import SynchronizedScatterplot from './SynchronizedScatterplot.svelte';
@@ -33,6 +32,11 @@
   $: if (!!data) {
     currentFrame = 0;
     previewFrame = -1;
+  }
+
+  export function updateThumbnails() {
+    canvas.updateThumbnails();
+    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
   }
 
   function updateThumbnailID(id) {
@@ -79,7 +83,7 @@
   }
 
   function onScatterplotClick(e) {
-    if (e.detail.length == 1) updateThumbnailID(e.detail);
+    if (e.detail.length == 1) updateThumbnailID(e.detail[0]);
     else updateThumbnailID(null);
   }
 
@@ -181,55 +185,15 @@
     {/if}
 
     {#if !!thumbnailData}
-      {#if thumbnailData.format == 'imagegrid'}
-        <ImageThumbnailViewer
-          bind:this={thumbnailViewer}
-          {thumbnailData}
-          width={200}
-          height={600}
-          baseURL={thumbnailsURL}
-          primaryThumbnail={thumbnailID}
-          secondaryThumbnails={thumbnailNeighbors}
-        />
-        {#if previewFrame != -1 && previewFrame != currentFrame}
-          <ImageThumbnailViewer
-            {thumbnailData}
-            width={200}
-            height={600}
-            baseURL={thumbnailsURL}
-            primaryTitle="Preview"
-            message={previewThumbnailMessage}
-            primaryThumbnail={previewThumbnailID}
-            secondaryThumbnails={previewThumbnailNeighbors}
-          />
-        {/if}
-      {:else if thumbnailData.format == 'text_descriptions'}
-        <TextThumbnailViewer
-          bind:this={thumbnailViewer}
-          {thumbnailData}
-          width={200}
-          height={600}
-          frame={currentFrame}
-          diffColor="red"
-          primaryThumbnail={thumbnailID}
-          secondaryThumbnails={thumbnailNeighbors}
-          secondaryDiff={previewThumbnailNeighbors}
-        />
-        {#if previewFrame != -1 && previewFrame != currentFrame}
-          <TextThumbnailViewer
-            {thumbnailData}
-            width={200}
-            height={600}
-            primaryTitle="Preview"
-            frame={previewFrame}
-            diffColor="green"
-            message={previewThumbnailMessage}
-            primaryThumbnail={previewThumbnailID}
-            secondaryThumbnails={previewThumbnailNeighbors}
-            secondaryDiff={thumbnailNeighbors}
-          />
-        {/if}
-      {/if}
+      <DefaultThumbnailViewer
+        bind:this={thumbnailViewer}
+        dataset={data}
+        width={200}
+        height={600}
+        frame={currentFrame}
+        {previewFrame}
+        thumbnailIDs={thumbnailID !== null ? [thumbnailID] : []}
+      />
     {/if}
   </div>
 

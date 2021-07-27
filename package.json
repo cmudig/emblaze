@@ -62,6 +62,7 @@
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3",
+    "@types/d3": "^7.0.0",
     "d3": "^6.7.0",
     "d3-svg-legend": "^2.25.6",
     "mathjs": "^9.3.2",

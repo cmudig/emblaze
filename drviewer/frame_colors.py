@@ -43,7 +43,7 @@ def _clustered_ordering(distances):
 
     return walk_tree(clusterer.children_)
 
-def _arrange_around_circle(distances, ordering):
+def _arrange_around_circle(distances, offset, ordering):
     """
     Arrange the points represented by the given distance matrix around a circle.
     The radius of the circle is a rough measure of 'clusteredness' of the data,
@@ -66,10 +66,13 @@ def _arrange_around_circle(distances, ordering):
 
     last_theta = thetas[-1] + theta_distances[ordering[-1], ordering[0]]
     thetas = np.array(thetas) * 2 * np.pi / last_theta # scale around the circle
-    thetas += np.random.uniform(0.0, 2 * np.pi) # random offset
+    thetas += offset
+    # thetas += np.random.uniform(0.0, 2.0 * np.pi) # random offset
     
     # Determine radius
     R = np.abs(theta_distances - np.mean(theta_distances)).mean() / np.max(theta_distances)
+    # absolute distance-based measure
+    # R = (distances.sum() / (len(distances.flatten()) - len(distances))) / max_dist
     
     # Create the points
     reduced = np.zeros((len(ordering), 2))
@@ -96,7 +99,9 @@ def compute_colors(frames, ids_of_interest=None, peripheral_points=None, scale_f
     
     # First compute a distance matrix for the IDs for each frame
     neighbor_dists = [np.log(1 + frame.distances(ids_of_interest, peripheral_points).flatten()) for frame in frames]
-
+    
+    clusteredness = np.array([np.abs(ndists - np.mean(ndists)).mean() / np.max(ndists)
+                              for ndists in neighbor_dists])
     distances = np.zeros((len(frames), len(frames)))
     for i in range(len(frames)):
         for j in range(len(frames)):
@@ -104,16 +109,20 @@ def compute_colors(frames, ids_of_interest=None, peripheral_points=None, scale_f
 
     # Compute an ordering using hierarchical clustering
     ordering_indexes = _clustered_ordering(distances)
+    # Put the most cluster-y embedding first
+    first_index = np.argmax(clusteredness)
+    ordering_position = np.argmax(ordering_indexes == first_index)
+    ordering_indexes = np.concatenate([ordering_indexes[ordering_position:], ordering_indexes[:ordering_position]]).astype(int)
 
     # Arrange the colors around a color wheel in the L*a*b* color space.
-    reduced = _arrange_around_circle(distances, ordering_indexes)
+    offset = clusteredness[first_index]
+    reduced = _arrange_around_circle(distances, offset, ordering_indexes) #, max_dist=np.array(neighbor_dists).mean())
 
     # Generate colors in L*a*b* space and convert to HSL/HSV
     colors = []
-    offset = np.random.uniform(-25.0, 25.0, 2)
     for point in reduced:
-        scaled_point = np.array([point[0] * 100.0 * scale_factor + offset[0],
-                                point[1] * 100.0 * scale_factor + offset[1]])
+        scaled_point = np.array([point[0] * 100.0 * scale_factor,
+                                point[1] * 100.0 * scale_factor])
         lab = LabColor(70.0, scaled_point[1], scaled_point[0])
         rgb = convert_color(lab, HSLColor)
         colors.append((int(rgb.hsl_h), int(rgb.hsl_s * 100.0), int(rgb.hsl_l * 100.0)))
