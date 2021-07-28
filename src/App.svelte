@@ -9,7 +9,7 @@
 
   // Creates a Svelte store (https://svelte.dev/tutorial/writable-stores) that syncs with the named Traitlet in widget.ts and example.py.
   import { syncValue } from './stores';
-  import { Dataset } from './visualization/models/dataset.js';
+  import { Dataset, PreviewMode } from './visualization/models/dataset.js';
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import { fade } from 'svelte/transition';
@@ -40,6 +40,12 @@
     console.log('New color scheme:', newScheme, colorSchemeObject);
     if (!!newScheme) colorSchemeObject = newScheme;
   }
+  let previewMode = syncValue(
+    model,
+    'previewMode',
+    PreviewMode.PROJECTION_SIMILARITY
+  );
+  let previewParameters = syncValue(model, 'previewParameters', {});
 
   $: if (
     !!$frameTransformations &&
@@ -212,6 +218,18 @@
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
     if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
+  }
+
+  // Previews
+
+  $: if (!!dataset) {
+    dataset.setPreviewMode($previewMode);
+  }
+
+  $: if (!!dataset) {
+    Object.keys($previewParameters).forEach((k) => {
+      dataset.setPreviewParameter(k, $previewParameters[k]);
+    });
   }
 
   // Autocomplete

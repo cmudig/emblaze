@@ -6,7 +6,7 @@
 
 from .viewer import DRViewer
 from .datasets import Embedding, EmbeddingSet
-from .utils import ProjectionTechnique, Field
+from .utils import ProjectionTechnique, Field, PreviewMode
 from .thumbnails import Thumbnails, TextThumbnails, ImageThumbnails
 from ._version import __version__, version_info
 

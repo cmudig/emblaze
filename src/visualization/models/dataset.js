@@ -25,6 +25,7 @@ export class Dataset {
   frameCount = 0;
   hasPreviews = false;
   previewMode = PreviewMode.PROJECTION_SIMILARITY;
+  previewParameters = {};
   ids = [];
 
   thumbnailData = null;
@@ -181,6 +182,17 @@ export class Dataset {
     this.previewMode = previewMode;
   }
 
+  setPreviewParameter(param, value) {
+    this.previewParameters[param] = value;
+  }
+
+  getPreviewParameter(param) {
+    if (this.previewParameters.hasOwnProperty(param))
+      return this.previewParameters[param];
+    if (param == 'k') return 10;
+    else if (param == 'similarityThreshold') return 0.5;
+  }
+
   previewInfo(frameNumber, previewFrameNumber) {
     // Could cache these values
     let frame = this.frames[frameNumber];
@@ -202,9 +214,19 @@ export class Dataset {
         neighborScale
       );
     } else if (this.previewMode == PreviewMode.PROJECTION_SIMILARITY) {
-      return new ProjectionPreview(frame, previewFrame);
+      return new ProjectionPreview(
+        frame,
+        previewFrame,
+        this.getPreviewParameter('k'),
+        this.getPreviewParameter('similarityThreshold')
+      );
     } else if (this.previewMode == PreviewMode.NEIGHBOR_SIMILARITY) {
-      return new NeighborPreview(frame, previewFrame);
+      return new NeighborPreview(
+        frame,
+        previewFrame,
+        this.getPreviewParameter('k'),
+        this.getPreviewParameter('similarityThreshold')
+      );
     }
     return new FramePreview(frame, previewFrame);
   }

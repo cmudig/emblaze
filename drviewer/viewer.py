@@ -15,7 +15,7 @@ from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
-from .utils import Field, matrix_to_affine, affine_to_matrix, DataType
+from .utils import Field, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
@@ -71,7 +71,11 @@ class DRViewer(DOMWidget):
     selectionList = List([]).tag(sync=True)
     
     # Name of a color scheme (e.g. tableau, turbo, reds)
-    colorScheme = Unicode("tableau").tag(sync=True)
+    colorScheme = Unicode("").tag(sync=True)
+    
+    # Preview info
+    previewMode = Unicode("").tag(sync=True)
+    previewParameters = Dict({}).tag(sync=True)
     
     def __init__(self, *args, **kwargs):
         """
@@ -84,7 +88,10 @@ class DRViewer(DOMWidget):
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
-        self.colorScheme = self.detect_color_scheme()
+        if not self.colorScheme:
+            self.colorScheme = self.detect_color_scheme()
+        if not self.previewMode:
+            self.previewMode = self.detect_preview_mode()
 
     @observe("saveSelectionFlag")
     def _observe_save_selection(self, change):
@@ -135,6 +142,23 @@ class DRViewer(DOMWidget):
         if self.embeddings[0].guess_data_type(Field.COLOR) == DataType.CATEGORICAL:
             return "tableau"
         return "plasma"
+    
+    def detect_preview_mode(self):
+        """
+        Returns a projection similarity preview mode if the neighbors in all the
+        frames are mostly the same, and a neighbor similarity preview mode
+        otherwise.
+        """
+        for emb_1 in self.embeddings:
+            if not emb_1.has_field(Field.NEIGHBORS):
+                return PreviewMode.PROJECTION_SIMILARITY
+            for emb_2 in self.embeddings:
+                if not emb_2.has_field(Field.NEIGHBORS):
+                    return PreviewMode.PROJECTION_SIMILARITY
+                if not np.allclose(emb_1.field(Field.NEIGHBORS),
+                                   emb_2.field(Field.NEIGHBORS)):
+                    return PreviewMode.NEIGHBOR_SIMILARITY
+        return PreviewMode.PROJECTION_SIMILARITY
         
     @observe("embeddings")
     def _observe_embeddings(self, change):
@@ -154,6 +178,9 @@ class DRViewer(DOMWidget):
         mins = np.min(base_frame, axis=0)
         maxes = np.max(base_frame, axis=0)
         self.plotPadding = np.min(maxes - mins) * 0.2
+        
+        self.colorScheme = self.detect_color_scheme()
+        self.previewMode = self.detect_preview_mode()
 
     @observe("thumbnails")
     def _observe_thumbnails(self, change):
