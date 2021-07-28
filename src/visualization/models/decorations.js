@@ -3,9 +3,9 @@ import {
   Decoration,
   Animator,
   easeInOut,
-} from "./data_items.js";
-import { circumscribeCircle } from "../utils/enclosing_circle.js";
-import { getWithFallback } from "../utils/helpers";
+} from './data_items.js';
+import { circumscribeCircle } from '../utils/enclosing_circle.js';
+import { getWithFallback } from '../utils/helpers';
 
 // Defines the visual decoration appearance of a star graph
 export function DecorationStarGraph(
@@ -18,25 +18,25 @@ export function DecorationStarGraph(
   this.neighborMarks = neighborMarks;
   this.isOn = false;
 
-  this.outlineDecoration = new Decoration("outline", [this.centerMark], {
+  this.outlineDecoration = new Decoration('outline', [this.centerMark], {
     r: {
-      valueFn: () => (this.isOn ? this.centerMark.attr("r") + 3.0 : 0.0),
+      valueFn: () => (this.isOn ? this.centerMark.attr('r') + 3.0 : 0.0),
     },
-    color: "007bff",
+    color: '007bff',
     lineWidth: 1.0,
     zIndex: outlineZIndex,
   });
 
   this._makeNeighborDecoration = function (mark) {
-    let dec = new Decoration("line", [this.centerMark, mark], {
-      color: "007bff",
+    let dec = new Decoration('line', [this.centerMark, mark], {
+      color: '007bff',
       lineWidth: 0.5,
       alpha: { valueFn: () => (this.isOn ? 1.0 : 0.0) },
       x2: {
-        valueFn: () => (this.isOn ? mark.attr("x") : this.centerMark.attr("x")),
+        valueFn: () => (this.isOn ? mark.attr('x') : this.centerMark.attr('x')),
       },
       y2: {
-        valueFn: () => (this.isOn ? mark.attr("y") : this.centerMark.attr("y")),
+        valueFn: () => (this.isOn ? mark.attr('y') : this.centerMark.attr('y')),
       },
       zIndex: lineZIndex,
     });
@@ -52,18 +52,18 @@ export function DecorationStarGraph(
   };
 
   this._updateNeighborDecoration = function (markSet, d, duration, curve) {
-    markSet.animateDecorationComputed(d, "x2", duration, curve);
-    markSet.animateDecorationComputed(d, "y2", duration, curve);
-    markSet.animateDecorationComputed(d, "alpha", duration, curve);
+    markSet.animateDecorationComputed(d, 'x2', duration, curve);
+    markSet.animateDecorationComputed(d, 'y2', duration, curve);
+    markSet.animateDecorationComputed(d, 'alpha', duration, curve);
   };
 
   this.enter = function (markSet, duration = 300, curve = null) {
     this.isOn = true;
     markSet.animateDecoration(
       this.outlineDecoration,
-      "r",
+      'r',
       new Animator(
-        interpolateTo(this.outlineDecoration.data("r")),
+        interpolateTo(this.outlineDecoration.data('r')),
         duration,
         curve
       )
@@ -78,7 +78,7 @@ export function DecorationStarGraph(
     this.isOn = false;
     markSet.animateDecoration(
       this.outlineDecoration,
-      "r",
+      'r',
       new Animator(interpolateTo(0.0), duration, curve)
     );
 
@@ -136,14 +136,14 @@ export function ClusterPreviewHalo(marks, color, alpha, colorID) {
 
   // Compute static location
   let points = this.marks.map((mark) => [
-    mark.attr("x", false),
-    mark.attr("y", false),
+    mark.attr('x', false),
+    mark.attr('y', false),
   ]);
   this.circle = circumscribeCircle(points);
   let xTransform = this.marks[0].attributes.x.transform;
   let yTransform = this.marks[0].attributes.y.transform;
 
-  this.decoration = new Decoration("halo", this.marks, {
+  this.decoration = new Decoration('halo', this.marks, {
     x: {
       value: this.circle.x,
       transform: xTransform,
@@ -175,14 +175,14 @@ export function ClusterPreviewHalo(marks, color, alpha, colorID) {
     this.isOn = true;
     markSet.animateDecoration(
       this.decoration,
-      "r",
-      new Animator(interpolateTo(this.decoration.data("r")), duration, curve)
+      'r',
+      new Animator(interpolateTo(this.decoration.data('r')), duration, curve)
     );
     markSet.animateDecoration(
       this.decoration,
-      "alpha",
+      'alpha',
       new Animator(
-        interpolateTo(this.decoration.data("alpha")),
+        interpolateTo(this.decoration.data('alpha')),
         duration,
         curve
       )
@@ -193,14 +193,14 @@ export function ClusterPreviewHalo(marks, color, alpha, colorID) {
     this.isOn = false;
     markSet.animateDecoration(
       this.decoration,
-      "r",
-      new Animator(interpolateTo(this.decoration.data("r")), duration, curve)
+      'r',
+      new Animator(interpolateTo(this.decoration.data('r')), duration, curve)
     );
     markSet.animateDecoration(
       this.decoration,
-      "alpha",
+      'alpha',
       new Animator(
-        interpolateTo(this.decoration.data("alpha")),
+        interpolateTo(this.decoration.data('alpha')),
         duration,
         curve
       )
@@ -211,8 +211,8 @@ export function ClusterPreviewHalo(marks, color, alpha, colorID) {
     this.isHovering = hovering;
     markSet.animateDecoration(
       this.decoration,
-      "lineWidth",
-      new Animator(interpolateTo(this.decoration.data("lineWidth")), 200)
+      'lineWidth',
+      new Animator(interpolateTo(this.decoration.data('lineWidth')), 200)
     );
   };
 }
@@ -224,67 +224,67 @@ export class WideningLineDecoration extends Decoration {
   frame2;
 
   constructor(mark, frame, lineWidthFn, lineAlphaFn) {
-    super("wideningLine", [mark], {
+    super('wideningLine', [mark], {
       x2: {
         value: 0.0,
-        transform: mark.attributes["x"].transform,
+        transform: mark.attributes['x'].transform,
       },
       y2: {
         value: 0.0,
-        transform: mark.attributes["y"].transform,
+        transform: mark.attributes['y'].transform,
       },
       lineWidth: {
         valueFn: () => lineWidthFn(mark),
       },
       alpha: {
-        valueFn: () => lineAlphaFn(mark),
+        valueFn: () => mark.attr('alpha') * lineAlphaFn(mark),
       },
       color: {
-        valueFn: () => mark.attr("fillStyle"),
+        valueFn: () => mark.attr('fillStyle'),
       },
     });
 
     this.frame1 = frame;
     this.frame2 = frame;
     this.mark = mark;
-    this.attributes["x2"].set(() => this._getX2());
-    this.attributes["x2"].compute();
-    this.attributes["y2"].set(() => this._getY2());
-    this.attributes["y2"].compute();
+    this.attributes['x2'].set(() => this._getX2());
+    this.attributes['x2'].compute();
+    this.attributes['y2'].set(() => this._getY2());
+    this.attributes['y2'].compute();
   }
 
   _getX() {
-    return this.frame1.get(this.mark.id, "x", this.mark.attr("x"));
+    return this.frame1.get(this.mark.id, 'x', this.mark.attr('x'));
   }
 
   _getY() {
-    return this.frame1.get(this.mark.id, "y", this.mark.attr("y"));
+    return this.frame1.get(this.mark.id, 'y', this.mark.attr('y'));
   }
 
   _getX2() {
-    return this.frame2.get(this.mark.id, "x", this.mark.attr("x"));
+    return this.frame2.get(this.mark.id, 'x', this.mark.attr('x'));
   }
 
   _getY2() {
-    return this.frame2.get(this.mark.id, "y", this.mark.attr("y"));
+    return this.frame2.get(this.mark.id, 'y', this.mark.attr('y'));
   }
 
   animateToFrames(markSet, frame1, frame2, duration = 300) {
     if (this.frame1 !== frame1) {
       this.frame1 = frame1;
-      markSet.animateDecorationComputed(this, "x", duration, easeInOut);
-      markSet.animateDecorationComputed(this, "y", duration, easeInOut);
+      markSet.animateDecorationComputed(this, 'x', duration, easeInOut);
+      markSet.animateDecorationComputed(this, 'y', duration, easeInOut);
     }
     if (this.frame2 !== frame2) {
       this.frame2 = frame2;
-      markSet.animateDecorationComputed(this, "x2", duration, easeInOut);
-      markSet.animateDecorationComputed(this, "y2", duration, easeInOut);
+      markSet.animateDecorationComputed(this, 'x2', duration, easeInOut);
+      markSet.animateDecorationComputed(this, 'y2', duration, easeInOut);
     }
   }
 
   updateLineAppearance(markSet, duration = 300) {
-    markSet.animateDecorationComputed(this, "lineWidth", duration, easeInOut);
-    markSet.animateDecorationComputed(this, "alpha", duration, easeInOut);
-    markSet.animateDecorationComputed(this, "color", duration, easeInOut);
+    markSet.animateDecorationComputed(this, 'lineWidth', duration, easeInOut);
+    markSet.animateDecorationComputed(this, 'alpha', duration, easeInOut);
+    markSet.animateDecorationComputed(this, 'color', duration, easeInOut);
   }
 }
