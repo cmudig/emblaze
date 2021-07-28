@@ -92,6 +92,8 @@ class DRViewer(DOMWidget):
             self.colorScheme = self.detect_color_scheme()
         if not self.previewMode:
             self.previewMode = self.detect_preview_mode()
+        if len(self.previewParameters) == 0:
+            self.previewParameters = {'k': 10, 'similarityThreshold': 0.5}
 
     @observe("saveSelectionFlag")
     def _observe_save_selection(self, change):

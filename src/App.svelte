@@ -20,6 +20,7 @@
   import SelectionBrowser from './visualization/components/SelectionBrowser.svelte';
   import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
   import SegmentedControl from './visualization/components/SegmentedControl.svelte';
+  import SettingsPane from './visualization/components/SettingsPane.svelte';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -220,7 +221,7 @@
     if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
   }
 
-  // Previews
+  // Previews and settings
 
   $: if (!!dataset) {
     dataset.setPreviewMode($previewMode);
@@ -232,6 +233,8 @@
     });
   }
 
+  let isSettingsOpen = false;
+
   // Autocomplete
 
   let pointSelectorOptions = [];
@@ -240,10 +243,11 @@
     if (dataset == null || $currentFrame < 0) return;
     let frame = dataset.frame($currentFrame);
     pointSelectorOptions = frame.getIDs().map((itemID) => {
-      if (!!frame.get(itemID, 'label')) {
+      let label = frame.get(itemID, 'label');
+      if (!!label && !!label.text) {
         return {
           value: itemID,
-          text: `${itemID} - ${frame.get(itemID, 'label').text}`,
+          text: `${itemID} - ${label.text}`,
         };
       }
       return { value: itemID, text: itemID.toString() };
@@ -295,6 +299,19 @@
         </p>
       </div>
     </SaveSelectionPane>
+  </Modal>
+
+  <Modal visible={isSettingsOpen} width={400}>
+    <SettingsPane
+      bind:colorScheme={$colorScheme}
+      bind:showLegend
+      bind:previewMode={$previewMode}
+      previewModes={Object.values(PreviewMode)}
+      colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
+      bind:k={$previewParameters.k}
+      bind:similarityThreshold={$previewParameters.similarityThreshold}
+      on:close={() => (isSettingsOpen = false)}
+    />
   </Modal>
 
   <div class="vis-container">
@@ -399,6 +416,14 @@
             $filterIDs.length == 0}
         >
           Save Selection
+        </button>
+        <div style="flex-grow: 1" />
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
+          on:click|preventDefault={() => (isSettingsOpen = true)}
+        >
+          Settings
         </button>
       </div>
     </div>
