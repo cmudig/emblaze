@@ -49,6 +49,7 @@ class DRViewer(DOMWidget):
     plotPadding = Float(10.0).tag(sync=True)
     
     currentFrame = Integer(0).tag(sync=True)
+    alignedFrame = Integer(0).tag(sync=True)
     selectedIDs = List([]).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
     filterIDs = List([]).tag(sync=True)
@@ -94,6 +95,7 @@ class DRViewer(DOMWidget):
             newSelection["filterIDs"] = self.filterIDs
             newSelection["selectionDescription"] = self.selectionDescription
             newSelection["currentFrame"] = self.currentFrame
+            newSelection["alignedFrame"] = self.alignedFrame
             now = datetime.now()
             dateTime = now.strftime("%Y-%m-%d %H:%M:%S")
             with open(dateTime + ' ' + self.selectionName + '.selection', 'w') as outfile:
@@ -193,11 +195,11 @@ class DRViewer(DOMWidget):
             return
     
         transformations = []
-        base_transform = matrix_to_affine(np.array(self.frameTransformations[self.currentFrame]))
+        base_transform = matrix_to_affine(np.array(self.frameTransformations[self.alignedFrame]))
 
         for emb in self.embeddings:
             transformations.append(affine_to_matrix(emb.align_to(
-                self.embeddings[self.currentFrame], 
+                self.embeddings[self.alignedFrame], 
                 ids=list(set(point_ids)),
                 base_transform=base_transform,
                 return_transform=True,

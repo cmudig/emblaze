@@ -82,7 +82,9 @@
   //$: console.log($selectedIDs);
 
   let alignedIDs = syncValue(model, 'alignedIDs', []);
-  $: console.log($alignedIDs);
+  let alignedFrame = syncValue(model, 'alignedFrame', 0);
+  // alignedFrame should match currentFrame as long as there is no current alignment
+  $: if ($alignedIDs.length == 0) $alignedFrame = $currentFrame;
 
   let thumbnailIDs = [];
   let thumbnailHover = false;
@@ -145,7 +147,9 @@
 
     if (
       event.detail.currentFrame < 0 ||
-      event.detail.currentFrame >= dataset.frameCount
+      event.detail.currentFrame >= dataset.frameCount ||
+      event.detail.alignedFrame < 0 ||
+      event.detail.alignedFrame >= dataset.frameCount
     ) {
       alert(
         'This saved selection has an invalid frame number and cannot be loaded.'
@@ -156,6 +160,7 @@
       let invalidFilter = !event.detail.filterIDs.every(filterFn);
 
       $currentFrame = event.detail.currentFrame;
+      $alignedFrame = event.detail.alignedFrame;
       $selectedIDs = event.detail.selectedIDs.filter(filterFn);
       $alignedIDs = event.detail.alignedIDs.filter(filterFn);
       $filterIDs = event.detail.filterIDs.filter(filterFn);
@@ -264,7 +269,11 @@
         </p>
         <p>
           <strong>Aligned:</strong>
-          {$alignedIDs.length} points
+          {#if $alignedIDs.length > 0}
+            {$alignedIDs.length} points, to frame {$alignedFrame}
+          {:else}
+            No alignment
+          {/if}
         </p>
       </div>
     </SaveSelectionPane>
