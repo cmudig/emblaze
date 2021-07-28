@@ -67,7 +67,6 @@
   //export let showRadiusselect = false;
   let centerX;
   let centerY;
-  let centerID;
   export let inRadiusselect = false;
   const defaultRadius = 25.0;
   export let selectionRadius = defaultRadius;
@@ -349,9 +348,6 @@
     var el = getElementAtPoint(mouseX, mouseY);
     stateManager.selectElement(el, event.shiftKey);
 
-    if (!!el && el.type == 'mark' && !scatterplot.radiusselect) {
-      centerID = el.id;
-    }
   }
 
   // Selection
@@ -414,8 +410,8 @@
 
   $: if (!!scatterplot) {
     if (inRadiusselect) {
-      if (!scatterplot.radiusselect) {
-        scatterplot.startRadiusSelect(centerID, selectionRadius);
+      if (!scatterplot.radiusselect && clickedIDs.length == 1) {
+        scatterplot.startRadiusSelect(clickedIDs[0], selectionRadius);
       }
     } else {
       if (!!scatterplot.radiusselect) {
