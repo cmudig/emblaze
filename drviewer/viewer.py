@@ -53,6 +53,8 @@ class DRViewer(DOMWidget):
     selectedIDs = List([]).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
     filterIDs = List([]).tag(sync=True)
+    
+    numNeighbors = Integer(10).tag(sync=True)
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)

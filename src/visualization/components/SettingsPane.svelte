@@ -4,7 +4,26 @@
   export let previewMode = '';
   export let previewModes = [];
 
-  export let k = 10;
+  export let numNeighbors = 10;
+
+  // Delay the setting of numNeighbors since it might alter the UI
+  let numNeighborsValue = 10;
+  let oldNumNeighbors = 10;
+  let numNeighborsTimeout = null;
+  $: numNeighborsValue = numNeighbors;
+  $: if (oldNumNeighbors != numNeighborsValue) {
+    updateNumNeighbors();
+    oldNumNeighbors = numNeighborsValue;
+  }
+
+  function updateNumNeighbors() {
+    if (!!numNeighborsTimeout) clearTimeout(numNeighborsTimeout);
+    numNeighborsTimeout = setTimeout(() => {
+      numNeighbors = numNeighborsValue;
+    }, 100);
+  }
+
+  export let previewK = 10;
   export let similarityThreshold = 0.5;
 
   export let colorScheme = '';
@@ -30,6 +49,23 @@
       </select>
     </div>
     <div class="form-row">
+      <label for="neighbor-k" class="col-form-label"
+        >Neighbor Count: {numNeighborsValue}</label
+      >
+      <input
+        class="col-form-element"
+        type="range"
+        min="5"
+        max="100"
+        step="5"
+        bind:value={numNeighborsValue}
+        id="neighbor-k"
+      />
+    </div>
+    <p class="help-text">
+      The number of neighbors displayed in the scatterplot and sidebar.
+    </p>
+    <div class="form-row">
       <input type="checkbox" id="show-legend" bind:checked={showLegend} />
       <label for="show-legend" style="padding-left: 12px;">Show Legend</label>
     </div>
@@ -46,14 +82,16 @@
       </select>
     </div>
     <div class="form-row">
-      <label for="preview-k" class="col-form-label">Neighbor Count: {k}</label>
+      <label for="preview-k" class="col-form-label"
+        >Preview Neighbor Count: {previewK}</label
+      >
       <input
         class="col-form-element"
         type="range"
         min="5"
         max="100"
         step="5"
-        bind:value={k}
+        bind:value={previewK}
         id="preview-k"
       />
     </div>

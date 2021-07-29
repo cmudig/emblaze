@@ -46,6 +46,9 @@
   // Mark styles may be specified in different formats for different renderers
   export let colorFormat = 'hex';
 
+  // Number of neighbors to display
+  export let numNeighbors = 10;
+
   // Constants
 
   const frameDuration = 4000;
@@ -243,7 +246,7 @@
       marks.animateComputed('alpha', interpolateTo, frameDuration, easeInOut);
     }
 
-    Object.keys(starGraphPool.getAllVisible()).forEach((id) => {
+    starGraphPool.getAllVisibleIDs().forEach((id) => {
       updateStarGraph(id, animated);
     });
   }
@@ -298,7 +301,7 @@
           previewLinePool.show(mark.id);
         }
       });
-      Object.values(previewLinePool.getAllVisible()).forEach((item) => {
+      previewLinePool.getAllVisible().forEach((item) => {
         let dec = item.element;
         dec.animateToFrames(
           marks,
@@ -309,7 +312,7 @@
         dec.updateLineAppearance(marks, previewAnimDuration);
       });
     } else {
-      Object.keys(previewLinePool.getAllVisible()).forEach((id) => {
+      previewLinePool.getAllVisibleIDs().forEach((id) => {
         previewLinePool.hide(id);
       });
     }
@@ -400,7 +403,10 @@
     highlightedPoints = new Set(
       selectedIDs
         .map((id) => {
-          return [id, ...frame.get(id, 'highlightIndexes')];
+          return [
+            id,
+            ...frame.get(id, 'highlightIndexes').slice(0, numNeighbors),
+          ];
         })
         .flat()
     );
@@ -561,6 +567,16 @@
     if (!!info) info.transient = transient;
   }
 
+  let oldNeighbors = 0;
+  $: if (oldNeighbors != numNeighbors) {
+    if (!!starGraphPool) {
+      starGraphPool.getAllVisibleIDs().forEach((id) => {
+        updateStarGraph(id);
+      });
+    }
+    oldNeighbors = numNeighbors;
+  }
+
   function updateStarGraph(nodeID, animated = true) {
     let info = starGraphPool.getInfo(nodeID);
     let element = starGraphPool.getElement(nodeID);
@@ -571,7 +587,7 @@
 
     let item = frame.byID(nodeID);
     if (item) {
-      let newNeighbors = item.highlightIndexes || [];
+      let newNeighbors = (item.highlightIndexes || []).slice(0, numNeighbors);
       info.highlightedNodes = [info.highlightedNodes[0], ...newNeighbors];
       element.updateNeighborMarks(
         newNeighbors.map((id) => marks.getMarkByID(id)).filter((m) => !!m),
@@ -588,7 +604,7 @@
     starGraphPool.show(id, () => {
       let item = frame.byID(id);
       if (!item) return;
-      let neighbors = item.highlightIndexes || [];
+      let neighbors = (item.highlightIndexes || []).slice(0, numNeighbors);
       return {
         linkedNodeIDs: neighbors,
         transient,
@@ -612,7 +628,7 @@
       visibleGraphs.add(selected);
       if (transientID == selected) transientID = null;
     }
-    Object.keys(starGraphPool.getAll()).forEach((key) => {
+    starGraphPool.getAllIDs().forEach((key) => {
       if (!visibleGraphs.has(key)) starGraphPool.hide(key);
     });
     visibleGraphs.forEach((key) => {
@@ -626,7 +642,7 @@
     alignedIDs.forEach((id) => idsToShow.add(id));
     selectedIDs.forEach((id) => idsToShow.delete(id));
 
-    Object.keys(alignDecorationPool.getAllVisible()).forEach((id) => {
+    alignDecorationPool.getAllVisibleIDs().forEach((id) => {
       alignDecorationPool.hide(id);
     });
     idsToShow.forEach((id) => alignDecorationPool.show(id));
@@ -641,7 +657,7 @@
       labeledPoints = new Set(highlightedPoints);
     }
     if (!!hoveredID) labeledPoints.add(hoveredID);
-    Object.keys(labelPool.getAll()).forEach((key) => {
+    labelPool.getAllIDs().forEach((key) => {
       if (!labeledPoints.has(key)) labelPool.hide(key);
     });
     labeledPoints.forEach((id) => labelPool.show(id));

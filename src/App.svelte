@@ -47,6 +47,7 @@
     PreviewMode.PROJECTION_SIMILARITY
   );
   let previewParameters = syncValue(model, 'previewParameters', {});
+  let numNeighbors = syncValue(model, 'numNeighbors', 10);
 
   $: if (
     !!$frameTransformations &&
@@ -308,7 +309,8 @@
       bind:previewMode={$previewMode}
       previewModes={Object.values(PreviewMode)}
       colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
-      bind:k={$previewParameters.k}
+      bind:numNeighbors={$numNeighbors}
+      bind:previewK={$previewParameters.k}
       bind:similarityThreshold={$previewParameters.similarityThreshold}
       on:close={() => (isSettingsOpen = false)}
     />
@@ -349,6 +351,7 @@
           padding={$plotPadding}
           frame={$currentFrame}
           {previewFrame}
+          numNeighbors={$numNeighbors}
           hoverable
           showPreviewControls
           animateTransitions
@@ -403,6 +406,7 @@
             frame={$currentFrame}
             {previewFrame}
             {thumbnailIDs}
+            numNeighbors={$numNeighbors}
           />
         {/if}
       </div>
@@ -427,7 +431,6 @@
         </button>
       </div>
     </div>
-    <div class="toolbar" />
   </div>
 {/if}
 

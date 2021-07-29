@@ -29,40 +29,40 @@ export default function AnimationPool(callbacks, defer = false) {
     !this.callbacks.hide ||
     !this.callbacks.destroy
   )
-    console.error("Missing required callbacks for AnimationPool");
+    console.error('Missing required callbacks for AnimationPool');
 
-  this.pool = {};
+  this.pool = new Map();
 
   // Contains directives per pool ID that are cleared at every run loop.
-  this.queuedAnimations = {};
+  this.queuedAnimations = new Map();
   this._flushTimer = null;
 
   this._perform = function (id, action) {
-    let item = this.pool[id];
+    let item = this.pool.get(id);
     if (!item || !item.element) return;
 
-    if (action == "show") {
-      if (item.lastState == "visible") return;
-      item.lastState = "entering";
+    if (action == 'show') {
+      if (item.lastState == 'visible') return;
+      item.lastState = 'entering';
       this.callbacks.show(item.element).then(
         () => {
-          if (item.state == "entering") {
-            item.state = "visible";
-            item.lastState = "visible";
+          if (item.state == 'entering') {
+            item.state = 'visible';
+            item.lastState = 'visible';
           }
         },
         () => {}
       );
-    } else if (action == "hide") {
-      if (item.lastState == "exiting" || item.lastState == "waiting") return;
-      item.lastState = "exiting";
+    } else if (action == 'hide') {
+      if (item.lastState == 'exiting' || item.lastState == 'waiting') return;
+      item.lastState = 'exiting';
       this.callbacks.hide(item.element).then(
         () => {
           // Resolve if it's still gone, otherwise reject
-          let item = this.pool[id];
-          if (!!item && item.lastState == "exiting") {
+          let item = this.pool.get(id);
+          if (!!item && item.lastState == 'exiting') {
             this.callbacks.destroy(item.element);
-            delete this.pool[id];
+            this.pool.delete(id);
           }
         },
         () => {}
@@ -72,27 +72,27 @@ export default function AnimationPool(callbacks, defer = false) {
 
   this.flush = function () {
     this._flushTimer = null;
-    Object.keys(this.queuedAnimations).forEach((id) => {
-      this._perform(id, this.queuedAnimations[id]);
+    this.queuedAnimations.forEach((action, id) => {
+      this._perform(id, action);
     });
-    this.queuedAnimations = {};
+    this.queuedAnimations.clear();
   };
 
   this._enqueue = function (id, action) {
-    let item = this.pool[id];
+    let item = this.pool.get(id);
     if (!item.element) return false;
-    if (action == "show") {
-      if (item.state == "entering" || item.state == "visible") return false;
-      item.state = "entering";
-    } else if (action == "hide") {
-      if (item.state == "exiting") return false;
-      item.state = "exiting";
+    if (action == 'show') {
+      if (item.state == 'entering' || item.state == 'visible') return false;
+      item.state = 'entering';
+    } else if (action == 'hide') {
+      if (item.state == 'exiting') return false;
+      item.state = 'exiting';
     } else {
-      console.error("Unknown action enqueued:", action);
+      console.error('Unknown action enqueued:', action);
     }
 
     if (this.defer) {
-      this.queuedAnimations[id] = action;
+      this.queuedAnimations.set(id, action);
       if (!this._flushTimer) {
         this._flushTimer = setTimeout(() => this.flush(), 0);
       }
@@ -103,52 +103,62 @@ export default function AnimationPool(callbacks, defer = false) {
   };
 
   this.show = function (id, infoCB) {
-    if (!this.pool[id]) {
+    if (!this.pool.has(id)) {
       let info = infoCB != null ? infoCB(id) : null;
-      this.pool[id] = {
+      this.pool.set(id, {
         element: this.callbacks.create(id, info),
         info,
-        state: "waiting",
-        lastState: "waiting",
-      };
+        state: 'waiting',
+        lastState: 'waiting',
+      });
     }
 
-    return this._enqueue(id, "show");
+    return this._enqueue(id, 'show');
   };
 
   this.getInfo = function (id) {
-    if (!this.pool[id]) return null;
-    return this.pool[id].info;
+    if (!this.pool.has(id)) return null;
+    return this.pool.get(id).info;
   };
 
   this.getElement = function (id) {
-    if (!this.pool[id]) return null;
-    return this.pool[id].element;
+    if (!this.pool.has(id)) return null;
+    return this.pool.get(id).element;
   };
 
   this.getAll = function () {
-    let result = {};
-    Object.assign(result, this.pool);
-    return result;
+    return new Map(this.pool);
+  };
+
+  this.getAllIDs = function () {
+    return Array.from(this.pool.keys());
   };
 
   this.getAllVisible = function () {
-    let result = {};
-    Object.keys(this.pool).forEach((key) => {
+    let result = new Map();
+    for (let [key, value] of this.pool) {
       if (
-        (this.pool[key].state == "visible" ||
-          this.pool[key].state == "entering") &&
-        !!this.pool[key].element
+        (value.state == 'visible' || value.state == 'entering') &&
+        !!value.element
       )
-        result[key] = this.pool[key];
-    });
+        result.set(key, value);
+    }
     return result;
   };
 
+  this.getAllVisibleIDs = function () {
+    return Array.from(this.pool.keys()).filter(
+      (key) =>
+        (this.pool.get(key).state == 'visible' ||
+          this.pool.get(key).state == 'entering') &&
+        !!this.pool.get(key).element
+    );
+  };
+
   this.hide = function (id) {
-    if (!this.pool[id]) {
+    if (!this.pool.has(id)) {
       return;
     }
-    return this._enqueue(id, "hide");
+    return this._enqueue(id, 'hide');
   };
 }
