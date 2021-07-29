@@ -699,7 +699,7 @@
     oldTentativeIDs,
     newTentativeIDs
   ) {
-    Object.keys(tentativeSelectionDecorationPool.getAll()).forEach((id) => {
+    tentativeSelectionDecorationPool.getAllIDs().forEach((id) => {
       tentativeSelectionDecorationPool.hide(id);
     });
     newTentativeIDs.forEach((id) => tentativeSelectionDecorationPool.show(id));
