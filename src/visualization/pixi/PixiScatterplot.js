@@ -4,19 +4,19 @@
  * creating its own HTML elements.
  */
 
-import * as PIXI from "pixi.js";
-import * as d3 from "d3";
+import * as PIXI from 'pixi.js';
+import * as d3 from 'd3';
 import {
   PixiLineDecoration,
   PixiOutlineDecoration,
   PixiWideningLineDecoration,
-} from "./PixiDecorations";
-import { PixiTextLabel, PixiImageLabel, PixiLabelContainer } from "./PixiLabel";
-import PixiMultiselect from "./PixiMultiselect";
-import PixiRadiusSelect from "./PixiRadiusSelect";
-import PixiPointSet from "./PixiPointSet";
-import PixiColorIDMap from "./PixiColorIDMap";
-import { approxEquals } from "../utils/helpers";
+} from './PixiDecorations';
+import { PixiTextLabel, PixiImageLabel, PixiLabelContainer } from './PixiLabel';
+import PixiMultiselect from './PixiMultiselect';
+import PixiRadiusSelect from './PixiRadiusSelect';
+import PixiPointSet from './PixiPointSet';
+import PixiColorIDMap from './PixiColorIDMap';
+import { approxEquals } from '../utils/helpers';
 //import { Circle } from "pixi.js";
 
 const TextLabelZIndex = 1000;
@@ -85,8 +85,10 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     }
 
     if (!!this.radiusselect) {
-      this.radiusselect.update(this.markSet.getMarkByID(this.radiusselect.centerID).attr("x"), 
-                               this.markSet.getMarkByID(this.radiusselect.centerID).attr("y"));
+      this.radiusselect.update(
+        this.markSet.getMarkByID(this.radiusselect.centerID).attr('x'),
+        this.markSet.getMarkByID(this.radiusselect.centerID).attr('y')
+      );
     }
   };
 
@@ -124,16 +126,16 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     currentDecorations.forEach((dec) => {
       if (!this.decorations.has(dec)) {
         let pixiDec;
-        if (dec.type == "line") {
+        if (dec.type == 'line') {
           pixiDec = new PixiLineDecoration(dec);
-        } else if (dec.type == "wideningLine") {
+        } else if (dec.type == 'wideningLine') {
           pixiDec = new PixiWideningLineDecoration(dec);
-        } else if (dec.type == "outline") {
+        } else if (dec.type == 'outline') {
           pixiDec = new PixiOutlineDecoration(dec);
-        } else if (dec.type == "text") {
+        } else if (dec.type == 'text') {
           pixiDec = new PixiTextLabel(dec, rFactor, TextLabelZIndex);
-        } else if (dec.type == "image" && !!this.textureLoader) {
-          let info = dec.attr("labelInfo");
+        } else if (dec.type == 'image' && !!this.textureLoader) {
+          let info = dec.attr('labelInfo');
           let spritesheet = this.textureLoader.resources[info.sheet];
           if (!!spritesheet) {
             let tex = spritesheet.textures[info.texture];
@@ -144,7 +146,7 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
         }
 
         if (!!pixiDec) {
-          if (dec.type == "text" || dec.type == "image") {
+          if (dec.type == 'text' || dec.type == 'image') {
             this.labelContainer.addLabel(pixiDec);
           } else {
             this.marksContainer.addChild(pixiDec);
@@ -154,14 +156,14 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
       }
 
       if (this.decorations.has(dec)) {
-        this.decorations.get(dec).update();
+        this.decorations.get(dec).update(this.currentTime);
       }
     });
 
     // Remove old decorations
     for (var dec of this.decorations.keys()) {
       if (!currentDecorations.has(dec)) {
-        if (dec.type == "text" || dec.type == "image") {
+        if (dec.type == 'text' || dec.type == 'image') {
           this.labelContainer.removeLabel(this.decorations.get(dec));
         } else {
           this.marksContainer.removeChild(this.decorations.get(dec));
@@ -241,7 +243,6 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     this.interactionMap = null;
   };
 
-
   // ================= Radius Selection
   this.radiusselect = null;
 
@@ -249,13 +250,18 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     if (!!this.radiusselect) {
       this.endRadiusSelect();
     }
-    
-    var centerX = this.markSet.getMarkByID(centerID).attr("x");
-    var centerY = this.markSet.getMarkByID(centerID).attr("y");
-    this.radiusselect = new PixiRadiusSelect(centerID, centerX, centerY, radius, 0x30cdfc);
+
+    var centerX = this.markSet.getMarkByID(centerID).attr('x');
+    var centerY = this.markSet.getMarkByID(centerID).attr('y');
+    this.radiusselect = new PixiRadiusSelect(
+      centerID,
+      centerX,
+      centerY,
+      radius,
+      0x30cdfc
+    );
     this.radiusselectContainer.addChild(this.radiusselect);
   };
-
 
   this.endRadiusSelect = function () {
     if (!!this.radiusselect) {

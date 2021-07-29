@@ -7,7 +7,7 @@
   import * as PIXI from 'pixi.js';
   import * as d3 from 'd3';
   import ScatterplotState from '../state/ScatterplotState.svelte';
-  import { ColorIDMap } from '../utils/helpers';
+  import { ColorIDMap, euclideanDistance } from '../utils/helpers';
   import ScatterplotViewportState from '../state/ScatterplotViewportState.svelte';
   import PixiScatterplot from './PixiScatterplot';
   import { PixiInMemoryLoader } from './PixiInMemoryLoader';
@@ -32,6 +32,7 @@
   export let hoveredID = null;
   export let clickedIDs = [];
   export let alignedIDs = [];
+  export let tentativeSelectedIDs = [];
   export let filterIDs = [];
   export let followingIDs = [];
 
@@ -65,11 +66,14 @@
   let loader;
   let scatterplot;
   //export let showRadiusselect = false;
-  let centerX;
-  let centerY;
   export let inRadiusselect = false;
-  const defaultRadius = 25.0;
   export let selectionRadius = defaultRadius;
+  export let selectionUnit = 'pixels'; // if not pixels, it will be passed to the selectionOrderFn
+  export let selectionOrderFn = null;
+  export let selectionMin = 0;
+  export let selectionMax = 0;
+  export let selectionStep = 1;
+  let selectionOrder = null; // order of points to add to the selection, in the format [idx, distance]
 
   onMount(() => {
     PIXI.settings.FILTER_RESOLUTION = window.devicePixelRatio;
@@ -347,7 +351,6 @@
 
     var el = getElementAtPoint(mouseX, mouseY);
     stateManager.selectElement(el, event.shiftKey);
-
   }
 
   // Selection
@@ -397,8 +400,8 @@
 
   export function cancelRadiusSelect() {
     inRadiusselect = false;
+    tentativeSelectedIDs = [];
     scatterplot.endRadiusSelect();
-    selectionRadius = defaultRadius;
   }
 
   let viewportAnimating = false;
@@ -408,31 +411,141 @@
     );
   }
 
+  $: if (inRadiusselect) {
+    updateSelectionOrder(selectionUnit);
+  }
+
+  const SelectionRadiusPadding = 10;
+
+  async function updateSelectionOrder(unit) {
+    if (unit == 'pixels') {
+      if (
+        !!selectionOrder &&
+        selectionOrder.length > 0 &&
+        tentativeSelectedIDs.length > 0
+      ) {
+        // size the circle to fit the last mark
+        let centerMark = marks.getMarkByID(clickedIDs[0]);
+        let centerLoc = { x: centerMark.attr('x'), y: centerMark.attr('y') };
+        selectionRadius =
+          tentativeSelectedIDs.reduce((curr, id) => {
+            let mark = marks.getMarkByID(id);
+            return Math.max(
+              curr,
+              euclideanDistance(centerLoc, {
+                x: mark.attr('x'),
+                y: mark.attr('y'),
+              })
+            );
+          }, 0) + SelectionRadiusPadding;
+      }
+      selectionOrder = [];
+    } else {
+      selectionOrder = await selectionOrderFn(clickedIDs[0], selectionUnit);
+      if (selectionOrder.length > 0 && tentativeSelectedIDs.length > 1) {
+        // keep the circle roughly the same size
+        let centerMark = marks.getMarkByID(clickedIDs[0]);
+        for (let i = 0; i < selectionOrder.length; i++) {
+          let mark = marks.getMarkByID(selectionOrder[i][0]);
+          let dist = euclideanDistance(
+            { x: centerMark.attr('x'), y: centerMark.attr('y') },
+            { x: mark.attr('x'), y: mark.attr('y') }
+          );
+          if (dist > selectionRadius) {
+            selectionRadius = selectionOrder[Math.max(i - 1, 1)][1];
+            break;
+          }
+        }
+      }
+    }
+    tentativeSelectedIDs = idsWithinSelectionRadius(selectionUnit);
+  }
+
+  $: if (selectionUnit != 'pixels' && selectionOrder.length > 0) {
+    // set the slider to range from the closest distance that is not zero, to
+    // the farthest distance
+    selectionMin = selectionOrder[1][1];
+    selectionMax = selectionOrder[selectionOrder.length - 1][1];
+    let step = Math.min(1, (selectionMax - selectionMin) / 100);
+    selectionMin = Math.floor(selectionMin / step) * step;
+    selectionMax = Math.ceil(selectionMax / step) * step;
+    selectionStep = Math.min(1, (selectionMax - selectionMin) / 100);
+  } else {
+    selectionMin = 10;
+    selectionMax = 250;
+    selectionStep = 1;
+  }
+
+  function idsWithinSelectionRadius(unit) {
+    if (!scatterplot || !scatterplot.radiusselect) return [];
+    if (unit == 'pixels') {
+      return marks
+        .filter((mark) => {
+          if (mark.attr('alpha') < 0.01) return false;
+          let x = Math.round(mark.attr('x'));
+          let y = Math.round(mark.attr('y'));
+          return scatterplot.radiusselect.circle.contains(x, y);
+        })
+        .map((mark) => mark.id);
+    } else if (selectionOrder.length > 0) {
+      let selection = [];
+      for (let i = 0; i < selectionOrder.length; i++) {
+        if (selectionOrder[i][1] > selectionRadius) break;
+        selection.push(selectionOrder[i][0]);
+      }
+      return selection;
+    }
+    return [];
+  }
+
+  function endRadiusSelect() {
+    clickedIDs = idsWithinSelectionRadius(selectionUnit);
+    dispatch('dataclick', clickedIDs);
+    scatterplot.endRadiusSelect();
+    tentativeSelectedIDs = [];
+  }
+
+  function autosizeRadiusSelect() {
+    if (selectionUnit == 'pixels') return;
+
+    // size the scatterplot's selection radius based on the locations of the selected points
+    let centerMark = marks.getMarkByID(clickedIDs[0]);
+    let centerLoc = { x: centerMark.attr('x'), y: centerMark.attr('y') };
+    // max distance in pixels from the center point
+    let maxDistance = tentativeSelectedIDs.reduce((curr, id) => {
+      let mark = marks.getMarkByID(id);
+      return Math.max(
+        curr,
+        euclideanDistance(centerLoc, { x: mark.attr('x'), y: mark.attr('y') })
+      );
+    }, 0);
+    // add some padding
+    scatterplot.updateRadiusSelect(maxDistance + SelectionRadiusPadding);
+  }
+
   $: if (!!scatterplot) {
     if (inRadiusselect) {
       if (!scatterplot.radiusselect && clickedIDs.length == 1) {
         scatterplot.startRadiusSelect(clickedIDs[0], selectionRadius);
+        tentativeSelectedIDs = idsWithinSelectionRadius(selectionUnit);
       }
     } else {
       if (!!scatterplot.radiusselect) {
-        clickedIDs = marks
-          .filter((mark) => {
-            if (mark.attr('alpha') < 0.01) return false;
-            let x = Math.round(mark.attr('x'));
-            let y = Math.round(mark.attr('y'));
-            return scatterplot.radiusselect.circle.contains(x, y);
-          })
-          .map((mark) => mark.id);
-        dispatch('dataclick', clickedIDs);
-        scatterplot.endRadiusSelect();
-        selectionRadius = defaultRadius;
+        endRadiusSelect();
       }
     }
   }
 
   $: if (!!scatterplot) {
     if (inRadiusselect && !!scatterplot.radiusselect) {
-      scatterplot.updateRadiusSelect(selectionRadius);
+      if (selectionUnit == 'pixels') {
+        // we will use the scatterplot's rendering to test for point inclusion
+        scatterplot.updateRadiusSelect(selectionRadius);
+        tentativeSelectedIDs = idsWithinSelectionRadius(selectionUnit);
+      } else if (selectionOrder.length > 0) {
+        tentativeSelectedIDs = idsWithinSelectionRadius(selectionUnit);
+        autosizeRadiusSelect();
+      }
     }
   }
 
@@ -445,6 +558,7 @@
 
   function rescale() {
     scalesNeutral = viewportManager.scalesNeutral;
+    if (inRadiusselect && !!scatterplot.radiusselect) autosizeRadiusSelect();
   }
 
   export function reset() {
@@ -479,6 +593,7 @@
     bind:filterIDs
     bind:hoveredID
     bind:selectedIDs={clickedIDs}
+    bind:tentativeSelectedIDs
     bind:alignedIDs
     bind:previewProgress
   />

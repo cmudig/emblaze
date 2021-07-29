@@ -1,5 +1,5 @@
-import { transformPoint, distance2 } from "../utils/helpers.js";
-import { kdTree } from "../utils/kdTree.js";
+import { transformPoint, distance2 } from '../utils/helpers.js';
+import { kdTree } from '../utils/kdTree.js';
 
 /**
  * A class for representing a fixed number of objects using arrays. The
@@ -92,6 +92,16 @@ export class ColumnarData {
     return this.columns[field][i];
   }
 
+  map(mapper) {
+    return Array.from(this.idMapping.keys()).map((id) => mapper(this.byID(id)));
+  }
+
+  forEach(fn) {
+    for (var id of this.idMapping.keys()) {
+      fn(this.byID(id));
+    }
+  }
+
   getIDs() {
     return Array.from(this.idMapping.keys());
   }
@@ -135,7 +145,7 @@ const FRAME_SCHEMA = {
   alpha: { array: Float32Array },
   r: { array: Float32Array },
   color: { array: Array },
-  highlightIndexes: { array: Int32Array, field: "highlight", nested: true },
+  highlightIndexes: { array: Int32Array, field: 'highlight', nested: true },
   visible: { array: Array },
 };
 
@@ -161,18 +171,18 @@ export class ColumnarFrame extends ColumnarData {
   buildKdTree() {
     let coordinates = this.getIDs().map((id) => ({
       id,
-      x: this.get(id, "x"),
-      y: this.get(id, "y"),
+      x: this.get(id, 'x'),
+      y: this.get(id, 'y'),
     }));
 
-    let tree = new kdTree(coordinates, distance2, ["x", "y"]);
+    let tree = new kdTree(coordinates, distance2, ['x', 'y']);
     this._kdTree = {
       _tree: tree,
       nearest: (pointID, k) => {
         if (!pointID || !this.has(pointID)) return [];
 
         let results = tree.nearest(
-          { x: this.get(pointID, "x"), y: this.get(pointID, "y") },
+          { x: this.get(pointID, 'x'), y: this.get(pointID, 'y') },
           k
         );
         return results.map((el) => parseInt(el[0].id));
@@ -269,9 +279,9 @@ export class NeighborPreview extends FramePreview {
   }
 
   static _calculate(pointID, frame, previewFrame) {
-    let currentNeighbors = new Set(frame.get(pointID, "highlightIndexes"));
+    let currentNeighbors = new Set(frame.get(pointID, 'highlightIndexes'));
     let previewNeighbors = new Set(
-      previewFrame.get(pointID, "highlightIndexes")
+      previewFrame.get(pointID, 'highlightIndexes')
     );
     let intersectionCount = 0;
     currentNeighbors.forEach((n) => {
@@ -328,8 +338,8 @@ export class PrecomputedPreview extends FramePreview {
       return { lineAlpha: 0, lineWidth: 0 };
     }
 
-    let dx = previewFrame.get(pointID, "x") - frame.get(pointID, "x");
-    let dy = previewFrame.get(pointID, "y") - frame.get(pointID, "y");
+    let dx = previewFrame.get(pointID, 'x') - frame.get(pointID, 'x');
+    let dy = previewFrame.get(pointID, 'y') - frame.get(pointID, 'y');
     let distance = Math.sqrt(dx * dx + dy * dy);
     return {
       lineWidth: 10.0 * (distance / scale + 0.2),

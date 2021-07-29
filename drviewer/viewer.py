@@ -70,6 +70,11 @@ class DRViewer(DOMWidget):
     loadSelectionFlag = Bool(False).tag(sync=True)
     selectionList = List([]).tag(sync=True)
     
+    # Contains three keys: centerID (int), frame (int), unit (string)
+    selectionUnit = Unicode("").tag(sync=True)
+    selectionOrderRequest = Dict({}).tag(sync=True)
+    selectionOrder = List([]).tag(sync=True)
+
     # Name of a color scheme (e.g. tableau, turbo, reds)
     colorScheme = Unicode("tableau").tag(sync=True)
     
@@ -154,6 +159,12 @@ class DRViewer(DOMWidget):
         mins = np.min(base_frame, axis=0)
         maxes = np.max(base_frame, axis=0)
         self.plotPadding = np.min(maxes - mins) * 0.2
+        
+        self.selectionUnit = embeddings[0].metric
+
+    @observe("currentFrame")
+    def _observe_current_frame(self, change):
+        self.selectionUnit = self.embeddings[change.new].metric
 
     @observe("thumbnails")
     def _observe_thumbnails(self, change):
@@ -207,3 +218,23 @@ class DRViewer(DOMWidget):
 
         self.frameTransformations = transformations
         self.frameColors = compute_colors(self.embeddings, point_ids, peripheral_points)
+
+    @observe("selectionOrderRequest")
+    def _compute_selection_order(self, change):
+        """Compute an ordering of the points by distance from the selected ID."""
+        if not change.new or 'centerID' not in change.new:
+            self.selectionOrder = []
+            return
+        
+        centerID = change.new['centerID']
+        frame = change.new['frame']
+        # metric = change.new['metric'] # for now, unused
+        
+        hi_d = self.embeddings[frame].get_root()
+        distances = hi_d.distances(ids=[centerID], comparison_ids=hi_d.ids).flatten()
+        
+        order = np.argsort(distances)
+        self.selectionOrder = [(int(x), y) for x, y in np.vstack([
+            order,
+            distances[order]
+        ]).T.tolist()]
