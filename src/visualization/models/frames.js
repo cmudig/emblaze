@@ -92,6 +92,16 @@ export class ColumnarData {
     return this.columns[field][i];
   }
 
+  map(mapper) {
+    return Array.from(this.idMapping.keys()).map((id) => mapper(this.byID(id)));
+  }
+
+  forEach(fn) {
+    for (var id of this.idMapping.keys()) {
+      fn(this.byID(id));
+    }
+  }
+
   getIDs() {
     return Array.from(this.idMapping.keys());
   }
@@ -301,6 +311,7 @@ export class NeighborPreview extends FramePreview {
   ) {
     let currentNeighbors = this._getNeighbors(frame, pointID, k);
     let previewNeighbors = this._getNeighbors(previewFrame, pointID, k);
+
     let intersectionCount = 0;
     currentNeighbors.forEach((n) => {
       if (previewNeighbors.has(n)) {

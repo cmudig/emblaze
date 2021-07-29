@@ -258,6 +258,47 @@
   $: if (dataset != null && $currentFrame >= 0) {
     updatePointSelectorOptions();
   }
+
+  // Selection order
+
+  let selectionUnit = syncValue(model, 'selectionUnit', '');
+  let selectionOrderRequest = syncValue(model, 'selectionOrderRequest', {});
+  let selectionOrder = syncValue(model, 'selectionOrder', []);
+  const SelectionOrderTimeout = 100;
+
+  async function selectionOrderFn(pointID, metric) {
+    console.log('requesting selection order!');
+    $selectionOrderRequest = {
+      centerID: pointID,
+      frame: $currentFrame,
+      metric,
+    };
+    $selectionOrder = [];
+
+    return await _checkSelectionOrder(); // dataset.map((id) => [id, id]);
+  }
+
+  async function _checkSelectionOrder() {
+    if ($selectionOrder.length > 0) {
+      $selectionOrderRequest = {};
+      return $selectionOrder;
+    }
+    return await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(_checkSelectionOrder());
+      }, SelectionOrderTimeout);
+    });
+  }
+
+  $: {
+    console.log(
+      'selection order:',
+      $selectionOrder,
+      'request:',
+      $selectionOrderRequest
+    );
+    //if ($selectionOrder.length > 0) $selectionOrderRequest = {};
+  }
 </script>
 
 {#if $isLoading}
@@ -363,6 +404,10 @@
           bind:filterIDs={$filterIDs}
           on:datahover={onScatterplotHover}
           colorScheme={colorSchemeObject}
+          {selectionOrderFn}
+          selectionUnits={!!$selectionUnit
+            ? ['pixels', $selectionUnit]
+            : ['pixels']}
         />
         {#if showLegend}
           <div class="legend-container">

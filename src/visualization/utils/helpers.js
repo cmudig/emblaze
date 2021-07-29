@@ -142,6 +142,10 @@ export function distance2(a, b) {
   return dx * dx + dy * dy;
 }
 
+export function euclideanDistance(a, b) {
+  return Math.sqrt(distance2(a, b));
+}
+
 export class ValueHistory {
   lastValues = {};
 
