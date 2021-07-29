@@ -33,7 +33,7 @@
   export let clickedIDs = [];
   export let alignedIDs = [];
   export let tentativeSelectedIDs = [];
-  export let filter = new Set();
+  export let filterIDs = [];
   export let followingIDs = [];
 
   export let data = null;
@@ -66,9 +66,6 @@
   let loader;
   let scatterplot;
   //export let showRadiusselect = false;
-  // let centerX;
-  // let centerY;
-  // let centerID;
   export let inRadiusselect = false;
   export let selectionRadius = defaultRadius;
   export let selectionUnit = 'pixels'; // if not pixels, it will be passed to the selectionOrderFn
@@ -528,7 +525,7 @@
 
   $: if (!!scatterplot) {
     if (inRadiusselect) {
-      if (!scatterplot.radiusselect) {
+      if (!scatterplot.radiusselect && clickedIDs.length == 1) {
         scatterplot.startRadiusSelect(clickedIDs[0], selectionRadius);
         tentativeSelectedIDs = idsWithinSelectionRadius(selectionUnit);
       }
@@ -553,10 +550,10 @@
   }
 
   // Clear interaction map when filter is changed
-  let prevFilter = null;
-  $: if (prevFilter !== filter) {
+  let prevFilterIDs = null;
+  $: if (prevFilterIDs !== filterIDs) {
     if (!!scatterplot) scatterplot.clearInteractionMap();
-    prevFilter = filter;
+    prevFilterIDs = filterIDs;
   }
 
   function rescale() {
@@ -590,10 +587,10 @@
     {previewInfo}
     colorScale={(c) => colorScale(c)}
     colorFormat="rgbArray"
-    xScale={(x) => viewportManager.scaleX(x)}
-    yScale={(y) => viewportManager.scaleY(y)}
+    xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}
+    yScale={!!viewportManager ? (y) => viewportManager.scaleY(y) : null}
     bind:marks
-    bind:filter
+    bind:filterIDs
     bind:hoveredID
     bind:selectedIDs={clickedIDs}
     bind:tentativeSelectedIDs

@@ -92,7 +92,7 @@ class ColumnarData:
         """
         if field not in self.data:
             return None
-        if len(np.unique(self.data[field])) >= 12:
+        if np.issubdtype(self.data[field].dtype, np.number) and len(np.unique(self.data[field])) >= 12:
             return DataType.CONTINUOUS
         return DataType.CATEGORICAL
     
