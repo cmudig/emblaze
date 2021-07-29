@@ -16,6 +16,10 @@
   import DefaultThumbnailViewer from './visualization/components/DefaultThumbnailViewer.svelte';
   import Legend from './visualization/components/Legend.svelte';
   import Autocomplete from './visualization/components/Autocomplete.svelte';
+  import Modal from './visualization/components/Modal.svelte';
+  import SelectionBrowser from './visualization/components/SelectionBrowser.svelte';
+  import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
+  import SegmentedControl from './visualization/components/SegmentedControl.svelte';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -75,9 +79,12 @@
   let thumbnailViewer;
 
   let selectedIDs = syncValue(model, 'selectedIDs', []);
-  $: console.log($selectedIDs);
+  //$: console.log($selectedIDs);
 
   let alignedIDs = syncValue(model, 'alignedIDs', []);
+  let alignedFrame = syncValue(model, 'alignedFrame', 0);
+  // alignedFrame should match currentFrame as long as there is no current alignment
+  $: if ($alignedIDs.length == 0) $alignedFrame = $currentFrame;
 
   let thumbnailIDs = [];
   let thumbnailHover = false;
@@ -89,6 +96,27 @@
   let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = -1;
 
+  let saveSelectionFlag = syncValue(model, 'saveSelectionFlag', false);
+  let selectionName = syncValue(model, 'selectionName', '');
+  let selectionDescription = syncValue(model, 'selectionDescription', '');
+  let isOpenDialogue = false;
+  let nameField = '';
+  let descriptionField = '';
+  let name = '';
+  let description = '';
+
+  const SidebarPanes = {
+    CURRENT: 0,
+    SAVED: 1,
+  };
+  let visibleSidebarPane = SidebarPanes.CURRENT; // 0 = current, 1 = saved
+  let loadSelectionFlag = syncValue(model, 'loadSelectionFlag', false);
+  $: $loadSelectionFlag = visibleSidebarPane == SidebarPanes.SAVED;
+  let selectionList = syncValue(model, 'selectionList', []);
+  //$: console.log("selectionList: ", $selectionList);
+
+  let filterIDs = syncValue(model, 'filterIDs', []);
+
   function onScatterplotHover(e) {
     if (e.detail != null) {
       thumbnailIDs = [e.detail];
@@ -96,6 +124,58 @@
     } else {
       thumbnailIDs = $selectedIDs;
       thumbnailHover = false;
+    }
+  }
+
+  // Saving and loading selections
+
+  function openSaveSelectionDialog() {
+    $selectionName = '';
+    $selectionDescription = '';
+    isOpenDialogue = true;
+  }
+
+  function saveSelection(event) {
+    $saveSelectionFlag = true;
+    isOpenDialogue = false;
+  }
+
+  function handleLoadSelection(event) {
+    function filterFn(id) {
+      return dataset.frame(event.detail.currentFrame).has(id);
+    }
+
+    if (
+      event.detail.currentFrame < 0 ||
+      event.detail.currentFrame >= dataset.frameCount ||
+      event.detail.alignedFrame < 0 ||
+      event.detail.alignedFrame >= dataset.frameCount
+    ) {
+      alert(
+        'This saved selection has an invalid frame number and cannot be loaded.'
+      );
+    } else {
+      let invalidSelected = !event.detail.selectedIDs.every(filterFn);
+      let invalidAligned = !event.detail.alignedIDs.every(filterFn);
+      let invalidFilter = !event.detail.filterIDs.every(filterFn);
+
+      $currentFrame = event.detail.currentFrame;
+      $alignedFrame = event.detail.alignedFrame;
+      $selectedIDs = event.detail.selectedIDs.filter(filterFn);
+      $alignedIDs = event.detail.alignedIDs.filter(filterFn);
+      $filterIDs = event.detail.filterIDs.filter(filterFn);
+
+      if (invalidSelected || invalidAligned || invalidFilter) {
+        let messages = [];
+        if (invalidSelected) messages.push('invalid selected IDs');
+        if (invalidAligned) messages.push('invalid aligned IDs');
+        if (invalidFilter) messages.push('invalid filter IDs');
+        alert(
+          'This saved selection had the following issues: ' +
+            messages.join(', ') +
+            '. The remainder of the selection was loaded.'
+        );
+      }
     }
   }
 
@@ -124,8 +204,11 @@
   // Thumbnails
 
   $: if (!!dataset && !!canvas) {
-    if (!!$thumbnailData && !!$thumbnailData.format)
-      dataset.addThumbnails($thumbnailData);
+    updateThumbnails($thumbnailData);
+  }
+
+  function updateThumbnails(td) {
+    if (!!td && !!td.format) dataset.addThumbnails(td);
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
     if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
@@ -160,6 +243,42 @@
     <i class="text-primary fa fa-spinner fa-spin" />
   </div>
 {:else}
+  <Modal visible={isOpenDialogue} width={400}>
+    <SaveSelectionPane
+      bind:name={$selectionName}
+      bind:description={$selectionDescription}
+      on:cancel={() => (isOpenDialogue = false)}
+      on:save={saveSelection}
+    >
+      <div slot="summary">
+        <p>
+          <strong>Frame number:</strong>
+          {$currentFrame}
+        </p>
+        <p>
+          <strong>Filter:</strong>
+          {#if $filterIDs.length > 0}
+            {$filterIDs.length} points
+          {:else}
+            No filter
+          {/if}
+        </p>
+        <p>
+          <strong>Selected:</strong>
+          {$selectedIDs.length} points
+        </p>
+        <p>
+          <strong>Aligned:</strong>
+          {#if $alignedIDs.length > 0}
+            {$alignedIDs.length} points, to frame {$alignedFrame}
+          {:else}
+            No alignment
+          {/if}
+        </p>
+      </div>
+    </SaveSelectionPane>
+  </Modal>
+
   <div class="vis-container">
     <div class="thumbnail-container">
       {#each [...d3.range(dataset.frameCount)] as i}
@@ -203,6 +322,7 @@
             : 'white'}
           bind:clickedIDs={$selectedIDs}
           bind:alignedIDs={$alignedIDs}
+          bind:filterIDs={$filterIDs}
           on:datahover={onScatterplotHover}
           colorScheme={colorSchemeObject}
         />
@@ -219,7 +339,7 @@
       </div>
     </div>
     <div class="sidebar">
-      <div class="action-toolbar">
+      <div class="search-bar">
         <Autocomplete
           placeholder="Search for a point..."
           options={pointSelectorOptions}
@@ -228,8 +348,19 @@
           on:change={(e) => ($selectedIDs = [e.detail])}
         />
       </div>
-      {#if !!$thumbnailData}
-        <div class="thumbnail-sidebar">
+      <div class="action-toolbar">
+        <SegmentedControl
+          bind:selected={visibleSidebarPane}
+          options={['Current', 'Saved']}
+        />
+      </div>
+      <div class="sidebar-content">
+        {#if visibleSidebarPane == SidebarPanes.SAVED}
+          <SelectionBrowser
+            bind:data={$selectionList}
+            on:loadSelection={handleLoadSelection}
+          />
+        {:else if visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
           <DefaultThumbnailViewer
             bind:this={thumbnailViewer}
             {dataset}
@@ -238,8 +369,20 @@
             {previewFrame}
             {thumbnailIDs}
           />
-        </div>
-      {/if}
+        {/if}
+      </div>
+      <div class="action-toolbar">
+        <button
+          type="button"
+          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
+          on:click|preventDefault={openSaveSelectionDialog}
+          disabled={$selectedIDs.length == 0 &&
+            $alignedIDs.length == 0 &&
+            $filterIDs.length == 0}
+        >
+          Save Selection
+        </button>
+      </div>
     </div>
     <div class="toolbar" />
   </div>
@@ -295,16 +438,29 @@
     box-sizing: border-box;
   }
 
-  .thumbnail-sidebar {
+  .sidebar-content {
     border: 1px solid #bbb;
     flex-grow: 1;
     overflow-y: scroll;
     box-sizing: border-box;
   }
+  .search-bar {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 4px;
+    flex: 0 0 auto;
+  }
   .action-toolbar {
     display: flex;
     align-items: center;
     height: 48px;
-    padding: 4px;
+    padding: 4px 0;
+    flex: 0 0 auto;
+  }
+
+  .jp-Dialog-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>

@@ -9,7 +9,8 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
-from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, observe
+from numpy.core.fromnumeric import sort
+from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, Set, observe
 from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
@@ -18,6 +19,9 @@ from .utils import Field, matrix_to_affine, affine_to_matrix, DataType
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial.transform import Rotation
+from datetime import datetime
+import json
+import glob
 import threading
 import multiprocessing as mp
 from functools import partial
@@ -25,6 +29,7 @@ import numpy as np
 import affine
 import base64
 import os
+
 
 class DRViewer(DOMWidget):
     """TODO: Add docstring here
@@ -44,8 +49,10 @@ class DRViewer(DOMWidget):
     plotPadding = Float(10.0).tag(sync=True)
     
     currentFrame = Integer(0).tag(sync=True)
+    alignedFrame = Integer(0).tag(sync=True)
     selectedIDs = List([]).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
+    filterIDs = List([]).tag(sync=True)
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
@@ -55,6 +62,13 @@ class DRViewer(DOMWidget):
     thumbnails = Instance(Thumbnails, allow_none=True)
     # JSON-serializable dictionary of thumbnail info
     thumbnailData = Dict({}).tag(sync=True)
+
+    saveSelectionFlag = Bool(False).tag(sync=True)
+    selectionName = Unicode("").tag(sync=True)
+    selectionDescription = Unicode("").tag(sync=True)
+
+    loadSelectionFlag = Bool(False).tag(sync=True)
+    selectionList = List([]).tag(sync=True)
     
     # Name of a color scheme (e.g. tableau, turbo, reds)
     colorScheme = Unicode("tableau").tag(sync=True)
@@ -67,7 +81,50 @@ class DRViewer(DOMWidget):
         super(DRViewer, self).__init__(*args, **kwargs)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
         self.isLoading = False
+        self.saveSelectionFlag = False
+        self.loadSelectionFlag = False
+        self.selectionList = []
         self.colorScheme = self.detect_color_scheme()
+
+    @observe("saveSelectionFlag")
+    def _observe_save_selection(self, change):
+        if change.new:
+            newSelection = { }
+            newSelection["selectedIDs"] = self.selectedIDs
+            newSelection["alignedIDs"] = self.alignedIDs
+            newSelection["filterIDs"] = self.filterIDs
+            newSelection["selectionDescription"] = self.selectionDescription
+            newSelection["currentFrame"] = self.currentFrame
+            newSelection["alignedFrame"] = self.alignedFrame
+            now = datetime.now()
+            dateTime = now.strftime("%Y-%m-%d %H:%M:%S")
+            with open(dateTime + ' ' + self.selectionName + '.selection', 'w') as outfile:
+                json.dump(newSelection, outfile)
+            
+            self.saveSelectionFlag = False
+            self.selectionName = ""
+            self.selectionDescription = ""
+            self.refresh_saved_selections()
+
+    @observe("loadSelectionFlag")
+    def _observe_load_selection(self, change):
+        if change.new:
+            self.refresh_saved_selections()
+            
+    def refresh_saved_selections(self):
+        """
+        Updates the selectionList property, which is displayed in the sidebar
+        under the Saved tab.
+        """
+        tmpList = []
+        # self.selectionList = []
+        for file in glob.glob("*.selection"):
+            with open(file, "r") as jsonFile:
+                data = json.load(jsonFile)                            
+                data["selectionName"] = file.split('.')[0]
+                tmpList.append(data)
+        self.selectionList = sorted(tmpList, key=lambda x: x["selectionName"], reverse=True)
+        self.loadSelectionFlag = False
         
     def detect_color_scheme(self):
         """
@@ -138,11 +195,11 @@ class DRViewer(DOMWidget):
             return
     
         transformations = []
-        base_transform = matrix_to_affine(np.array(self.frameTransformations[self.currentFrame]))
+        base_transform = matrix_to_affine(np.array(self.frameTransformations[self.alignedFrame]))
 
         for emb in self.embeddings:
             transformations.append(affine_to_matrix(emb.align_to(
-                self.embeddings[self.currentFrame], 
+                self.embeddings[self.alignedFrame], 
                 ids=list(set(point_ids)),
                 base_transform=base_transform,
                 return_transform=True,

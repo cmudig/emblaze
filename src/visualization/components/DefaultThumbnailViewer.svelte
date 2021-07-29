@@ -106,7 +106,10 @@
   }
 
   onMount(() => {
-    if (!!dataset.spritesheets) updateImageThumbnails();
+    if (!!dataset.spritesheets) {
+      updateImageThumbnails();
+      thumbnailIDs = thumbnailIDs; // force re-layout
+    }
   });
 
   onDestroy(() => {
@@ -134,7 +137,9 @@
       {#if !!message}
         <p>{message}</p>
       {/if}
-      {#each thumbnailIDs.map((id) => getThumbnailInfo(id)) as d}
+      {#each thumbnailIDs
+        .map((id) => getThumbnailInfo(id))
+        .filter((d) => !!d) as d}
         <div class="thumbnail-row">
           {#if !!d.sheet}
             <div
@@ -167,7 +172,9 @@
     </div>
     <div class="thumbnails-container column-container">
       <div class="thumbnail-column">
-        {#each secondaryIDs.map((id) => getThumbnailInfo(id)) as d}
+        {#each secondaryIDs
+          .map((id) => getThumbnailInfo(id))
+          .filter((d) => !!d) as d}
           <div class="thumbnail-row">
             {#if !!d.sheet}
               <div
