@@ -47,6 +47,8 @@
     PreviewMode.PROJECTION_SIMILARITY
   );
   let previewParameters = syncValue(model, 'previewParameters', {});
+  let previewK = 10;
+  let previewSimilarityThreshold = 0.5;
   let numNeighbors = syncValue(model, 'numNeighbors', 10);
 
   $: if (
@@ -234,6 +236,11 @@
     });
   }
 
+  $: $previewParameters = {
+    k: previewK,
+    similarityThreshold: previewSimilarityThreshold,
+  };
+
   let isSettingsOpen = false;
 
   // Autocomplete
@@ -351,8 +358,8 @@
       previewModes={Object.values(PreviewMode)}
       colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
       bind:numNeighbors={$numNeighbors}
-      bind:previewK={$previewParameters.k}
-      bind:similarityThreshold={$previewParameters.similarityThreshold}
+      bind:previewK
+      bind:similarityThreshold={previewSimilarityThreshold}
       on:close={() => (isSettingsOpen = false)}
     />
   </Modal>
