@@ -9,7 +9,7 @@
 
   // Creates a Svelte store (https://svelte.dev/tutorial/writable-stores) that syncs with the named Traitlet in widget.ts and example.py.
   import { syncValue } from './stores';
-  import { Dataset } from './visualization/models/dataset.js';
+  import { Dataset, PreviewMode } from './visualization/models/dataset.js';
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import { fade } from 'svelte/transition';
@@ -20,6 +20,7 @@
   import SelectionBrowser from './visualization/components/SelectionBrowser.svelte';
   import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
   import SegmentedControl from './visualization/components/SegmentedControl.svelte';
+  import SettingsPane from './visualization/components/SettingsPane.svelte';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -40,6 +41,13 @@
     console.log('New color scheme:', newScheme, colorSchemeObject);
     if (!!newScheme) colorSchemeObject = newScheme;
   }
+  let previewMode = syncValue(
+    model,
+    'previewMode',
+    PreviewMode.PROJECTION_SIMILARITY
+  );
+  let previewParameters = syncValue(model, 'previewParameters', {});
+  let numNeighbors = syncValue(model, 'numNeighbors', 10);
 
   $: if (
     !!$frameTransformations &&
@@ -214,6 +222,20 @@
     if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
   }
 
+  // Previews and settings
+
+  $: if (!!dataset) {
+    dataset.setPreviewMode($previewMode);
+  }
+
+  $: if (!!dataset) {
+    Object.keys($previewParameters).forEach((k) => {
+      dataset.setPreviewParameter(k, $previewParameters[k]);
+    });
+  }
+
+  let isSettingsOpen = false;
+
   // Autocomplete
 
   let pointSelectorOptions = [];
@@ -222,10 +244,11 @@
     if (dataset == null || $currentFrame < 0) return;
     let frame = dataset.frame($currentFrame);
     pointSelectorOptions = frame.getIDs().map((itemID) => {
-      if (!!frame.get(itemID, 'label')) {
+      let label = frame.get(itemID, 'label');
+      if (!!label && !!label.text) {
         return {
           value: itemID,
-          text: `${itemID} - ${frame.get(itemID, 'label').text}`,
+          text: `${itemID} - ${label.text}`,
         };
       }
       return { value: itemID, text: itemID.toString() };
@@ -320,6 +343,20 @@
     </SaveSelectionPane>
   </Modal>
 
+  <Modal visible={isSettingsOpen} width={400}>
+    <SettingsPane
+      bind:colorScheme={$colorScheme}
+      bind:showLegend
+      bind:previewMode={$previewMode}
+      previewModes={Object.values(PreviewMode)}
+      colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
+      bind:numNeighbors={$numNeighbors}
+      bind:previewK={$previewParameters.k}
+      bind:similarityThreshold={$previewParameters.similarityThreshold}
+      on:close={() => (isSettingsOpen = false)}
+    />
+  </Modal>
+
   <div class="vis-container">
     <div class="thumbnail-container">
       {#each [...d3.range(dataset.frameCount)] as i}
@@ -355,6 +392,7 @@
           padding={$plotPadding}
           frame={$currentFrame}
           {previewFrame}
+          numNeighbors={$numNeighbors}
           hoverable
           showPreviewControls
           animateTransitions
@@ -413,6 +451,7 @@
             frame={$currentFrame}
             {previewFrame}
             {thumbnailIDs}
+            numNeighbors={$numNeighbors}
           />
         {/if}
       </div>
@@ -427,9 +466,16 @@
         >
           Save Selection
         </button>
+        <div style="flex-grow: 1" />
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
+          on:click|preventDefault={() => (isSettingsOpen = true)}
+        >
+          Settings
+        </button>
       </div>
     </div>
-    <div class="toolbar" />
   </div>
 {/if}
 

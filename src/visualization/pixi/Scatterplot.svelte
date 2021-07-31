@@ -43,6 +43,8 @@
 
   export let thumbnailsURL = null;
 
+  export let numNeighbors = 10;
+
   const dispatch = createEventDispatcher();
 
   let container;
@@ -585,6 +587,7 @@
     {frame}
     {previewFrame}
     {previewInfo}
+    {numNeighbors}
     colorScale={(c) => colorScale(c)}
     colorFormat="rgbArray"
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}

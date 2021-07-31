@@ -13,6 +13,8 @@
   export let previewFrame = -1;
   export let message = '';
 
+  export let numNeighbors = 10;
+
   let secondaryIDs = [];
   let previewSecondaryIDs = [];
 
@@ -88,7 +90,8 @@
   $: if (thumbnailIDs.length == 1 && frame >= 0) {
     secondaryIDs = dataset
       .frame(frame)
-      .get(thumbnailIDs[0], 'highlightIndexes');
+      .get(thumbnailIDs[0], 'highlightIndexes')
+      .slice(0, numNeighbors);
   } else {
     secondaryIDs = [];
   }
@@ -100,7 +103,8 @@
   ) {
     previewSecondaryIDs = dataset
       .frame(previewFrame)
-      .get(thumbnailIDs[0], 'highlightIndexes');
+      .get(thumbnailIDs[0], 'highlightIndexes')
+      .slice(0, numNeighbors);
   } else {
     previewSecondaryIDs = [];
   }

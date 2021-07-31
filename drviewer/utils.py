@@ -26,6 +26,11 @@ class DataType:
     CATEGORICAL = "categorical"
     CONTINUOUS = "continuous"
 
+class PreviewMode:
+    """Ways of calculating preview lines."""
+    PROJECTION_SIMILARITY = "projectionNeighborSimilarity"
+    NEIGHBOR_SIMILARITY = "neighborSimilarity"
+
 FLIP_FACTORS = [
     np.array([1, 1, 1]),
     np.array([-1, 1, 1]),

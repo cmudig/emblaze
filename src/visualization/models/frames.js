@@ -233,13 +233,25 @@ export class FramePreview {
  * constant.
  */
 export class ProjectionPreview extends FramePreview {
-  constructor(frame, previewFrame, k = 10) {
+  constructor(frame, previewFrame, k = 10, similarityThreshold = 0.7) {
     super(frame, previewFrame, (id) =>
-      ProjectionPreview._calculate(id, frame, previewFrame, k)
+      ProjectionPreview._calculate(
+        id,
+        frame,
+        previewFrame,
+        k,
+        similarityThreshold
+      )
     );
   }
 
-  static _calculate(pointID, frame, previewFrame, k = 10) {
+  static _calculate(
+    pointID,
+    frame,
+    previewFrame,
+    k = 10,
+    similarityThreshold = 0.7
+  ) {
     let currentNeighbors = new Set(frame.neighbors(pointID, k));
 
     let previewNeighbors = new Set(previewFrame.neighbors(pointID, k));
@@ -252,12 +264,12 @@ export class ProjectionPreview extends FramePreview {
 
     let fraction = intersectionCount / currentNeighbors.size;
     let intensity;
-    if (fraction >= 0.7) {
+    if (fraction >= similarityThreshold) {
       intensity = { lineWidth: 0.0, lineAlpha: 0.0 };
     } else {
       intensity = {
-        lineWidth: (1 - fraction / 0.7) * 10.0,
-        lineAlpha: 1 - fraction / 0.7,
+        lineWidth: (1 - fraction / similarityThreshold) * 10.0,
+        lineAlpha: 1 - fraction / similarityThreshold,
       }; //5.0 + 20.0 * (1.0 - fraction * fraction));
     }
     return intensity;
@@ -272,17 +284,34 @@ export class ProjectionPreview extends FramePreview {
  * lines shown.
  */
 export class NeighborPreview extends FramePreview {
-  constructor(frame, previewFrame) {
+  constructor(frame, previewFrame, k = 10, similarityThreshold = 0.3) {
     super(frame, previewFrame, (id) =>
-      NeighborPreview._calculate(id, frame, previewFrame)
+      NeighborPreview._calculate(
+        id,
+        frame,
+        previewFrame,
+        k,
+        similarityThreshold
+      )
     );
   }
 
-  static _calculate(pointID, frame, previewFrame) {
-    let currentNeighbors = new Set(frame.get(pointID, 'highlightIndexes'));
-    let previewNeighbors = new Set(
-      previewFrame.get(pointID, 'highlightIndexes')
-    );
+  static _getNeighbors(frame, pointID, k) {
+    let n = frame.get(pointID, 'highlightIndexes');
+    if (k < n.length) n = n.slice(0, k);
+    return new Set(n);
+  }
+
+  static _calculate(
+    pointID,
+    frame,
+    previewFrame,
+    k = 10,
+    similarityThreshold = 0.3
+  ) {
+    let currentNeighbors = this._getNeighbors(frame, pointID, k);
+    let previewNeighbors = this._getNeighbors(previewFrame, pointID, k);
+
     let intersectionCount = 0;
     currentNeighbors.forEach((n) => {
       if (previewNeighbors.has(n)) {
@@ -292,12 +321,12 @@ export class NeighborPreview extends FramePreview {
 
     let fraction = intersectionCount / currentNeighbors.size;
     let intensity;
-    if (fraction >= 0.3) {
+    if (fraction >= similarityThreshold) {
       intensity = { lineWidth: 0.0, lineAlpha: 0.0 };
     } else {
       intensity = {
-        lineWidth: Math.pow(1 - fraction / 0.3, 3) * 5.0, //20.0,
-        lineAlpha: Math.pow(1 - fraction / 0.3, 3),
+        lineWidth: Math.pow(1 - fraction / similarityThreshold, 3) * 5.0, //20.0,
+        lineAlpha: Math.pow(1 - fraction / similarityThreshold, 3),
       }; //5.0 + 20.0 * (1.0 - fraction * fraction));
     }
     return intensity;

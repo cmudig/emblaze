@@ -52,6 +52,9 @@
   // Thumbnails
   export let thumbnailsURL = null;
 
+  // Number of neighbors to display
+  export let numNeighbors = 10;
+
   let scatterplot;
   let warningMessage = '';
   let colorScale = (c) => c;
@@ -111,7 +114,9 @@
       data.frames.forEach((frame) => {
         let neighbors = frame.neighbors(clickedID, 10);
         neighbors.forEach((n) => filteredPoints.add(n));
-        let highlight = frame.get(clickedID, 'highlightIndexes');
+        let highlight = frame
+          .get(clickedID, 'highlightIndexes')
+          .slice(0, numNeighbors);
         if (!!highlight) {
           highlight.forEach((n) => filteredPoints.add(n));
         }
@@ -252,7 +257,11 @@
       let filteredPoints = new Set(pointIDs);
       pointIDs.forEach((id) => {
         let highlightIndexes = data.byID(id).highlightIndexes;
-        let allNeighbors = new Set(Object.values(highlightIndexes).flat());
+        let allNeighbors = new Set(
+          Object.values(highlightIndexes)
+            .map((v) => v.slice(0, numNeighbors))
+            .flat()
+        );
         allNeighbors.forEach((n) => filteredPoints.add(n));
       });
       vicinity = Array.from(filteredPoints);
@@ -283,6 +292,7 @@
     {colorScale}
     {animateTransitions}
     {thumbnailsURL}
+    {numNeighbors}
     frame={!!data ? data.frame(frame) : null}
     previewFrame={!!data && previewFrame >= 0 && previewFrame != frame
       ? data.frame(previewFrame)
@@ -400,7 +410,6 @@
       {/if}
       {#if showResetButton && !inRadiusselect}
         <button
-          transition:fade={{ duration: 100 }}
           type="button"
           class="btn btn-dark btn-sm jp-Dialog-button jp-mod-warn jp-mod-styled"
           on:click|preventDefault={(e) => {
@@ -428,26 +437,7 @@
       </div>
     {/if}
     {#if showPreviewControls && previewFrame != frame && previewFrame != -1}
-      <div id="preview-panel" transition:fade={{ duration: 100 }}>
-        <!-- <div>
-          Showing {data.frameLabels[frame]} &rsaquo; {data.frameLabels[
-            previewFrame
-          ]}
-        </div>
-        <button
-          type="button"
-          class="btn btn-secondary btn-sm ml-2 mr-1 mb-0"
-          on:click|preventDefault={(e) => {
-            dispatch("cancelPreview");
-          }}>Cancel</button
-        >
-        <button
-          type="button"
-          class="btn btn-primary btn-sm mb-0"
-          on:click|preventDefault={(e) => {
-            dispatch("advancePreview");
-          }}>Go</button
-        > -->
+      <div id="preview-panel">
         <PreviewSlider width={240} bind:progress={previewProgress} />
       </div>
     {/if}
