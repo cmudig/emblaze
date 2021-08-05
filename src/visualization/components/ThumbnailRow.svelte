@@ -29,6 +29,8 @@
     >
       <img
         class="thumbnail-image"
+        class:diff-green={color="green"}
+        class:diff-red={color="red"}
         src={blobURLs.get(d.sheet)}
         width={`${d.macroSize.w}px`}
         height={`${d.macroSize.h}px`}
@@ -46,6 +48,23 @@
 
 
 <style>
+  .thumbnail-row {
+    padding: 4px 6px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .image-parent {
+    margin: 4px 12px 4px 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .thumbnail-image {
+    position: relative;
+    max-width: none !important;
+  }
+
   .diff-red {
     border: 2px solid red;
   }
