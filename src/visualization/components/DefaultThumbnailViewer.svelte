@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  import App from '../../App.svelte';
   import { base64ToBlob } from '../utils/helpers';
-
+  import ThumbnailRow from './ThumbnailRow.svelte';
   export let width = null;
   export let height = null;
 
@@ -16,7 +17,15 @@
   export let numNeighbors = 10;
 
   let secondaryIDs = [];
+  $: console.log("secondaryIDs len", secondaryIDs.length);
   let previewSecondaryIDs = [];
+  $: console.log("previewSecondaryIDs len", previewSecondaryIDs.length);
+  let gainedIDs = [];
+  let lostIDs = [];
+  let sameIDs = [];
+  $: console.log("gainedIDs here:", gainedIDs);
+  $: console.log("lostIDs here:", lostIDs);
+  $: console.log("sameIDs here:", sameIDs);
 
   // For image thumbnails
 
@@ -87,6 +96,35 @@
     return infoText;
   }
 
+ 
+function mostCommonValues(arr, k) {
+  let freqMap = new Map();
+
+  for (const x of arr) {
+      if (freqMap.has(x)) {
+        freqMap.set(x, freqMap.get(x) + 1);
+      } else {
+        freqMap.set(x, 1);
+      }
+  }
+
+  return [...freqMap.keys()].sort((a, b) => freqMap.get(b) - freqMap.get(a))
+                            .slice(0, k);
+}
+
+function genNeighborArray() {
+  let neighborArray = [];
+
+  for (const id of thumbnailIDs) {
+    for (const n of dataset.frame(frame).get(id, 'highlightIndexes')) {
+      neighborArray.push(n);
+    }
+  }
+
+  return neighborArray;
+}
+
+  // without preview frame, single:
   $: if (thumbnailIDs.length == 1 && frame >= 0) {
     secondaryIDs = dataset
       .frame(frame)
@@ -96,6 +134,16 @@
     secondaryIDs = [];
   }
 
+  // without preview frame, multiple:
+  $: if (thumbnailIDs.length > 1 && frame >= 0) {
+    secondaryIDs = mostCommonValues(genNeighborArray(), numNeighbors);
+    console.log("Final length: ", secondaryIDs.map((id) => getThumbnailInfo(id))
+        .filter((d) => !!d).length);
+  } else {
+    secondaryIDs = [];
+  }
+
+  // with preview frame, single
   $: if (
     thumbnailIDs.length == 1 &&
     previewFrame >= 0 &&
@@ -109,6 +157,34 @@
     previewSecondaryIDs = [];
   }
 
+  // with preview frame, multiple
+  $: if (thumbnailIDs.length > 1 && previewFrame >= 0 && previewFrame != frame) {
+    console.log("Into the branch!");
+    let frame1Neighbors = new Set();
+    let frame2Neighbors = new Set();
+    
+    for (const id of thumbnailIDs) {
+      for (const n of dataset.frame(frame).get(id, 'highlightIndexes')) {
+        frame1Neighbors.add(n);
+      }
+
+      for (const n of dataset.frame(previewFrame).get(id, 'highlightIndexes')) {
+        frame2Neighbors.add(n);
+      }
+    }
+    
+    sameIDs = mostCommonValues([...frame1Neighbors].filter(x => frame2Neighbors.has(x)), numNeighbors);
+    lostIDs = mostCommonValues([...frame1Neighbors].filter(x => !frame2Neighbors.has(x)), numNeighbors);
+    gainedIDs = mostCommonValues([...frame2Neighbors].filter(x => !frame1Neighbors.has(x)), numNeighbors);
+    console.log("Same IDs", sameIDs);
+    console.log("Lost IDs", lostIDs);
+    console.log("Gained IDs", gainedIDs);
+  } else {
+    sameIDs = [];
+    lostIDs = [];
+    gainedIDs = [];
+  }
+  
   onMount(() => {
     if (!!dataset.spritesheets) {
       updateImageThumbnails();
@@ -175,6 +251,31 @@
       {secondaryTitle}
     </div>
     <div class="thumbnails-container column-container">
+      {#if sameIDs.length > 0}
+        <div class="thumbnail-column">
+          {#each sameIDs.map((id) => getThumbnailInfo(id)) as d}
+            <ThumbnailRow blobURLs={blobURLs} d={d} color={"black"} />
+          {/each}
+        </div>
+      {/if}
+
+      {#if gainedIDs.length > 0}
+        <div class="thumbnail-column">
+          {#each gainedIDs.map((id) => getThumbnailInfo(id)) as d}
+            <ThumbnailRow blobURLs={blobURLs} d={d} color={"green"} />
+          {/each}
+        </div>
+      {/if}
+
+      {#if lostIDs.length > 0}
+        <div class="thumbnail-column">
+          {#each lostIDs.map((id) => getThumbnailInfo(id)) as d}
+            <ThumbnailRow blobURLs={blobURLs} d={d} color={"red"} />
+          {/each}
+        </div>
+      {/if}
+
+      {#if secondaryIDs.length > 0 && lostIDs.length == 0 && gainedIDs.length == 0 && sameIDs.length == 0}
       <div class="thumbnail-column">
         {#each secondaryIDs
           .map((id) => getThumbnailInfo(id))
@@ -211,7 +312,9 @@
           </div>
         {/each}
       </div>
-      {#if previewSecondaryIDs.length > 0}
+      {/if}
+      
+      {#if previewSecondaryIDs.length > 0 && lostIDs.length == 0 && gainedIDs.length == 0 && sameIDs.length == 0}
         <div class="thumbnail-column">
           {#each previewSecondaryIDs.map((id) => getThumbnailInfo(id)) as d}
             <div class="thumbnail-row">
