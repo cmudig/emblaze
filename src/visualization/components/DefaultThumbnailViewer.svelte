@@ -124,21 +124,15 @@ function genNeighborArray() {
   return neighborArray;
 }
 
-  // without preview frame, single:
+  // without preview frame, single or multiple:
   $: if (thumbnailIDs.length == 1 && frame >= 0) {
+    console.log("Hello?");
     secondaryIDs = dataset
       .frame(frame)
       .get(thumbnailIDs[0], 'highlightIndexes')
       .slice(0, numNeighbors);
-  } else {
-    secondaryIDs = [];
-  }
-
-  // without preview frame, multiple:
-  $: if (thumbnailIDs.length > 1 && frame >= 0) {
+  } else if (thumbnailIDs.length > 1 && frame >= 0) {
     secondaryIDs = mostCommonValues(genNeighborArray(), numNeighbors);
-    console.log("Final length: ", secondaryIDs.map((id) => getThumbnailInfo(id))
-        .filter((d) => !!d).length);
   } else {
     secondaryIDs = [];
   }
@@ -159,7 +153,6 @@ function genNeighborArray() {
 
   // with preview frame, multiple
   $: if (thumbnailIDs.length > 1 && previewFrame >= 0 && previewFrame != frame) {
-    console.log("Into the branch!");
     let frame1Neighbors = new Set();
     let frame2Neighbors = new Set();
     
@@ -275,7 +268,7 @@ function genNeighborArray() {
         </div>
       {/if}
 
-      {#if secondaryIDs.length > 0 && lostIDs.length == 0 && gainedIDs.length == 0 && sameIDs.length == 0}
+      {#if lostIDs.length == 0 && gainedIDs.length == 0 && sameIDs.length == 0}
       <div class="thumbnail-column">
         {#each secondaryIDs
           .map((id) => getThumbnailInfo(id))
