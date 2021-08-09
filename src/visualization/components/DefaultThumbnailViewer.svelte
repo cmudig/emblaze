@@ -22,6 +22,9 @@
   let lostIDs = [];
   let sameIDs = [];
 
+  const MaxSelectionVisible = 6;
+  let showingFullSelection = false;
+
   // For image thumbnails
 
   let blobURLs = new Map();
@@ -216,11 +219,33 @@
       {#if !!message}
         <p>{message}</p>
       {/if}
-      {#each thumbnailIDs
-        .map((id) => getThumbnailInfo(id))
-        .filter((d) => !!d) as d}
-        <ThumbnailRow {blobURLs} {d} detail />
-      {/each}
+      <div class:wrap-container={blobURLs.size > 0 && thumbnailIDs.length > 1}>
+        {#each thumbnailIDs
+          .map((id) => getThumbnailInfo(id))
+          .filter((d) => !!d)
+          .slice(0, showingFullSelection ? thumbnailIDs.length : MaxSelectionVisible) as d}
+          <ThumbnailRow
+            {blobURLs}
+            {d}
+            mini={blobURLs.size > 0 && thumbnailIDs.length > 1}
+            detail={thumbnailIDs.length == 1}
+          />
+        {/each}
+      </div>
+      {#if thumbnailIDs.length > MaxSelectionVisible}
+        <a
+          class="selection-toggle-link"
+          href="#"
+          on:click|preventDefault={() =>
+            (showingFullSelection = !showingFullSelection)}
+        >
+          {#if showingFullSelection}
+            Show less
+          {:else}
+            Show more
+          {/if}
+        </a>
+      {/if}
     </div>
   {/if}
   {#if secondaryIDs.length > 0}
@@ -312,6 +337,11 @@
     width: 100%;
     box-sizing: border-box;
   }
+  .wrap-container {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
   .thumbnail-column {
     flex: 1 1 auto;
   }
@@ -329,5 +359,8 @@
     text-transform: uppercase;
     margin-bottom: 8px;
     width: 100%;
+  }
+  .selection-toggle-link {
+    margin-left: 10px;
   }
 </style>
