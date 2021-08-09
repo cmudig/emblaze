@@ -17,15 +17,10 @@
   export let numNeighbors = 10;
 
   let secondaryIDs = [];
-  $: console.log("secondaryIDs len", secondaryIDs.length);
   let previewSecondaryIDs = [];
-  $: console.log("previewSecondaryIDs len", previewSecondaryIDs.length);
   let gainedIDs = [];
   let lostIDs = [];
   let sameIDs = [];
-  $: console.log("gainedIDs here:", gainedIDs);
-  $: console.log("lostIDs here:", lostIDs);
-  $: console.log("sameIDs here:", sameIDs);
 
   // For image thumbnails
 
@@ -96,37 +91,36 @@
     return infoText;
   }
 
- 
-function mostCommonValues(arr, k) {
-  let freqMap = new Map();
+  function mostCommonValues(arr, k) {
+    let freqMap = new Map();
 
-  for (const x of arr) {
+    for (const x of arr) {
       if (freqMap.has(x)) {
         freqMap.set(x, freqMap.get(x) + 1);
       } else {
         freqMap.set(x, 1);
       }
-  }
-
-  return [...freqMap.keys()].sort((a, b) => freqMap.get(b) - freqMap.get(a))
-                            .slice(0, k);
-}
-
-function genNeighborArray() {
-  let neighborArray = [];
-
-  for (const id of thumbnailIDs) {
-    for (const n of dataset.frame(frame).get(id, 'highlightIndexes')) {
-      neighborArray.push(n);
     }
+
+    return [...freqMap.keys()]
+      .sort((a, b) => freqMap.get(b) - freqMap.get(a))
+      .slice(0, k);
   }
 
-  return neighborArray;
-}
+  function genNeighborArray() {
+    let neighborArray = [];
+
+    for (const id of thumbnailIDs) {
+      for (const n of dataset.frame(frame).get(id, 'highlightIndexes')) {
+        neighborArray.push(n);
+      }
+    }
+
+    return neighborArray;
+  }
 
   // without preview frame, single or multiple:
   $: if (thumbnailIDs.length == 1 && frame >= 0) {
-    console.log("Hello?");
     secondaryIDs = dataset
       .frame(frame)
       .get(thumbnailIDs[0], 'highlightIndexes')
@@ -152,10 +146,14 @@ function genNeighborArray() {
   }
 
   // with preview frame, multiple
-  $: if (thumbnailIDs.length > 1 && previewFrame >= 0 && previewFrame != frame) {
+  $: if (
+    thumbnailIDs.length > 1 &&
+    previewFrame >= 0 &&
+    previewFrame != frame
+  ) {
     let frame1Neighbors = new Set();
     let frame2Neighbors = new Set();
-    
+
     for (const id of thumbnailIDs) {
       for (const n of dataset.frame(frame).get(id, 'highlightIndexes')) {
         frame1Neighbors.add(n);
@@ -165,19 +163,27 @@ function genNeighborArray() {
         frame2Neighbors.add(n);
       }
     }
-    
-    sameIDs = mostCommonValues([...frame1Neighbors].filter(x => frame2Neighbors.has(x)), numNeighbors);
-    lostIDs = mostCommonValues([...frame1Neighbors].filter(x => !frame2Neighbors.has(x)), numNeighbors);
-    gainedIDs = mostCommonValues([...frame2Neighbors].filter(x => !frame1Neighbors.has(x)), numNeighbors);
-    console.log("Same IDs", sameIDs);
-    console.log("Lost IDs", lostIDs);
-    console.log("Gained IDs", gainedIDs);
+
+    sameIDs = mostCommonValues(
+      [...frame1Neighbors].filter(
+        (x) => frame2Neighbors.has(x) && !thumbnailIDs.includes(x)
+      ),
+      numNeighbors
+    );
+    lostIDs = mostCommonValues(
+      [...frame1Neighbors].filter((x) => !frame2Neighbors.has(x)),
+      numNeighbors
+    );
+    gainedIDs = mostCommonValues(
+      [...frame2Neighbors].filter((x) => !frame1Neighbors.has(x)),
+      numNeighbors
+    );
   } else {
     sameIDs = [];
     lostIDs = [];
     gainedIDs = [];
   }
-  
+
   onMount(() => {
     if (!!dataset.spritesheets) {
       updateImageThumbnails();
@@ -213,29 +219,7 @@ function genNeighborArray() {
       {#each thumbnailIDs
         .map((id) => getThumbnailInfo(id))
         .filter((d) => !!d) as d}
-        <div class="thumbnail-row">
-          {#if !!d.sheet}
-            <div
-              class="image-parent"
-              style={`width: ${d.spec.frame.w}px; height: ${d.spec.frame.h}px;`}
-            >
-              <img
-                class="thumbnail-image"
-                src={blobURLs.get(d.sheet)}
-                width={`${d.macroSize.w}px`}
-                height={`${d.macroSize.h}px`}
-                style={`left: ${-d.spec.frame.x}px; top: ${-d.spec.frame
-                  .y}px; width: ${d.macroSize.w}px; height: ${
-                  d.macroSize.h
-                }px;`}
-                alt="Image preview for point {d.id}"
-              />
-            </div>
-          {/if}
-          <div class="thumbnail-text-section">
-            {@html makeThumbnailText(d, false)}
-          </div>
-        </div>
+        <ThumbnailRow {blobURLs} {d} detail />
       {/each}
     </div>
   {/if}
@@ -246,100 +230,64 @@ function genNeighborArray() {
     <div class="thumbnails-container column-container">
       {#if sameIDs.length > 0}
         <div class="thumbnail-column">
+          <div class="subheader">Both</div>
           {#each sameIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow blobURLs={blobURLs} d={d} color={"black"} />
-          {/each}
-        </div>
-      {/if}
-
-      {#if gainedIDs.length > 0}
-        <div class="thumbnail-column">
-          {#each gainedIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow blobURLs={blobURLs} d={d} color={"green"} />
+            <ThumbnailRow mini {blobURLs} {d} color="black" />
           {/each}
         </div>
       {/if}
 
       {#if lostIDs.length > 0}
         <div class="thumbnail-column">
+          <div class="subheader">{dataset.frame(frame).title}</div>
           {#each lostIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow blobURLs={blobURLs} d={d} color={"red"} />
+            <ThumbnailRow mini {blobURLs} {d} color="red" />
+          {/each}
+        </div>
+      {/if}
+
+      {#if gainedIDs.length > 0}
+        <div class="thumbnail-column">
+          <div class="subheader">{dataset.frame(previewFrame).title}</div>
+          {#each gainedIDs.map((id) => getThumbnailInfo(id)) as d}
+            <ThumbnailRow mini {blobURLs} {d} color="green" />
           {/each}
         </div>
       {/if}
 
       {#if lostIDs.length == 0 && gainedIDs.length == 0 && sameIDs.length == 0}
-      <div class="thumbnail-column">
-        {#each secondaryIDs
-          .map((id) => getThumbnailInfo(id))
-          .filter((d) => !!d) as d}
-          <div class="thumbnail-row">
-            {#if !!d.sheet}
-              <div
-                class="image-parent"
-                class:diff-red={previewSecondaryIDs.size > 0 &&
-                  !previewSecondaryIDs.includes(d.id)}
-                style={`width: ${d.spec.frame.w}px; height: ${d.spec.frame.h}px;`}
-              >
-                <img
-                  class="thumbnail-image"
-                  src={blobURLs.get(d.sheet)}
-                  width={`${d.macroSize.w}px`}
-                  height={`${d.macroSize.h}px`}
-                  style={`left: ${-d.spec.frame.x}px; top: ${-d.spec.frame
-                    .y}px; width: ${d.macroSize.w}px; height: ${
-                    d.macroSize.h
-                  }px;`}
-                  alt="Image preview for point {d.id}"
-                />
-              </div>
-            {/if}
-            <div class="thumbnail-text-section">
-              {@html makeThumbnailText(
-                d,
-                true,
-                new Set(previewSecondaryIDs),
-                'red'
-              )}
-            </div>
-          </div>
-        {/each}
-      </div>
+        <div class="thumbnail-column">
+          {#if previewSecondaryIDs.length > 0}
+            <div class="subheader">{dataset.frame(frame).title}</div>
+          {/if}
+          {#each secondaryIDs
+            .map((id) => getThumbnailInfo(id))
+            .filter((d) => !!d) as d}
+            <ThumbnailRow
+              mini={previewSecondaryIDs.length > 0}
+              {blobURLs}
+              {d}
+              color={previewSecondaryIDs.length > 0 &&
+              !previewSecondaryIDs.includes(d.id)
+                ? 'red'
+                : 'black'}
+            />
+          {/each}
+        </div>
       {/if}
-      
+
       {#if previewSecondaryIDs.length > 0 && lostIDs.length == 0 && gainedIDs.length == 0 && sameIDs.length == 0}
         <div class="thumbnail-column">
+          <div class="subheader">{dataset.frame(previewFrame).title}</div>
           {#each previewSecondaryIDs.map((id) => getThumbnailInfo(id)) as d}
-            <div class="thumbnail-row">
-              {#if !!d.sheet}
-                <div
-                  class="image-parent"
-                  class:diff-green={secondaryIDs.size > 0 &&
-                    !secondaryIDs.includes(d.id)}
-                  style={`width: ${d.spec.frame.w}px; height: ${d.spec.frame.h}px;`}
-                >
-                  <img
-                    class="thumbnail-image"
-                    src={blobURLs.get(d.sheet)}
-                    width={`${d.macroSize.w}px`}
-                    height={`${d.macroSize.h}px`}
-                    style={`left: ${-d.spec.frame.x}px; top: ${-d.spec.frame
-                      .y}px; width: ${d.macroSize.w}px; height: ${
-                      d.macroSize.h
-                    }px;`}
-                    alt="Image preview for point {d.id}"
-                  />
-                </div>
-              {/if}
-              <div class="thumbnail-text-section">
-                {@html makeThumbnailText(
-                  d,
-                  true,
-                  new Set(secondaryIDs),
-                  'green'
-                )}
-              </div>
-            </div>
+            <ThumbnailRow
+              mini
+              {blobURLs}
+              {d}
+              color={secondaryIDs.length > 0 && !secondaryIDs.includes(d.id)
+                ? 'green'
+                : 'black'}
+            />
           {/each}
         </div>
       {/if}
@@ -353,12 +301,6 @@ function genNeighborArray() {
     text-align: center;
     color: #999;
     padding: 80px 24px 0 24px;
-  }
-  .thumbnail-row {
-    padding: 4px 6px;
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
   }
   .thumbnails-container {
     padding: 12px 4px;
@@ -380,22 +322,12 @@ function genNeighborArray() {
     font-size: 10pt;
     text-transform: uppercase;
   }
-
-  .image-parent {
-    margin: 4px 12px 4px 4px;
-    overflow: hidden;
-    position: relative;
-  }
-  .thumbnail-image {
-    position: relative;
-    max-width: none !important;
-  }
-
-  .diff-red {
-    border: 2px solid red;
-  }
-
-  .diff-green {
-    border: 2px solid green;
+  .subheader {
+    text-align: center;
+    font-weight: 600;
+    font-size: 10pt;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    width: 100%;
   }
 </style>

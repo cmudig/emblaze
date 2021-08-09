@@ -1,36 +1,22 @@
 <script>
   export let d;
-  export let color;
+  export let color = 'black';
   export let blobURLs;
 
-  function makeText(item) {
-    if (!item || (!item.text && !item.description)) return '';
-    // let textColor = color;
-    // let color = 'black';
-    // if (secondary && diff.size > 0 && !diff.has(item.id)) {
-    //   color = diffColor;
-    // }
-    let infoText = `<p style="color: ${color}">` + (item.text || '') + '</p>';
-    // if (!secondary && !!item.description) {
-    //   infoText +=
-    //     '<p style="color: grey;">' +
-    //     item.description.replace('\n', '</p><p style="color: grey;">') +
-    //     '</p>';
-    // }
-    return infoText;
-  }
+  export let mini = false;
+  export let detail = false;
 </script>
 
 <div class="thumbnail-row">
   {#if !!d.sheet}
     <div
       class="image-parent"
+      class:diff-green={color == 'green'}
+      class:diff-red={color == 'red'}
       style={`width: ${d.spec.frame.w}px; height: ${d.spec.frame.h}px;`}
     >
       <img
         class="thumbnail-image"
-        class:diff-green={color="green"}
-        class:diff-red={color="red"}
         src={blobURLs.get(d.sheet)}
         width={`${d.macroSize.w}px`}
         height={`${d.macroSize.h}px`}
@@ -41,18 +27,28 @@
       />
     </div>
   {/if}
-  <div class="thumbnail-text-section">
-    {@html makeText(d)}
-  </div>
+  {#if !d.sheet || !mini}
+    <div class="thumbnail-text-section">
+      {#if d.text}
+        <p class:text-red={color == 'red'} class:text-green={color == 'green'}>
+          {d.text}
+        </p>
+      {/if}
+      {#if detail && !!d.description}
+        {#each d.description.split('\n') as line}
+          <p style="color: grey;">{line}</p>
+        {/each}
+      {/if}
+    </div>
+  {/if}
 </div>
-
 
 <style>
   .thumbnail-row {
     padding: 4px 6px;
     display: flex;
     align-items: center;
-    box-sizing: border-box;
+    box-sizing: content-box;
   }
 
   .image-parent {
@@ -60,16 +56,25 @@
     overflow: hidden;
     position: relative;
   }
+
   .thumbnail-image {
     position: relative;
     max-width: none !important;
   }
 
   .diff-red {
-    border: 2px solid red;
+    border: 3px solid #d81b60;
   }
 
   .diff-green {
-    border: 2px solid green;
+    border: 3px solid #98fb98;
+  }
+
+  .text-red {
+    color: #d81b60;
+  }
+
+  .text-green {
+    color: #98fb98;
   }
 </style>
