@@ -582,7 +582,7 @@
               labelInfo: dataItem.label,
               priority: { valueFn: () => _getLabelPriority(mark) },
               alpha: 0.0,
-              maxDim: 200.0, // maximum width or height
+              maxDim: 50.0, // maximum width or height
             });
           } else if (!!dataItem.label.text) {
             return new Decoration('text', [mark], {
