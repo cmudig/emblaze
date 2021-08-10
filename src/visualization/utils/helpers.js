@@ -197,3 +197,15 @@ export function getTextWidth(text, font) {
   var metrics = context.measureText(text);
   return metrics.width;
 }
+
+/**
+ * @returns the most likely OS the user is running ("Windows", "MacOS", "UNIX", or "Linux").
+ */
+export function getOSName() {
+  if (navigator.appVersion.indexOf('Win') != -1) return 'Windows';
+  if (navigator.appVersion.indexOf('Mac') != -1) return 'MacOS';
+  if (navigator.appVersion.indexOf('X11') != -1) return 'UNIX';
+  if (navigator.appVersion.indexOf('Linux') != -1) return 'Linux';
+
+  return 'Unknown';
+}

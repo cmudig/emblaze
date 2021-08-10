@@ -35,6 +35,7 @@
   export let tentativeSelectedIDs = [];
   export let filterIDs = [];
   export let followingIDs = [];
+  export let idsOfInterest = [];
 
   export let data = null;
 
@@ -291,7 +292,7 @@
     var mouseY = event.clientY - rect.top; //y position within the element.
 
     if (mouseDown && !!lastX && !!lastY) {
-      if (event.shiftKey || !!scatterplot.multiselect) {
+      if (event.metaKey || event.ctrlKey || !!scatterplot.multiselect) {
         // Multiselect
         if (!scatterplot.multiselect) {
           scatterplot.startMultiselect([mouseX, mouseY]);
@@ -352,7 +353,7 @@
     var mouseY = event.clientY - rect.top; //y position within the element.
 
     var el = getElementAtPoint(mouseX, mouseY);
-    stateManager.selectElement(el, event.shiftKey);
+    stateManager.selectElement(el, event.metaKey || event.ctrlKey);
   }
 
   // Selection
@@ -415,6 +416,8 @@
 
   $: if (inRadiusselect) {
     updateSelectionOrder(selectionUnit);
+    if (!!scatterplot.radiusselect)
+      scatterplot.radiusselect.visible = selectionUnit == 'pixels';
   }
 
   const SelectionRadiusPadding = 10;
@@ -588,6 +591,7 @@
     {previewFrame}
     {previewInfo}
     {numNeighbors}
+    {idsOfInterest}
     colorScale={(c) => colorScale(c)}
     colorFormat="rgbArray"
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}

@@ -300,6 +300,7 @@
     previewInfo={!!data && previewFrame >= 0 && previewFrame != frame
       ? data.previewInfo(frame, previewFrame)
       : null}
+    idsOfInterest={alignedIDs.length > 0 ? getFilterPoints(alignedIDs) : []}
     bind:previewProgress
     bind:clickedIDs
     bind:hoveredID
