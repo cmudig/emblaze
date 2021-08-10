@@ -416,6 +416,8 @@
 
   $: if (inRadiusselect) {
     updateSelectionOrder(selectionUnit);
+    if (!!scatterplot.radiusselect)
+      scatterplot.radiusselect.visible = selectionUnit == 'pixels';
   }
 
   const SelectionRadiusPadding = 10;
