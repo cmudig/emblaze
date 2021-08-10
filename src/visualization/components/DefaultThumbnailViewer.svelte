@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import App from '../../App.svelte';
-  import { base64ToBlob } from '../utils/helpers';
+  import { base64ToBlob, getOSName } from '../utils/helpers';
   import ThumbnailRow from './ThumbnailRow.svelte';
   export let width = null;
   export let height = null;
@@ -208,8 +208,17 @@
 >
   {#if thumbnailIDs.length == 0}
     <div class="no-selection">
-      Click to select points in the scatter plot, or Shift + drag to select a
-      region.
+      <p><strong>Click</strong> to select points</p>
+      <p>
+        <strong
+          >{#if getOSName() == 'MacOS'}Cmd{:else}Ctrl{/if} + click</strong
+        > to add to selection
+      </p>
+      <p>
+        <strong
+          >{#if getOSName() == 'MacOS'}Cmd{:else}Ctrl{/if} + drag</strong
+        > to select a region
+      </p>
     </div>
   {:else}
     <div class="header-bar">
@@ -326,6 +335,9 @@
     text-align: center;
     color: #999;
     padding: 80px 24px 0 24px;
+  }
+  .no-selection p {
+    margin-bottom: 12px;
   }
   .thumbnails-container {
     padding: 12px 4px;

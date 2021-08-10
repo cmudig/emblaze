@@ -292,7 +292,7 @@
     var mouseY = event.clientY - rect.top; //y position within the element.
 
     if (mouseDown && !!lastX && !!lastY) {
-      if (event.shiftKey || !!scatterplot.multiselect) {
+      if (event.metaKey || event.ctrlKey || !!scatterplot.multiselect) {
         // Multiselect
         if (!scatterplot.multiselect) {
           scatterplot.startMultiselect([mouseX, mouseY]);
@@ -353,7 +353,7 @@
     var mouseY = event.clientY - rect.top; //y position within the element.
 
     var el = getElementAtPoint(mouseX, mouseY);
-    stateManager.selectElement(el, event.shiftKey);
+    stateManager.selectElement(el, event.metaKey || event.ctrlKey);
   }
 
   // Selection
