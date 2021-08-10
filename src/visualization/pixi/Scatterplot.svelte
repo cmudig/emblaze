@@ -35,6 +35,7 @@
   export let tentativeSelectedIDs = [];
   export let filterIDs = [];
   export let followingIDs = [];
+  export let idsOfInterest = [];
 
   export let data = null;
 
@@ -588,6 +589,7 @@
     {previewFrame}
     {previewInfo}
     {numNeighbors}
+    {idsOfInterest}
     colorScale={(c) => colorScale(c)}
     colorFormat="rgbArray"
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}

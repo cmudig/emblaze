@@ -30,6 +30,7 @@
   export let selectedIDs = [];
   export let alignedIDs = [];
   export let tentativeSelectedIDs = []; // preview a selection before executing
+  export let idsOfInterest = [];
 
   export let frame = null;
   export let previewFrame = null;
@@ -119,6 +120,9 @@
 
   let highlightedPoints = new Set();
 
+  let previewLinePoints = new Set();
+  $: previewLinePoints = new Set(idsOfInterest);
+
   function _getX(mark) {
     let id = mark.id;
     let base = frame.get(id, 'x', mark.attributes.x.last() || 0.0);
@@ -178,12 +182,16 @@
 
   function _getLineAlpha(mark) {
     if (filter.size > 0 && !filter.has(mark.id)) return 0.0;
+    if (previewLinePoints.size > 0 && !previewLinePoints.has(mark.id))
+      return 0.0;
     if (previewInfo == null) return 0.0;
     return previewInfo.get(mark.id).lineAlpha || 0.0;
   }
 
   function _getLineWidth(mark) {
     if (filter.size > 0 && !filter.has(mark.id)) return 0.0;
+    if (previewLinePoints.size > 0 && !previewLinePoints.has(mark.id))
+      return 0.0;
     if (previewInfo == null) return 0.0;
     return previewInfo.get(mark.id).lineWidth || 0.0;
   }
