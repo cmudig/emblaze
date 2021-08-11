@@ -1,6 +1,6 @@
 {
   "name": "dr-viewer-widget",
-  "version": "0.1.1",
+  "version": "0.9.0",
   "description": "Interactive uncertainty-aware dimensionality reduction viewer",
   "keywords": [
     "jupyter",

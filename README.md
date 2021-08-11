@@ -1,35 +1,28 @@
-# dr-viewer-widget
+# Emblaze - Interactive Embedding Comparison
 
-Interactive uncertainty-aware dimensionality reduction viewer
+A Jupyter notebook widget for visually comparing embeddings using dimensionally-reduced scatter plots.
 
 ## Installation
 
-This is not available yet, please see Development Installation instructions below.
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
+This widget has been tested using Python 3.7, Jupyter Notebook (6.3.0), Jupyter Lab (3.0), and ipykernel 5.5.3.
 
 You can install using `pip`:
 
 ```bash
-pip install drviewer
+pip install emblaze
 ```
 
-Or if you use jupyterlab:
+If you use JupyterLab, you will need to run the following additional commands:
 
 ```bash
-pip install drviewer
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
+jupyter labextension install emblaze
 ```
 
 If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
 the nbextension:
 
 ```bash
-jupyter nbextension enable --py [--sys-prefix|--user|--system] drviewer
+jupyter nbextension enable --py --sys-prefix emblaze
 ```
 
 ## Development Installation
@@ -56,8 +49,8 @@ jupyter labextension install .
 Run the following commands if you use **Jupyter Notebook**:
 
 ```
-jupyter nbextension install --sys-prefix --symlink --overwrite --py drviewer
-jupyter nbextension enable --sys-prefix --py drviewer
+jupyter nbextension install --sys-prefix --symlink --overwrite --py emblaze
+jupyter nbextension enable --sys-prefix --py emblaze
 ```
 
 Note that the `--symlink` flag doesn't work on Windows, so you will here have to run

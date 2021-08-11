@@ -62,7 +62,9 @@ cmdclass['jsdeps'] = combine_commands(
 
 setup_args = dict(
     name=name,
-    description='Interactive uncertainty-aware dimensionality reduction viewer',
+    description='Interactive Jupyter notebook widget for visually comparing embeddings',
+    long_description=open(pjoin(HERE, 'README.md')).read(),
+    long_description_content_type='text/markdown',
     version=version,
     scripts=glob(pjoin('scripts', '*')),
     cmdclass=cmdclass,
@@ -88,6 +90,15 @@ setup_args = dict(
     include_package_data=True,
     install_requires=[
         'ipywidgets>=7.0.0',
+        'affine>=2.3.0',
+        'colormath>=3.0.0',
+        'numpy>=1.19.5',
+        'pandas>=1.2.0',
+        'scikit-learn>=0.24.1',
+        'scipy>=1.6.0',
+        'pillow>=8.2.0',
+        'umap-learn>=0.5.1',
+        'flask>=1.1.2'
     ],
     entry_points={
     },
