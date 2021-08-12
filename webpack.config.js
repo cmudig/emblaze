@@ -88,7 +88,7 @@ module.exports = module.exports = (env, options) => {
         plugin: './src/plugin.ts',
       },
       output: {
-        filename: '[name].js',
+        filename: 'index.js',
         path: path.resolve(__dirname, 'lib'),
         libraryTarget: 'amd',
       },
@@ -123,7 +123,7 @@ module.exports = module.exports = (env, options) => {
     },
 
     /**
-     * Embeddable dr-viewer-widget bundle
+     * Embeddable emblaze bundle
      *
      * This bundle is almost identical to the notebook extension bundle. The only
      * difference is in the configuration of the webpack public path for the
@@ -138,8 +138,8 @@ module.exports = module.exports = (env, options) => {
         filename: 'index.js',
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'amd',
-        library: 'dr-viewer-widget',
-        publicPath: 'https://unpkg.com/dr-viewer-widget@' + version + '/dist/',
+        library: 'emblaze',
+        publicPath: 'https://unpkg.com/emblaze@' + version + '/dist/',
       },
       devtool: 'source-map',
       module: {
@@ -160,7 +160,7 @@ module.exports = module.exports = (env, options) => {
       output: {
         filename: 'embed-bundle.js',
         path: path.resolve(__dirname, 'docs', 'source', '_static'),
-        library: 'dr-viewer-widget',
+        library: 'emblaze',
         libraryTarget: 'amd',
       },
       module: {

@@ -8,7 +8,7 @@ include .coverage.rc
 include tsconfig.json
 include package.json
 include webpack.config.js
-include emblaze/labextension/*.tgz
+graft emblaze/labextension
 
 # Documentation
 graft docs
@@ -36,6 +36,6 @@ prune lib
 global-exclude *~
 global-exclude *.pyc
 global-exclude *.pyo
-global-exclude **/.DS_Store
+global-exclude .DS_Store
 global-exclude .git
-global-exclude .ipynb_checkpoints
+prune **/.ipynb_checkpoints

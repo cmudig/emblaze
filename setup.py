@@ -7,7 +7,9 @@
 from __future__ import print_function
 from glob import glob
 from os.path import join as pjoin
+import sys
 
+sys.path.insert(0, '.')
 
 from setupbase import (
     create_cmdclass, install_npm, ensure_targets,
@@ -16,7 +18,6 @@ from setupbase import (
 )
 
 from setuptools import setup
-
 
 # The name of the project
 name = 'emblaze'
@@ -33,7 +34,12 @@ lab_path = pjoin(HERE, name, 'labextension')
 # Representative files that should exist after a successful build
 jstargets = [
     pjoin(nb_path, 'index.js'),
-    pjoin(HERE, 'lib', 'plugin.js'),
+    pjoin(HERE, 'lib', 'index.js'),
+]
+
+ensured_targets = [
+    pjoin(lab_path, "package.json"),
+    pjoin(lab_path, "static/style.js")
 ]
 
 package_data_spec = {
@@ -46,19 +52,11 @@ package_data_spec = {
 data_files_spec = [
     ('share/jupyter/nbextensions/emblaze',
         nb_path, '*.js*'),
-    ('share/jupyter/lab/extensions', lab_path, '*.tgz'),
+    # ('share/jupyter/lab/extensions', lab_path, '*.tgz'),
+    ("share/jupyter/labextensions/%s" % name, lab_path, "**"),
     ('etc/jupyter/nbconfig/notebook.d', HERE,
      'emblaze.json')
 ]
-
-
-cmdclass = create_cmdclass('jsdeps', package_data_spec=package_data_spec,
-                           data_files_spec=data_files_spec)
-cmdclass['jsdeps'] = combine_commands(
-    install_npm(HERE, build_cmd='build:all'),
-    ensure_targets(jstargets),
-)
-
 
 setup_args = dict(
     name=name,
@@ -67,7 +65,6 @@ setup_args = dict(
     long_description_content_type='text/markdown',
     version=version,
     scripts=glob(pjoin('scripts', '*')),
-    cmdclass=cmdclass,
     packages=find_packages(),
     author='venkatesh-sivaraman',
     author_email='venkatesh.sivaraman.98@gmail.com',
@@ -103,6 +100,24 @@ setup_args = dict(
     entry_points={
     },
 )
+
+try:
+    from jupyter_packaging import (
+        wrap_installers,
+        npm_builder,
+        get_data_files
+    )
+    post_develop = npm_builder(
+        build_cmd="build:all", source_dir="src", build_dir=lab_path
+    )
+    setup_args["cmdclass"] = wrap_installers(post_develop=post_develop, ensured_targets=ensured_targets)
+    setup_args["data_files"] = get_data_files(data_files_spec)
+except ImportError as e:
+    import logging
+    logging.basicConfig(format="%(levelname)s: %(message)s")
+    logging.warning("Build tool `jupyter-packaging` is missing. Install it with pip or conda.")
+    if not ("--name" in sys.argv or "--version" in sys.argv):
+        raise e
 
 if __name__ == '__main__':
     setup(**setup_args)

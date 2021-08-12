@@ -8,5 +8,5 @@
 Information about the frontend package of the widgets.
 """
 
-module_name = "dr-viewer-widget"
-module_version = "^0.1.1"
+module_name = "emblaze"
+module_version = "^0.9.0"
