@@ -8,6 +8,6 @@ def _jupyter_nbextension_paths():
     return [{
         'section': 'notebook',
         'src': 'nbextension/static',
-        'dest': 'drviewer',
-        'require': 'drviewer/extension'
+        'dest': 'emblaze',
+        'require': 'emblaze/extension'
     }]

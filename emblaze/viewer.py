@@ -16,28 +16,20 @@ from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
 from .utils import Field, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
-from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
-from sklearn.neighbors import NearestNeighbors
-from scipy.spatial.transform import Rotation
 from datetime import datetime
 import json
 import glob
 import threading
-import multiprocessing as mp
-from functools import partial
 import numpy as np
-import affine
-import base64
-import os
 
 
-class DRViewer(DOMWidget):
+class Viewer(DOMWidget):
     """TODO: Add docstring here
     """
     _model_name = Unicode('ViewerModel').tag(sync=True)
     _model_module = Unicode(module_name).tag(sync=True)
     _model_module_version = Unicode(module_version).tag(sync=True)
-    _view_name = Unicode('DRViewer').tag(sync=True)
+    _view_name = Unicode('Viewer').tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
 
@@ -89,7 +81,7 @@ class DRViewer(DOMWidget):
         embeddings: An EmbeddingSet object.
         thumbnails: A ThumbnailSet object.
         """
-        super(DRViewer, self).__init__(*args, **kwargs)
+        super(Viewer, self).__init__(*args, **kwargs)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
         self.isLoading = False
         self.saveSelectionFlag = False

@@ -4,7 +4,7 @@
 # Copyright (c) venkatesh-sivaraman.
 # Distributed under the terms of the Modified BSD License.
 
-from .viewer import DRViewer
+from .viewer import Viewer
 from .datasets import Embedding, EmbeddingSet
 from .utils import ProjectionTechnique, Field, PreviewMode
 from .thumbnails import Thumbnails, TextThumbnails, ImageThumbnails
