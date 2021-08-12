@@ -32,12 +32,12 @@ export class ViewerModel extends DOMWidgetModel {
   static model_name = 'ViewerModel';
   static model_module = MODULE_NAME;
   static model_module_version = MODULE_VERSION;
-  static view_name = 'DRViewer'; // Set to null if no view
+  static view_name = 'Viewer'; // Set to null if no view
   static view_module = MODULE_NAME; // Set to null if no view
   static view_module_version = MODULE_VERSION;
 }
 
-export class DRViewer extends DOMWidgetView {
+export class Viewer extends DOMWidgetView {
   render() {
     new App({
       target: this.el,

@@ -87,22 +87,22 @@ Please see `examples/example.ipynb` to try using the DR Viewer widget on the Bos
 **Example 1: Multiple projections of the same embedding dataset.** This can reveal areas of variation in the dimensionality reduction process, since tSNE and UMAP are randomized algorithms.
 
 ```python
-import drviewer as dr
+import emblaze
 
 # X is an n x k array, Y is a length-n array
 X, Y = ...
 
 # Represent the high-dimensional embedding
-emb = dr.Embedding({dr.Field.POSITION: X, dr.Field.COLOR: Y})
+emb = emblaze.Embedding({dr.Field.POSITION: X, dr.Field.COLOR: Y})
 # Compute nearest neighbors in the high-D space
 emb.compute_neighbors(metric='euclidean')
 
 # Generate UMAP 2D representations - you can pass UMAP parameters to project()
-variants = dr.EmbeddingSet([
+variants = emblaze.EmbeddingSet([
     emb.project(method=dr.ProjectionTechnique.UMAP) for _ in range(10)
 ])
 
-w = dr.DRViewer(embeddings=variants)
+w = emblaze.Viewer(embeddings=variants)
 w
 ```
 
@@ -118,8 +118,8 @@ Y = ...
 embedding_names = [...]
 
 # Make high-dimensional embedding objects
-embeddings = dr.EmbeddingSet([
-    dr.Embedding({dr.Field.POSITION: X, dr.Field.COLOR: Y}, label=emb_name)
+embeddings = emblaze.EmbeddingSet([
+    emblaze.Embedding({dr.Field.POSITION: X, dr.Field.COLOR: Y}, label=emb_name)
     for X, emb_name in zip(Xs, embedding_names)
 ])
 embeddings.compute_neighbors()
@@ -127,7 +127,7 @@ embeddings.compute_neighbors()
 # Make aligned UMAP
 reduced = embeddings.project(method=dr.ProjectionTechnique.ALIGNED_UMAP)
 
-w = dr.DRViewer(embeddings=reduced)
+w = emblaze.Viewer(embeddings=reduced)
 w
 ```
 
@@ -136,14 +136,14 @@ w
 ```python
 # images is an n x 100 x 100 x 3 numpy array of 100x100 RGB images (values from 0-255)
 images = ...
-thumbnails = dr.ImageThumbnails(images)
-w = dr.DRViewer(embeddings=embeddings, thumbnails=thumbnails)
+thumbnails = emblaze.ImageThumbnails(images)
+w = emblaze.Viewer(embeddings=embeddings, thumbnails=thumbnails)
 w
 ```
 
 ### Interactive Analysis
 
-Once you have loaded a `DRViewer` instance in the notebook, you can read and write its properties to dynamically work with the visualization. The following properties are reactive:
+Once you have loaded a `Viewer` instance in the notebook, you can read and write its properties to dynamically work with the visualization. The following properties are reactive:
 
 - `embeddings` (`EmbeddingSet`) Modify this to change the entire dataset that is displayed.
 - `thumbnails` (`Thumbnails`) Represents the image or text thumbnails displayed on hover and click.
@@ -160,7 +160,7 @@ To build once and run the app, first run `npm run build:standalone`. (For develo
 Start the Flask server:
 
 ```bash
-cd drviewer
+cd emblaze
 python server.py
 ```
 

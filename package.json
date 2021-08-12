@@ -1,7 +1,7 @@
 {
-  "name": "dr-viewer-widget",
+  "name": "emblaze",
   "version": "0.9.0",
-  "description": "Interactive uncertainty-aware dimensionality reduction viewer",
+  "description": "Interactive Jupyter notebook widget for visually comparing embeddings",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -12,9 +12,9 @@
     "lib/**/*.js",
     "dist/*.js"
   ],
-  "homepage": "https://github.com/cmudig/dr-viewer-widget",
+  "homepage": "https://github.com/cmudig/emblaze",
   "bugs": {
-    "url": "https://github.com/cmudig/dr-viewer-widget/issues"
+    "url": "https://github.com/cmudig/emblaze/issues"
   },
   "license": "BSD-3-Clause",
   "author": {
@@ -25,7 +25,7 @@
   "types": "./lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cmudig/dr-viewer-widget"
+    "url": "https://github.com/cmudig/emblaze"
   },
   "babel": {
     "presets": [
@@ -42,14 +42,14 @@
   },
   "scripts": {
     "build": "npm run build:nbextension",
-    "build:labextension": "npm run clean:labextension && mkdirp drviewer/labextension && cd drviewer/labextension && npm pack ../..",
+    "build:labextension": "npm run clean:labextension && mkdirp emblaze/labextension && cd emblaze/labextension && npm pack ../..",
     "build:nbextension": "webpack --mode=production",
     "build:standalone": "webpack --mode=production --config-name standalone",
     "build:all": "npm run build:labextension && npm run build:nbextension && npm run build:standalone",
     "clean": "npm run clean:lib && npm run clean:nbextension",
     "clean:lib": "rimraf lib",
-    "clean:labextension": "rimraf drviewer/labextension",
-    "clean:nbextension": "rimraf drviewer/nbextension/static/index.js",
+    "clean:labextension": "rimraf emblaze/labextension",
+    "clean:nbextension": "rimraf emblaze/nbextension/static/index.js",
     "clean:standalone": "rimraf public/build",
     "lint": "eslint . --ext .ts,.tsx --fix",
     "lint:check": "eslint . --ext .ts,.tsx",

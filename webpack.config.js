@@ -110,7 +110,7 @@ module.exports = module.exports = (env, options) => {
       entry: './src/extension.ts',
       output: {
         filename: 'index.js',
-        path: path.resolve(__dirname, 'drviewer', 'nbextension', 'static'),
+        path: path.resolve(__dirname, 'emblaze', 'nbextension', 'static'),
         libraryTarget: 'amd',
       },
       module: {

@@ -145,12 +145,12 @@ $RECYCLE.BIN/
 # ----
 
 **/node_modules/
-drviewer/nbextension/static/index.*
-drviewer/labextension/*.tgz
+emblaze/nbextension/static/index.*
+emblaze/labextension/*.tgz
 
 # Coverage data
 # -------------
 **/coverage/
 
 # Packed lab extensions
-drviewer/labextension
+emblaze/labextension
