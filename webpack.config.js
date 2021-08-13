@@ -60,7 +60,7 @@ module.exports = module.exports = (env, options) => {
       name: 'standalone',
       output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'public', 'build'),
+        path: path.resolve(__dirname, 'emblaze', 'public', 'build'),
         chunkFilename: '[name].[id].js',
         publicPath: '/build',
       },
@@ -77,7 +77,7 @@ module.exports = module.exports = (env, options) => {
       ],
       devServer: {
         hot: true,
-        contentBase: ['./src', './public'], // both src and output dirs
+        contentBase: ['./src', './emblaze/public'], // both src and output dirs
         inline: true,
       },
     },

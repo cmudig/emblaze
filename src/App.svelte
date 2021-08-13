@@ -127,16 +127,6 @@
 
   let filterIDs = syncValue(model, 'filterIDs', []);
 
-  function onScatterplotHover(e) {
-    if (e.detail != null) {
-      thumbnailIDs = [e.detail];
-      thumbnailHover = true;
-    } else {
-      thumbnailIDs = $selectedIDs;
-      thumbnailHover = false;
-    }
-  }
-
   // Saving and loading selections
 
   function openSaveSelectionDialog() {
@@ -189,29 +179,24 @@
     }
   }
 
+  let showLegend = true;
+
+  // Thumbnails
+
   $: {
     thumbnailIDs = $selectedIDs;
     thumbnailHover = false;
   }
 
-  let spinner;
-  $: if (!!spinner && !!$frameColors && $frameColors.length > 0) {
-    console.log('Spinner!');
-    setTimeout(() => {
-      spinner.setColors(
-        $frameColors.map((f) => ({
-          hue: f[0],
-          saturation: f[1],
-          lightness: f[2],
-        })),
-        true
-      );
-    }, 0);
+  function onScatterplotHover(e) {
+    if (e.detail != null) {
+      thumbnailIDs = [e.detail];
+      thumbnailHover = true;
+    } else {
+      thumbnailIDs = $selectedIDs;
+      thumbnailHover = false;
+    }
   }
-
-  let showLegend = true;
-
-  // Thumbnails
 
   $: if (!!dataset && !!canvas) {
     updateThumbnails($thumbnailData);

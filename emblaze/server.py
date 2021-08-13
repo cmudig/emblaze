@@ -2,29 +2,33 @@ from flask import request, Flask, send_from_directory, jsonify, send_file
 import os
 import json
 import numpy as np
-import moving_scatterplot as ms
+from . import moving_scatterplot as ms
 
 app = Flask(__name__)
+
+parent_dir = os.path.dirname(__file__)
+public_dir = os.path.join(parent_dir, "public")
+data_dir = os.path.join(parent_dir, "data")
 
 # Path for our main Svelte page
 @app.route("/")
 def base():
-    return send_from_directory('../public', 'index.html')
+    return send_from_directory(public_dir, 'index.html')
 
 # Path for all the static files (compiled JS/CSS, etc.)
 @app.route("/<path:path>")
 def home(path):
-    return send_from_directory('../public', path)
+    return send_from_directory(public_dir, path)
 
 # Example
 
 @app.route("/datasets")
 def list_datasets():
-    return jsonify([f for f in sorted(os.listdir("../data")) if os.path.isdir(os.path.join("../data", f))])
+    return jsonify([f for f in sorted(os.listdir(data_dir)) if os.path.isdir(os.path.join(data_dir, f))])
 
 @app.route("/datasets/<dataset_name>/data")
 def get_data(dataset_name):
-    dataset_base = os.path.join("../data", dataset_name)
+    dataset_base = os.path.join(data_dir, dataset_name)
     if not os.path.exists(dataset_base) or not os.path.isdir(dataset_base):
         return app.response_class(response="The dataset does not exist", status=404)
 
@@ -37,7 +41,7 @@ def get_data(dataset_name):
 
 @app.route("/datasets/<dataset_name>/thumbnails")
 def get_thumbnails(dataset_name):
-    dataset_base = os.path.join("../data", dataset_name)
+    dataset_base = os.path.join(data_dir, dataset_name)
     if not os.path.exists(dataset_base) or not os.path.isdir(dataset_base):
         return app.response_class(response="The dataset does not exist", status=404)
 
@@ -53,7 +57,7 @@ def get_thumbnails(dataset_name):
 
 @app.route("/datasets/<dataset_name>/supplementary/<filename>")
 def get_supplementary_file(dataset_name, filename):
-    dataset_base = os.path.join("../data", dataset_name)
+    dataset_base = os.path.join(data_dir, dataset_name)
     if not os.path.exists(dataset_base) or not os.path.isdir(dataset_base):
         return app.response_class(response="The dataset does not exist", status=404)
 
@@ -61,7 +65,7 @@ def get_supplementary_file(dataset_name, filename):
 
 @app.route("/align/<dataset_name>/<current_frame>", methods=['GET', 'POST'])
 def align_frames(dataset_name, current_frame):
-    dataset_base = os.path.join("../data", dataset_name)
+    dataset_base = os.path.join(data_dir, dataset_name)
     if not os.path.exists(dataset_base) or not os.path.isdir(dataset_base):
         return app.response_class(response="The dataset does not exist", status=404)
 
@@ -116,4 +120,5 @@ def align_frames(dataset_name, current_frame):
     return jsonify({"transformations": transformations})
 
 if __name__ == "__main__":
+    print("Running Flask server with public dir '{}' and data dir '{}'".format(public_dir, data_dir))
     app.run(debug=True)

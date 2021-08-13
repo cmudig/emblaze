@@ -15,14 +15,26 @@
   export let thumbnailsURL = null;
   export let thumbnailData = null;
   let thumbnailViewer;
-  let thumbnailID = null;
-  let thumbnailNeighbors = [];
 
+  export let data = null;
+
+  export let showLegend = true;
+
+  let selectedIDs = [];
+
+  let alignedIDs = [];
+  let alignedFrame = 0;
+  // alignedFrame should match currentFrame as long as there is no current alignment
+  $: if (alignedIDs.length == 0) alignedFrame = currentFrame;
+
+  let filterIDs = [];
+
+  let thumbnailIDs = [];
+  let thumbnailHover = false;
+  let thumbnailNeighbors = [];
   let previewThumbnailID = null;
   let previewThumbnailMessage = '';
   let previewThumbnailNeighbors = [];
-
-  export let data = null;
 
   let currentFrame = 0;
   let previewFrame = -1;
@@ -34,71 +46,28 @@
     previewFrame = -1;
   }
 
-  export function updateThumbnails() {
-    canvas.updateThumbnails();
-    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
-  }
+  // Thumbnails
 
-  function updateThumbnailID(id) {
-    thumbnailID = id;
-    if (
-      thumbnailID != null &&
-      data.atFrame(thumbnailID, currentFrame) != null
-    ) {
-      thumbnailNeighbors = data.atFrame(thumbnailID, currentFrame)
-        .highlightIndexes;
-    } else {
-      thumbnailNeighbors = [];
-    }
-
-    updatePreviewThumbnailID();
-  }
-
-  function updatePreviewThumbnailID() {
-    if (previewFrame == -1) {
-      previewThumbnailID = null;
-      previewThumbnailMessage = '';
-      previewThumbnailNeighbors = [];
-    } else if (
-      thumbnailID != null &&
-      data.atFrame(thumbnailID, previewFrame) != null
-    ) {
-      previewThumbnailID = thumbnailID;
-      previewThumbnailNeighbors = data.atFrame(thumbnailID, previewFrame)
-        .highlightIndexes;
-    } else {
-      previewThumbnailID = null;
-      if (thumbnailID != null)
-        previewThumbnailMessage =
-          'The selected point is not present in the preview';
-      previewThumbnailNeighbors = [];
-    }
+  $: {
+    thumbnailIDs = selectedIDs;
+    thumbnailHover = false;
   }
 
   function onScatterplotHover(e) {
-    if (e.detail != null) updateThumbnailID(e.detail);
-    else if (canvas.clickedIDs.length == 1)
-      updateThumbnailID(canvas.clickedIDs[0]);
-    else updateThumbnailID(null);
+    if (e.detail != null) {
+      thumbnailIDs = [e.detail];
+      thumbnailHover = true;
+    } else {
+      thumbnailIDs = selectedIDs;
+      thumbnailHover = false;
+    }
   }
 
-  function onScatterplotClick(e) {
-    if (e.detail.length == 1) updateThumbnailID(e.detail[0]);
-    else updateThumbnailID(null);
+  export function updateThumbnails() {
+    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
   }
 
-  let oldFrame = 0;
-  $: if (oldFrame != currentFrame) {
-    updateThumbnailID(thumbnailID);
-    oldFrame = currentFrame;
-  }
-
-  let oldPreviewFrame = -1;
-
-  $: if (oldPreviewFrame != previewFrame) {
-    updatePreviewThumbnailID();
-    oldPreviewFrame = previewFrame;
-  }
+  // Autocomplete
 
   let pointSelectorOptions = [];
 
@@ -131,46 +100,16 @@
   }
 </script>
 
-<div>
-  <Autocomplete
-    options={pointSelectorOptions}
-    on:change={(e) => selectPoint(e.detail)}
-  />
-  <div style="display: flex;">
-    <div class="scatterplot">
-      <SynchronizedScatterplot
-        {data}
-        width={700}
-        height={700}
-        hoverable
-        {colorScheme}
-        frame={currentFrame}
-        {previewFrame}
-        {thumbnailsURL}
-        animateTransitions
-        showPreviewControls
-        backgroundColor={previewFrame != currentFrame && previewFrame != -1
-          ? '#f8f8ff'
-          : 'white'}
-        bind:this={canvas}
-        on:colorScale={(e) => (colorScale = e.detail)}
-        on:datahover={onScatterplotHover}
-        on:dataclick={onScatterplotClick}
-        on:cancelPreview={() => (previewFrame = -1)}
-        on:advancePreview={() => (currentFrame = previewFrame)}
-        on:align
-      />
-    </div>
-
-    {#if data != null}
-      <div
-        style="height: 700px; display: flex; flex-wrap: wrap; flex-direction: column; width: 240px;"
-      >
-        {#each [...d3.range(data.frameCount)] as i}
+{#if !!data}
+  <div class="vis-container">
+    <div class="thumbnail-container">
+      {#each [...d3.range(data.frameCount)] as i}
+        <div class="thumbnail-item">
           <ScatterplotThumbnail
             on:click={() => {
               if (previewFrame == i) {
                 currentFrame = i;
+                previewFrame = -1;
               } else if (currentFrame != i) previewFrame = i;
               else if (currentFrame == i) previewFrame = -1;
             }}
@@ -180,29 +119,125 @@
             {data}
             frame={!!data ? data.frame(i) : null}
           />
-        {/each}
+        </div>
+      {/each}
+    </div>
+
+    <div class="scatterplot">
+      <div class="scatterplot-parent">
+        <SynchronizedScatterplot
+          bind:this={canvas}
+          {data}
+          frame={currentFrame}
+          {previewFrame}
+          hoverable
+          showPreviewControls
+          animateTransitions
+          backgroundColor={previewFrame != currentFrame && previewFrame != -1
+            ? '#f8f8ff'
+            : 'white'}
+          bind:clickedIDs={selectedIDs}
+          bind:alignedIDs
+          bind:filterIDs
+          on:datahover={onScatterplotHover}
+          {colorScheme}
+          selectionUnits={['pixels']}
+        />
+        {#if showLegend}
+          <div class="legend-container">
+            <Legend
+              colorScale={!!data ? data.colorScale(colorScheme) : null}
+              type={colorScheme.type || 'continuous'}
+            />
+          </div>
+        {/if}
       </div>
-    {/if}
-
-    {#if !!thumbnailData}
-      <DefaultThumbnailViewer
-        bind:this={thumbnailViewer}
-        dataset={data}
-        width={200}
-        height={600}
-        frame={currentFrame}
-        {previewFrame}
-        thumbnailIDs={thumbnailID !== null ? [thumbnailID] : []}
-      />
-    {/if}
+    </div>
+    <div class="sidebar">
+      <div class="search-bar">
+        <Autocomplete
+          placeholder="Search for a point..."
+          options={pointSelectorOptions}
+          maxOptions={10}
+          fillWidth={true}
+          on:change={(e) => (selectedIDs = [e.detail])}
+        />
+      </div>
+      <div class="sidebar-content">
+        <DefaultThumbnailViewer
+          bind:this={thumbnailViewer}
+          dataset={data}
+          primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
+          frame={currentFrame}
+          {previewFrame}
+          {thumbnailIDs}
+        />
+      </div>
+    </div>
   </div>
-
-  <Legend {colorScale} type={colorScheme.type || 'continuous'} />
-</div>
+{/if}
 
 <style>
   .scatterplot {
-    margin-bottom: 16px;
-    margin-right: 16px;
+    height: 100%;
+    flex: 1 1;
+    min-width: 0;
+  }
+
+  .scatterplot-parent {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    /*border: 1px solid #bbb;*/
+  }
+
+  .vis-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-items: stretch;
+    /*border: 2px solid #bbb;*/
+  }
+
+  .thumbnail-item {
+    border-bottom: 1px solid #bbb;
+  }
+
+  .thumbnail-container {
+    flex-shrink: 0;
+    overflow-y: scroll;
+    border: 1px solid #bbb;
+  }
+
+  .legend-container {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+  }
+
+  .sidebar {
+    width: 300px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-right: 8px;
+    box-sizing: border-box;
+  }
+
+  .sidebar-content {
+    border: 1px solid #bbb;
+    flex-grow: 1;
+    overflow-y: scroll;
+    box-sizing: border-box;
+  }
+  .search-bar {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    margin: 4px;
+    flex: 0 0 auto;
   }
 </style>

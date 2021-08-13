@@ -19,6 +19,9 @@ prune docs/dist
 
 # Examples
 graft examples
+prune examples/screenshots
+graft emblaze/data
+graft emblaze/public
 
 # Tests
 graft tests

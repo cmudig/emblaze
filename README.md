@@ -14,50 +14,22 @@ pip install emblaze
 
 The widget should work out of the box when you run `jupyter lab` (see example code below).
 
-If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
+*Jupyter Notebook note:* If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
 the nbextension:
 
 ```bash
 jupyter nbextension enable --py --sys-prefix emblaze
 ```
 
-## Development Installation
+## Standalone Demo
 
-Clone repository, then install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Install the python package. This will also build the JS packages.
+Although the full application is designed to work as a Jupyter widget, you can run a standalone version (with some features currently limited) directly in your browser. To do so, simply run the following command after installing the package:
 
 ```bash
-pip install -e .
+python -m emblaze.server
 ```
 
-Run the following commands if you use **Jupyter Lab**:
-
-```
-jupyter labextension install @jupyter-widgets/jupyterlab-manager --no-build
-jupyter labextension install .
-```
-
-Run the following commands if you use **Jupyter Notebook**:
-
-```
-jupyter nbextension install --sys-prefix --symlink --overwrite --py emblaze
-jupyter nbextension enable --sys-prefix --py emblaze
-```
-
-Note that the `--symlink` flag doesn't work on Windows, so you will here have to run
-the `install` command every time that you rebuild your extension. For certain installations
-you might also need another flag instead of `--sys-prefix`, but we won't cover the meaning
-of those flags here.
-
-### How to see your changes
-
-Open JupyterLab in watch mode with `jupyter lab --watch`. Then, in a separate terminal, watch the source directory for changes with `npm run watch`. After a change to the JavaScript code, you will wait for the build to finish, then refresh your browser. After changing in Python code, you will need to restart the notebook kernel to see your changes take effect.
-
+This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets to this demo application, you can copy a directory containing `data.json` and optional `thumbnails.json` files into the data path printed when the Flask server starts. (To generate these JSON files, simply build an `EmbeddingSet` and a `Thumbnails` object using the Python API, then call the `to_json()` method on each one and save it to a file.)
 
 ## Examples
 
@@ -133,21 +105,47 @@ Once you have loaded a `Viewer` instance in the notebook, you can read and write
 - `colorScheme` (`string`) The name of a color scheme to use to render the points. A variety of color schemes are available, listed in `src/colorschemes.ts`. This property can also be changed in the Settings panel of the widget.
 - `previewMode` (`string`) The method to use to generate preview lines, which should be one of the values in `utils.
 
-## Standalone App
+---
 
-The widget can also be run as a standalone application. In this case, you must include data and thumbnail files in the `data` directory for them to appear in the widget.
+## Development Installation
 
-To build once and run the app, first run `npm run build:standalone`. (For development, see below).
-
-Start the Flask server:
+Clone repository, then install dependencies:
 
 ```bash
-cd emblaze
-python server.py
+pip install -r requirements.txt
 ```
 
-For development, run `npm run watch:standalone` to continuously build the frontend and automatically reload when the content changes.
+Install the python package. This will also build the JS packages.
 
-## Notes
+```bash
+pip install -e .
+```
+
+Run the following commands if you use **Jupyter Lab**:
+
+```
+jupyter labextension install @jupyter-widgets/jupyterlab-manager --no-build
+jupyter labextension install .
+```
+
+Run the following commands if you use **Jupyter Notebook**:
+
+```
+jupyter nbextension install --sys-prefix --symlink --overwrite --py emblaze
+jupyter nbextension enable --sys-prefix --py emblaze
+```
+
+Note that the `--symlink` flag doesn't work on Windows, so you will here have to run
+the `install` command every time that you rebuild your extension. For certain installations
+you might also need another flag instead of `--sys-prefix`, but we won't cover the meaning
+of those flags here.
+
+### How to see your changes
+
+Open JupyterLab in watch mode with `jupyter lab --watch`. Then, in a separate terminal, watch the source directory for changes with `npm run watch`. After a change to the JavaScript code, you will wait for the build to finish, then refresh your browser. After changing in Python code, you will need to restart the notebook kernel to see your changes take effect.
+
+To develop using the standalone app, run `npm run watch:standalone` in a separate terminal from the Flask server to continuously build the frontend. You will need to reload the page to see your changes.
+
+### Development Notes
 
 - Svelte transitions don't seem to work well as they force an expensive re-layout operation. Avoid using them during interactions.

@@ -6,8 +6,8 @@
   import SpatialVisualization from './visualization/SpatialVisualization.svelte';
   import ColorSchemes from './colorschemes';
 
-  let datasetOptions = ['mnist-umap'];
-  let datasetName = 'mnist-umap';
+  let datasetOptions = ['mnist-tsne'];
+  let datasetName = 'mnist-tsne';
 
   let colorChannel = 'constant';
   let colorChannelOptions = ['constant'];
@@ -141,7 +141,7 @@
 </script>
 
 <main>
-  <div>
+  <div class="config-view">
     <h3>Dataset Configuration</h3>
     <div style="display: flex">
       <select bind:value={datasetName} class="config-item">
@@ -168,24 +168,10 @@
           <option value={mode}>{mode}</option>
         {/each}
       </select>
-      <select bind:value={visualizationMode} class="config-item">
-        <option value="temporal">Temporal Visualization</option>
-        <option value="spatial">Spatial Visualization</option>
-      </select>
     </div>
   </div>
 
-  {#if visualizationMode == 'spatial'}
-    <SpatialVisualization
-      bind:this={visualization}
-      {data}
-      {thumbnailsURL}
-      {thumbnailData}
-      {colorScheme}
-      {useHalos}
-      on:align={alignVisualization}
-    />
-  {:else if visualizationMode == 'temporal'}
+  <div class="visualization-view">
     <TemporalVisualization
       bind:this={visualization}
       {data}
@@ -195,11 +181,21 @@
       {useHalos}
       on:align={alignVisualization}
     />
-  {/if}
+  </div>
 </main>
 
 <style>
+  main {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
   .config-item {
     margin-right: 16px;
+  }
+  .visualization-view {
+    flex: 1;
+    overflow: scroll;
   }
 </style>

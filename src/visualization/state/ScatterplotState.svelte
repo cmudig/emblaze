@@ -302,6 +302,8 @@
     updatePreviewLines(previewInfo);
 
   function updatePreviewLines(info) {
+    if (!marks || !previewLinePool) return;
+
     if (!!info) {
       marks.forEach((mark) => {
         if (_getLineAlpha(mark) <= 0.01) {
@@ -334,7 +336,7 @@
 
   let prevFilter = null;
   $: if (prevFilter !== filter) {
-    if (prevFilter != null) {
+    if (prevFilter != null && !!marks) {
       marks.animateComputed('alpha', interpolateTo, defaultDuration);
     }
     if (previewInfo != null) {
