@@ -29,7 +29,7 @@ Although the full application is designed to work as a Jupyter widget, you can r
 python -m emblaze.server
 ```
 
-This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets to this demo application, you can copy a directory containing `data.json` and optional `thumbnails.json` files into the data path printed when the Flask server starts. (To generate these JSON files, simply build an `EmbeddingSet` and a `Thumbnails` object using the Python API, then call the `to_json()` method on each one and save it to a file.)
+Visit `localhost:5000` to see the running application. This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets to this demo application, you can copy a directory containing `data.json` and optional `thumbnails.json` files into the data path printed when the Flask server starts. (To generate these JSON files, simply build an `EmbeddingSet` and a `Thumbnails` object using the Python API, then call the `to_json()` method on each one and save it to a file.)
 
 ## Examples
 
