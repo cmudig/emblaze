@@ -25,13 +25,13 @@ jupyter nbextension enable --py --sys-prefix emblaze
 
 ## Standalone Demo
 
-Although the full application is designed to work as a Jupyter widget, you can run a standalone version (with some features currently limited) directly in your browser. To do so, simply run the following command after installing the package:
+Although the full application is designed to work as a Jupyter widget, you can run a standalone version with most of the available features directly in your browser. To do so, simply run the following command after pip-installing the package (note: you do *not* need to clone the repository to run the standalone app):
 
 ```bash
 python -m emblaze.server
 ```
 
-Visit `localhost:5000` to see the running application. This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets to this demo application, you can copy a directory containing `data.json` and optional `thumbnails.json` files into the data path printed when the Flask server starts. (To generate these JSON files, simply build an `EmbeddingSet` and a `Thumbnails` object using the Python API, then call the `to_json()` method on each one and save it to a file.)
+Visit `localhost:5000` to see the running application. This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets (for example, to host an instance of Emblaze showing a custom dataset), see the standalone app development instructions below.
 
 ## Examples
 
@@ -146,7 +146,27 @@ of those flags here.
 
 Open JupyterLab in watch mode with `jupyter lab --watch`. Then, in a separate terminal, watch the source directory for changes with `npm run watch`. After a change to the JavaScript code, you will wait for the build to finish, then refresh your browser. After changing in Python code, you will need to restart the notebook kernel to see your changes take effect.
 
+### Standalone App Development
+
 To develop using the standalone app, run `npm run watch:standalone` in a separate terminal from the Flask server to continuously build the frontend. You will need to reload the page to see your changes.
+
+The standalone application serves datasets stored at the data path that is printed when the Flask server starts (should be something like `.../lib/python3.9/site-packages/emblaze/data` for the pip-installed version, or `.../emblaze/emblaze/data` for a local repository). You can add your own datasets by building an `EmbeddingSet` and (optionally) a `Thumbnails` object, then saving the results to files in the data directory:
+
+```python
+import os, json
+
+dataset_name = "my-dataset"
+data_dir = ... # data directory printed by flask server
+
+embeddings = ... # EmbeddingSet object
+thumbnails = ... # (Text|Image)Thumbnails object
+
+os.mkdir(os.path.join(data_dir, dataset_name))
+with open(os.path.join(data_dir, dataset_name, "data.json"), "w") as file:
+    json.dump(embeddings.to_json(), file)
+with open(os.path.join(data_dir, dataset_name, "thumbnails.json"), "w") as file:
+    json.dump(thumbnails.to_json(), file)
+```
 
 ### Development Notes
 
