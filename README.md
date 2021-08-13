@@ -6,7 +6,7 @@ Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using
 
 ## Installation
 
-**Compatibility Note:** Note that this widget has been tested using Python >= 3.7. If you are using JupyterLab, please make sure you are running version 3.0 or higher.
+**Compatibility Note:** Note that this widget has been tested using Python >= 3.7. If you are using JupyterLab, please make sure you are running version 3.0 or higher. The widget currently does not support displaying in the VS Code interactive notebook environment.
 
 Install Emblaze using `pip`:
 
