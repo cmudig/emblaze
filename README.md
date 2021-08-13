@@ -1,22 +1,18 @@
 # Emblaze - Interactive Embedding Comparison
 
-A Jupyter notebook widget for visually comparing embeddings using dimensionally-reduced scatter plots.
+Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using animated scatter plots. It bundles an easy-to-use Python API for performing dimensionality reduction on multiple sets of embedding data (including aligning the results for easier comparison), and a full-featured interactive platform for probing and comparing embeddings that runs within a Jupyter notebook cell.
 
 ## Installation
 
-This widget has been tested using Python 3.7, Jupyter Notebook (6.3.0), Jupyter Lab (3.0), and ipykernel 5.5.3.
+**Compatibility Note:** Note that this widget has been tested using Python >= 3.7. If you are using JupyterLab, please make sure you are running version 3.0 or higher.
 
-You can install using `pip`:
+Install Emblaze using `pip`:
 
 ```bash
 pip install emblaze
 ```
 
-If you use JupyterLab, you will need to run the following additional commands:
-
-```bash
-jupyter labextension install emblaze
-```
+The widget should work out of the box when you run `jupyter lab` (see example code below).
 
 If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
 the nbextension:
@@ -27,7 +23,7 @@ jupyter nbextension enable --py --sys-prefix emblaze
 
 ## Development Installation
 
-Install dependencies:
+Clone repository, then install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -60,46 +56,30 @@ of those flags here.
 
 ### How to see your changes
 
-#### Typescript:
+Open JupyterLab in watch mode with `jupyter lab --watch`. Then, in a separate terminal, watch the source directory for changes with `npm run watch`. After a change to the JavaScript code, you will wait for the build to finish, then refresh your browser. After changing in Python code, you will need to restart the notebook kernel to see your changes take effect.
 
-To continuously monitor the project for changes and automatically trigger a rebuild, start Jupyter in watch mode:
-
-```bash
-jupyter lab --watch
-```
-
-And in a separate session, begin watching the source directory for changes:
-
-```bash
-npm run watch
-```
-
-After a change wait for the build to finish and then refresh your browser and the changes should take effect.
-
-#### Python:
-
-If you make a change to the python code then you will need to restart the notebook kernel to have it take effect.
 
 ## Examples
 
-Please see `examples/example.ipynb` to try using the DR Viewer widget on the Boston housing prices or MNIST (TensorFlow import required) datasets.
+Please see `examples/example.ipynb` to try using the Emblaze widget on the Boston housing prices or MNIST (TensorFlow import required) datasets.
 
 **Example 1: Multiple projections of the same embedding dataset.** This can reveal areas of variation in the dimensionality reduction process, since tSNE and UMAP are randomized algorithms.
 
 ```python
 import emblaze
+from emblaze.utils import Field, ProjectionTechnique
 
 # X is an n x k array, Y is a length-n array
 X, Y = ...
 
 # Represent the high-dimensional embedding
-emb = emblaze.Embedding({dr.Field.POSITION: X, dr.Field.COLOR: Y})
+emb = emblaze.Embedding({Field.POSITION: X, Field.COLOR: Y})
 # Compute nearest neighbors in the high-D space
 emb.compute_neighbors(metric='euclidean')
 
 # Generate UMAP 2D representations - you can pass UMAP parameters to project()
 variants = emblaze.EmbeddingSet([
-    emb.project(method=dr.ProjectionTechnique.UMAP) for _ in range(10)
+    emb.project(method=ProjectionTechnique.UMAP) for _ in range(10)
 ])
 
 w = emblaze.Viewer(embeddings=variants)
@@ -119,13 +99,13 @@ embedding_names = [...]
 
 # Make high-dimensional embedding objects
 embeddings = emblaze.EmbeddingSet([
-    emblaze.Embedding({dr.Field.POSITION: X, dr.Field.COLOR: Y}, label=emb_name)
+    emblaze.Embedding({Field.POSITION: X, Field.COLOR: Y}, label=emb_name)
     for X, emb_name in zip(Xs, embedding_names)
 ])
 embeddings.compute_neighbors()
 
 # Make aligned UMAP
-reduced = embeddings.project(method=dr.ProjectionTechnique.ALIGNED_UMAP)
+reduced = embeddings.project(method=ProjectionTechnique.ALIGNED_UMAP)
 
 w = emblaze.Viewer(embeddings=reduced)
 w
@@ -150,6 +130,8 @@ Once you have loaded a `Viewer` instance in the notebook, you can read and write
 - `currentFrame` (`int`) The current frame or embedding space that is being viewed (from `0` to `len(embeddings)`).
 - `selectedIDs` (`List[int]`) The selected ID numbers. Unless you provide custom IDs when constructing the `EmbeddingSet`, these are simply zero-indexed integers.
 - `alignedIDs` (`List[int]`) The IDs of the points to which the embedding spaces are aligned (same format as `selectedIDs`). Alignment is computed relative to the positions of the points in the current frame.
+- `colorScheme` (`string`) The name of a color scheme to use to render the points. A variety of color schemes are available, listed in `src/colorschemes.ts`. This property can also be changed in the Settings panel of the widget.
+- `previewMode` (`string`) The method to use to generate preview lines, which should be one of the values in `utils.
 
 ## Standalone App
 
