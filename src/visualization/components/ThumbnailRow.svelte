@@ -8,7 +8,7 @@
   export let detail = false;
 </script>
 
-<div class="thumbnail-row" on:click={e => dispatch("thumbnailClick", { id : d.id, shiftKey : e.shiftKey })} on:mouseover={() => dispatch("thumbnailHover", {id : d.id})} 
+<div class="thumbnail-row" on:click={e => dispatch("thumbnailClick", { id : d.id, keyPressed : e.metaKey || e.ctrlKey })} on:mouseover={() => dispatch("thumbnailHover", {id : d.id})} 
                                                                                                             on:mouseout={() => dispatch("thumbnailHover", {id : null})}>
   {#if !!d.sheet}
     <div

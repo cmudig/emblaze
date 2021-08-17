@@ -183,10 +183,9 @@
   }
 
   function handleThumbnailClick(event) {
-    if (event.detail.shiftKey) {
+    if (event.detail.keyPressed) {
       if ($selectedIDs.indexOf(event.detail.id) == -1) {
-        ($selectedIDs).push(event.detail.id);
-        console.log("now selected", $selectedIDs);
+        $selectedIDs = [...$selectedIDs, event.detail.id];
       }
     } else {
       $selectedIDs = [event.detail.id];
