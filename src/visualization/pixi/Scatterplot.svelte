@@ -264,6 +264,7 @@
       .on('mouseout', () => {
         if (hoveredID != null) {
           hoveredID = null;
+          dispatch("datahover", hoveredID);
         }
       })
       .on('mousewheel', handleMouseWheel)
@@ -311,9 +312,11 @@
         // centerX = mouseX;
         // centerY = mouseY;
         hoveredID = hoveredItem.id;
+        dispatch("datahover", hoveredID);
         //handleRadiusselect();
       } else {
         hoveredID = null;
+        dispatch("datahover", hoveredID);
       }
     }
     lastX = mouseX;
@@ -358,12 +361,12 @@
 
   // Selection
 
-  var prevHoverID = null;
+  // var prevHoverID = null;
 
-  $: if (prevHoverID != hoveredID) {
-    dispatch('datahover', hoveredID);
-    prevHoverID = hoveredID;
-  }
+  // $: if (prevHoverID != hoveredID) {
+  //   dispatch('datahover', hoveredID);
+  //   prevHoverID = hoveredID;
+  // }
 
   export function selectPoint(pointID, multi = false) {
     if (!stateManager) return;
