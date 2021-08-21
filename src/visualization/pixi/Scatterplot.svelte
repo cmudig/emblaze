@@ -264,7 +264,7 @@
       .on('mouseout', () => {
         if (hoveredID != null) {
           hoveredID = null;
-          dispatch("datahover", hoveredID);
+          dispatch('datahover', hoveredID);
         }
       })
       .on('mousewheel', handleMouseWheel)
@@ -312,11 +312,11 @@
         // centerX = mouseX;
         // centerY = mouseY;
         hoveredID = hoveredItem.id;
-        dispatch("datahover", hoveredID);
+        dispatch('datahover', hoveredID);
         //handleRadiusselect();
       } else {
         hoveredID = null;
-        dispatch("datahover", hoveredID);
+        dispatch('datahover', hoveredID);
       }
     }
     lastX = mouseX;

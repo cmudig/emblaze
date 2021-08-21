@@ -268,7 +268,14 @@
         <div class="thumbnail-column">
           <div class="subheader">Both</div>
           {#each sameIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow on:thumbnailClick on:thumbnailHover mini {blobURLs} {d} color="black" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="black"
+            />
           {/each}
         </div>
       {/if}
@@ -277,7 +284,14 @@
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(frame).title}</div>
           {#each lostIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow on:thumbnailClick on:thumbnailHover mini {blobURLs} {d} color="red" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="red"
+            />
           {/each}
         </div>
       {/if}
@@ -286,7 +300,14 @@
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(previewFrame).title}</div>
           {#each gainedIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow on:thumbnailClick on:thumbnailHover mini {blobURLs} {d} color="green" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="green"
+            />
           {/each}
         </div>
       {/if}

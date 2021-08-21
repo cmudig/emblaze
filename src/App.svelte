@@ -192,7 +192,6 @@
     }
   }
 
-
   function handleThumbnailHover(event) {
     //thumbnailHoveredID = event.detail.id;
     scatterplotHoveredID = event.detail.id;
