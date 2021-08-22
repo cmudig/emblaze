@@ -5,7 +5,7 @@ from io import BytesIO
 from PIL import Image
 import base64
 from .datasets import ColumnarData
-from .utils import Field
+from .utils import Field, standardize_json
 
 class Thumbnails:
     """
@@ -56,7 +56,22 @@ class TextThumbnails(Thumbnails):
                 "frames": {} # Not implemented
             } for i, id_val in enumerate(self.data.ids)
         }
-        return result
+        return standardize_json(result)
+    
+    @staticmethod
+    def from_json(data, ids=None):
+        """
+        Builds a TextThumbnails object from a JSON object. The provided object should
+        have an "items" key with a dictionary mapping ID values to text thumbnail
+        objects, each of which must have a 'name' and optionally 'description' keys.
+        """
+        assert "items" in data, "JSON object must contain an 'items' field"
+        items = data["items"]
+        if ids is None:
+            ids = sorted(list(items.keys()))
+        return TextThumbnails([items[id_val]["name"] for id_val in ids],
+                              [items[id_val].get("description", "") for id_val in ids],
+                              ids)
    
 MAX_IMAGE_DIM = 100
 MAX_SPRITESHEET_DIM = 1000
@@ -66,12 +81,15 @@ class ImageThumbnails(Thumbnails):
     Defines a set of image thumbnails. All thumbnails are scaled to the same
     dimensions to fit in a set of spritesheets.
     """
-    def __init__(self, images, ids=None, grid_dimensions=None, image_size=None, names=None, descriptions=None):
+    def __init__(self, images, spritesheets=None, ids=None, grid_dimensions=None, image_size=None, names=None, descriptions=None):
         """
         Args:
             images: An array of images, each represented as a numpy array. The
                 images contained can be different sizes if the images object is
                 provided as a list.
+            spritesheets: If provided, ignores the other spritesheet-generating
+                parameters and initializes the thumbnails object with previously
+                generated spritesheets.
             ids: The IDs of the points to which each image belongs. If none, this
                 is assumed to be a zero-indexed increasing index.
             grid_dimensions: Number of images per spritesheet, defined as
@@ -87,7 +105,10 @@ class ImageThumbnails(Thumbnails):
                 and only show on the currently selected point(s).
         """
         super().__init__("spritesheet")
-        self.make_spritesheets(images, ids or np.arange(len(images)), grid_dimensions, image_size)
+        if spritesheets is not None:
+            self.spritesheets = spritesheets
+        else:
+            self.make_spritesheets(images, ids or np.arange(len(images)), grid_dimensions, image_size)
         
         if names is not None:
             self.text_data = ColumnarData({
@@ -117,7 +138,33 @@ class ImageThumbnails(Thumbnails):
                 } for i, id_val in enumerate(self.text_data.ids)
             }
 
-        return result
+        return standardize_json(result)
+    
+    @staticmethod
+    def from_json(data, ids=None):
+        """
+        Builds an ImageThumbnails object from a JSON object. The provided object should
+        have a "spritesheets" object that defines PIXI spritesheets, and an
+        optional "items" key that contains text thumbnails (see TextThumbnails
+        for more information about the "items" field).
+        """
+        assert "spritesheets" in data, "JSON object must contain a 'spritesheets' field"
+        spritesheets = data["spritesheets"]
+        if ids is None:
+            ids = sorted([k for sp in spritesheets for k in sp["spec"]["frames"].keys()])
+            
+        names = None
+        descriptions = None
+        if "items" in data:
+            items = data["items"]
+            
+            names = [items[id_val]["name"] for id_val in ids]
+            descriptions = [items[id_val].get("description", "") for id_val in ids]
+        return ImageThumbnails(None,
+                               spritesheets=spritesheets,
+                               ids=ids,
+                               names=names,
+                               descriptions=descriptions)
 
     def make_spritesheets(self, images, ids, grid_dimensions=None, image_size=None):
         """

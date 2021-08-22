@@ -28,7 +28,7 @@ class ColumnarData:
             self.data[field] = np.array(values)
 
         self.length = length
-        self.ids = ids if ids is not None else np.arange(length)
+        self.ids = np.array(ids) if ids is not None else np.arange(length)
         self._id_index = {id: i for i, id in enumerate(self.ids)}
         
     def copy(self):
@@ -237,7 +237,24 @@ class Embedding(ColumnarData):
                 obj["highlight"] = []
             result[id_val] = obj
         
-        return result
+        return standardize_json(result)
+    
+    @staticmethod
+    def from_json(data, label=None, metric='euclidean', parent=None):
+        """
+        Builds a 2-dimensional Embedding object from the given JSON object.
+        """
+        ids = sorted(list(data.keys()))
+        mats = {}
+        mats[Field.POSITION] = np.array([[data[id_val]["x"], data[id_val]["y"]] for id_val in ids])
+        mats[Field.COLOR] = np.array([data[id_val]["color"] for id_val in ids])
+        if "alpha" in data[ids[0]]:
+            mats[Field.ALPHA] = np.array([data[id_val]["alpha"] for id_val in ids])
+        if "r" in data[ids[0]]:
+            mats[Field.RADIUS] = np.array([data[id_val]["r"] for id_val in ids])
+        if "highlight" in data[ids[0]]:
+            mats[Field.NEIGHBORS] = np.array([data[id_val]["highlight"] for id_val in ids])
+        return Embedding(mats, ids=ids, label=label, metric=metric, parent=parent)
     
     def align_to(self, base_frame, ids=None, return_transform=False, base_transform=None, allow_flips=True):
         """
@@ -387,3 +404,15 @@ class EmbeddingSet:
             "data": [emb.to_json() for emb in self.embeddings],
             "frameLabels": [emb.label or "Frame {}".format(i) for i, emb in enumerate(self.embeddings)]
         }
+
+    @staticmethod
+    def from_json(data, metric='euclidean'):
+        """
+        Builds an EmbeddingSet from a JSON object. The provided object should
+        contain a "data" field containing frames, and optionally a "frameLabels"
+        field containing a list of string names for each field.
+        """
+        assert "data" in data, "JSON object must contain a 'data' field"
+        labels = data.get("frameLabels", [None for _ in range(len(data["data"]))])
+        embs = [Embedding.from_json(frame, label=label, metric=metric) for frame, label in zip(data["data"], labels)]
+        return EmbeddingSet(embs, align=False)

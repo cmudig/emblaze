@@ -5,8 +5,11 @@
   import Autocomplete from './components/Autocomplete.svelte';
   import ScatterplotThumbnail from './components/ScatterplotThumbnail.svelte';
   import SynchronizedScatterplot from './SynchronizedScatterplot.svelte';
+  import { createEventDispatcher } from 'svelte';
 
   export let colorScheme = { name: 'turbo', value: d3.interpolateTurbo };
+
+  const dispatch = createEventDispatcher();
 
   let colorScale;
 
@@ -26,6 +29,12 @@
   let alignedFrame = 0;
   // alignedFrame should match currentFrame as long as there is no current alignment
   $: if (alignedIDs.length == 0) alignedFrame = currentFrame;
+
+  let oldAlignedIDs = [];
+  $: if (alignedIDs !== oldAlignedIDs) {
+    dispatch('align', { baseFrame: alignedFrame, alignedIDs });
+    oldAlignedIDs = alignedIDs;
+  }
 
   let filterIDs = [];
 

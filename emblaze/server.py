@@ -2,7 +2,8 @@ from flask import request, Flask, send_from_directory, jsonify, send_file
 import os
 import json
 import numpy as np
-from . import moving_scatterplot as ms
+from .datasets import EmbeddingSet
+from .utils import affine_to_matrix, matrix_to_affine
 
 app = Flask(__name__)
 
@@ -76,21 +77,18 @@ def align_frames(dataset_name, current_frame):
         body = request.json
         if body:
             if "initialTransform" in body:
-                base_transform = ms.matrix_to_affine(np.array(body["initialTransform"]))
+                base_transform = matrix_to_affine(np.array(body["initialTransform"]))
             if "ids" in body:
                 ids = body["ids"]
 
     with open(os.path.join(dataset_base, "data.json"), "r") as file:
         data = json.load(file)
-    try:
-        data = data["data"]
-    except:
-        pass
+    emb_set = EmbeddingSet.from_json(data)
 
     if not ids:
         return jsonify({"transformations": [
             np.eye(3).tolist()
-            for i in range(len(data))
+            for i in range(len(emb_set))
         ]})
 
     try:
@@ -98,20 +96,15 @@ def align_frames(dataset_name, current_frame):
     except:
         current_frame = None
     
-    if current_frame is None or current_frame < 0 or current_frame >= len(data):
+    if current_frame is None or current_frame < 0 or current_frame >= len(emb_set):
         return app.response_class(response="Invalid frame number", status=400)
-    
-    frames = [ms.ScatterplotFrame([{
-        "id": id_val,
-        "x": item["x"],
-        "y": item["y"],
-    } for id_val, item in frame.items()]) for frame in data]
 
+    print(base_transform, current_frame, ids, emb_set)
+    
     transformations = []
-    for frame in frames:
-        transformations.append(ms.affine_to_matrix(ms.align_projection(
-            frames[current_frame], 
-            frame, 
+    for frame in emb_set.embeddings:
+        transformations.append(affine_to_matrix(frame.align_to(
+            emb_set.embeddings[current_frame], 
             ids=list(set(ids)) if ids else None,
             base_transform=base_transform,
             return_transform=True,
