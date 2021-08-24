@@ -68,10 +68,15 @@ class TextThumbnails(Thumbnails):
         assert "items" in data, "JSON object must contain an 'items' field"
         items = data["items"]
         if ids is None:
-            ids = sorted(list(items.keys()))
-        return TextThumbnails([items[id_val]["name"] for id_val in ids],
-                              [items[id_val].get("description", "") for id_val in ids],
-                              ids)
+            try:
+                ids = [int(id_val) for id_val in list(items.keys())]
+                items = {int(k): v for k, v in items.items()}
+            except:
+                ids = list(items.keys())
+            ids = sorted(ids)
+        names = [items[id_val]["name"] for id_val in ids]
+        descriptions = [items[id_val].get("description", "") for id_val in ids]
+        return TextThumbnails(names, descriptions, ids)
    
 MAX_IMAGE_DIM = 100
 MAX_SPRITESHEET_DIM = 1000
@@ -151,15 +156,20 @@ class ImageThumbnails(Thumbnails):
         assert "spritesheets" in data, "JSON object must contain a 'spritesheets' field"
         spritesheets = data["spritesheets"]
         if ids is None:
-            ids = sorted([k for sp in spritesheets for k in sp["spec"]["frames"].keys()])
+            ids = sorted([k for sp in spritesheets.values() for k in sp["spec"]["frames"].keys()])
+            try:
+                ids = [int(id_val) for id_val in ids]
+            except:
+                pass
+            ids = sorted(ids)
             
         names = None
         descriptions = None
         if "items" in data:
             items = data["items"]
             
-            names = [items[id_val]["name"] for id_val in ids]
-            descriptions = [items[id_val].get("description", "") for id_val in ids]
+            names = [items[str(id_val)]["name"] for id_val in ids]
+            descriptions = [items[str(id_val)].get("description", "") for id_val in ids]
         return ImageThumbnails(None,
                                spritesheets=spritesheets,
                                ids=ids,

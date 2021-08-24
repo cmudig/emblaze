@@ -207,6 +207,7 @@
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
     if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
+    updatePointSelectorOptions();
   }
 
   // Previews and settings

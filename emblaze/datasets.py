@@ -244,7 +244,12 @@ class Embedding(ColumnarData):
         """
         Builds a 2-dimensional Embedding object from the given JSON object.
         """
-        ids = sorted(list(data.keys()))
+        try:
+            ids = [int(id_val) for id_val in list(data.keys())]
+            data = {int(k): v for k, v in data.items()}
+        except:
+            ids = list(data.keys())
+        ids = sorted(ids)
         mats = {}
         mats[Field.POSITION] = np.array([[data[id_val]["x"], data[id_val]["y"]] for id_val in ids])
         mats[Field.COLOR] = np.array([data[id_val]["color"] for id_val in ids])
