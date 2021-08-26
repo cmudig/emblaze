@@ -211,7 +211,7 @@ class Viewer(DOMWidget):
             np.eye(3).tolist()
             for i in range(len(self.embeddings))
         ]
-        self.frameColors = compute_colors(self.embeddings)
+        self.frameColors = []
         
     def align_to_points(self, point_ids, peripheral_points):
         """
@@ -224,7 +224,7 @@ class Viewer(DOMWidget):
         """
         if point_ids is None:
             self.reset_alignment()
-            self.frameColors = compute_colors(self.embeddings)
+            self.frameColors = []
             return
     
         transformations = []
@@ -253,10 +253,9 @@ class Viewer(DOMWidget):
         # metric = change.new['metric'] # for now, unused
         
         hi_d = self.embeddings[frame].get_root()
-        distances = hi_d.distances(ids=[centerID], comparison_ids=hi_d.ids).flatten()
+        order, distances = hi_d.neighbor_distances(ids=[centerID], n_neighbors=2000)
         
-        order = np.argsort(distances)
         self.selectionOrder = [(int(x), y) for x, y in np.vstack([
-            order,
-            distances[order]
+            order.flatten(),
+            distances.flatten()
         ]).T.tolist()]

@@ -7,9 +7,8 @@ import {
 } from "./data_items";
 import { boundingBox, padExtent } from "../utils/helpers";
 
-const ZoomAnimationDuration = 1000;
-const MaxScale = 14.0;
-const MinScale = 0.1;
+const ZoomAnimationDuration = 1000; // milliseconds
+const ZoomBoxPadding = 50; // pixels
 
 // This type handles x and y axis scales with zooming and panning.
 export function Scales(
@@ -47,6 +46,9 @@ export function Scales(
   this.translateX = new Attribute(0.0);
   this.translateY = new Attribute(0.0);
   this.translateX.label = "scaleFactor";
+
+  this.minScale = 0.1;
+  this.maxScale = 14.0;
 
   this._updatedNoAdvance = false;
   this.listeners = [];
@@ -118,6 +120,20 @@ export function Scales(
     };
   };
 
+  // Returns a factor k such that <screen distance> = <data distance> * k when
+  // the scales' scaleFactor is 1
+  this.getDataToUniformScaleFactor = function () {
+    return Math.min(this.xRExtent / this.xDExtent, this.yRExtent / this.yDExtent);
+  }
+
+  // Returns the scale factor that would be needed to make two points at the
+  // given data distance be pixelDistance apart
+  this.scaleFactorForDistance = function (dataDistance, pixelDistance) {
+    let baseScaleX = this.xRExtent / this.xDExtent;
+    let baseScaleY = this.yRExtent / this.yDExtent;
+    return pixelDistance / (Math.min(baseScaleX, baseScaleY) * dataDistance);
+  }
+
   // These parameters tell the scales how to transform the coordinates after
   // they have been converted into pixel space.
   this.transform = function (scaleInfo, animated = false) {
@@ -177,7 +193,7 @@ export function Scales(
     }
 
     var newScaleFactor = s + ds;
-    if (newScaleFactor > MaxScale || newScaleFactor < MinScale) return;
+    if (newScaleFactor > this.maxScale || newScaleFactor < this.minScale) return;
 
     this.scaleFactor.set(newScaleFactor);
     this.translateX.set(tx + ds * centerPoint[0]);
@@ -193,7 +209,6 @@ export function Scales(
 
   this._computeZoomBox = function (
     points,
-    padding = 0.2,
     fixedCenter = null,
     fixedScale = null
   ) {
@@ -224,9 +239,6 @@ export function Scales(
         yExtent = [fixedCenter.y - yDist, fixedCenter.y + yDist];
       }
 
-      xExtent = padExtent(xExtent, padding);
-      yExtent = padExtent(yExtent, padding);
-
       let xScale =
         this.xRExtent /
         (xExtent[1] - xExtent[0]) /
@@ -236,7 +248,20 @@ export function Scales(
         (yExtent[1] - yExtent[0]) /
         (this.yRExtent / this.yDExtent);
 
-      newScale = Math.min(Math.min(xScale, yScale), MaxScale);
+      // pad by roughly ZoomBoxPadding (this isn't exact)
+      xExtent = padExtent(xExtent, ZoomBoxPadding / (this.xRExtent / this.xDExtent * xScale));
+      yExtent = padExtent(yExtent, ZoomBoxPadding / (this.yRExtent / this.yDExtent * yScale));
+
+      xScale =
+        this.xRExtent /
+        (xExtent[1] - xExtent[0]) /
+        (this.xRExtent / this.xDExtent);
+      yScale =
+        this.yRExtent /
+        (yExtent[1] - yExtent[0]) /
+        (this.yRExtent / this.yDExtent);
+
+      newScale = Math.min(Math.min(xScale, yScale), this.maxScale);
       newCenterX = (xExtent[0] + xExtent[1]) * 0.5;
       newCenterY = (yExtent[0] + yExtent[1]) * 0.5;
     }
@@ -267,7 +292,7 @@ export function Scales(
       x: mark.attr(xAttr, false),
       y: mark.attr(yAttr, false),
     }));
-    this.transform(this._computeZoomBox(points, padding), animated);
+    this.transform(this._computeZoomBox(points), animated);
   };
 
   this.followingMarks = [];
@@ -287,7 +312,6 @@ export function Scales(
 
     let value = this._computeZoomBox(
       this._markPointFn(this.followingMarks),
-      padding,
       !!this.centerMark ? this._markPointFn([this.centerMark])[0] : null,
       this._fixedScale
     );

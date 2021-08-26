@@ -41,6 +41,8 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
   this.size = null;
   this.ticker = null;
   this.currentTime = 0.0;
+  this.showPointBorders = true;
+  this.rFactor = rFactor;
 
   this.pointSet = new PixiPointSet(this.markSet, transformInfo, rFactor);
   this.marksContainer.addChild(this.pointSet);
@@ -77,6 +79,8 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
     } else {
       this._marksAnimating = false;
     }
+    this.pointSet.showBorders = this.showPointBorders;
+    this.pointSet.rFactor = this.rFactor;
     this.pointSet.update(this.currentTime, needsUpdate);
     this.labelContainer.update();
     this.updateDecorations();
@@ -160,13 +164,17 @@ export default function PixiScatterplot(markSet, transformInfo, rFactor = 1.0) {
       }
     });
 
-    // Remove old decorations
-    for (var dec of this.decorations.keys()) {
+    // Update and remove old decorations
+    for (var dec of this.decorations.keys()) { 
+      let graphicDec = this.decorations.get(dec);
+      if (dec.type == 'outline') {
+        graphicDec.rFactor = this.rFactor;
+      }
       if (!currentDecorations.has(dec)) {
         if (dec.type == 'text' || dec.type == 'image') {
-          this.labelContainer.removeLabel(this.decorations.get(dec));
+          this.labelContainer.removeLabel(graphicDec);
         } else {
-          this.marksContainer.removeChild(this.decorations.get(dec));
+          this.marksContainer.removeChild(graphicDec);
         }
         this.decorations.delete(dec);
       }

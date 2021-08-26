@@ -58,6 +58,26 @@ class TextThumbnails(Thumbnails):
         }
         return result
    
+    @staticmethod
+    def from_json(data, ids=None):
+        """
+        Builds a TextThumbnails object from a JSON object. The provided object should
+        have an "items" key with a dictionary mapping ID values to text thumbnail
+        objects, each of which must have a 'name' and optionally 'description' keys.
+        """
+        assert "items" in data, "JSON object must contain an 'items' field"
+        items = data["items"]
+        if ids is None:
+            try:
+                ids = [int(id_val) for id_val in list(items.keys())]
+                items = {int(k): v for k, v in items.items()}
+            except:
+                ids = list(items.keys())
+            ids = sorted(ids)
+        names = [items[id_val]["name"] for id_val in ids]
+        descriptions = [items[id_val].get("description", "") for id_val in ids]
+        return TextThumbnails(names, descriptions, ids)
+    
 MAX_IMAGE_DIM = 100
 MAX_SPRITESHEET_DIM = 1000
  
@@ -118,6 +138,37 @@ class ImageThumbnails(Thumbnails):
             }
 
         return result
+    
+    @staticmethod
+    def from_json(data, ids=None):
+        """
+        Builds an ImageThumbnails object from a JSON object. The provided object should
+        have a "spritesheets" object that defines PIXI spritesheets, and an
+        optional "items" key that contains text thumbnails (see TextThumbnails
+        for more information about the "items" field).
+        """
+        assert "spritesheets" in data, "JSON object must contain a 'spritesheets' field"
+        spritesheets = data["spritesheets"]
+        if ids is None:
+            ids = sorted([k for sp in spritesheets.values() for k in sp["spec"]["frames"].keys()])
+            try:
+                ids = [int(id_val) for id_val in ids]
+            except:
+                pass
+            ids = sorted(ids)
+            
+        names = None
+        descriptions = None
+        if "items" in data:
+            items = data["items"]
+
+            names = [items[str(id_val)]["name"] for id_val in ids]
+            descriptions = [items[str(id_val)].get("description", "") for id_val in ids]
+        return ImageThumbnails(None,
+                               spritesheets=spritesheets,
+                               ids=ids,
+                               names=names,
+                               descriptions=descriptions)
 
     def make_spritesheets(self, images, ids, grid_dimensions=None, image_size=None):
         """

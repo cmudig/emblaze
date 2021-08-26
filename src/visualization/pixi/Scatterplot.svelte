@@ -21,7 +21,8 @@
   export let hoverable = false;
   export let thumbnail = false;
 
-  export let rFactor = 1.0;
+  export let pointRadius = 3.0;
+  let rFactor = 1.0;
   export let colorScale = (c) => c;
 
   export let frame = null;
@@ -41,6 +42,8 @@
 
   export let animateTransitions = false;
   export let scalesNeutral = true;
+
+  export let performanceMode = true;
 
   export let thumbnailsURL = null;
 
@@ -159,6 +162,7 @@
       viewportManager.getTransformInfo(),
       rFactor
     );
+    scatterplot.showPointBorders = !performanceMode;
     scatterplot.addTo(pixiApp.stage, pixiApp.ticker, pixiApp.renderer);
     let renderMargin = 50.0;
     scatterplot.setRenderBox([
@@ -175,6 +179,9 @@
     actualWidth = container.clientWidth;
     actualHeight = container.clientHeight;
   }
+
+  $: if (!!scatterplot) scatterplot.showPointBorders = !performanceMode;
+  $: if (!!scatterplot) scatterplot.rFactor = rFactor;
 
   // Texture loading (for image labels)
 
@@ -415,10 +422,12 @@
   }
 
   $: if (inRadiusselect) {
+    console.log('updating selection order');
     updateSelectionOrder(selectionUnit);
-    if (!!scatterplot.radiusselect)
-      scatterplot.radiusselect.visible = selectionUnit == 'pixels';
   }
+
+  $: if (!!scatterplot && !!scatterplot.radiusselect)
+    scatterplot.radiusselect.visible = selectionUnit == 'pixels';
 
   const SelectionRadiusPadding = 10;
 
@@ -561,6 +570,10 @@
     prevFilterIDs = filterIDs;
   }
 
+  $: if (!!data && !!scatterplot) {
+    scatterplot.showPointBorders = !performanceMode;
+  }
+
   function rescale() {
     scalesNeutral = viewportManager.scalesNeutral;
     if (inRadiusselect && !!scatterplot.radiusselect) autosizeRadiusSelect();
@@ -592,10 +605,13 @@
     {previewInfo}
     {numNeighbors}
     {idsOfInterest}
+    {pointRadius}
     colorScale={(c) => colorScale(c)}
     colorFormat="rgbArray"
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}
     yScale={!!viewportManager ? (y) => viewportManager.scaleY(y) : null}
+    highlightFocusedPoints={!performanceMode}
+    showPreviewLines={!performanceMode}
     bind:marks
     bind:filterIDs
     bind:hoveredID
@@ -606,12 +622,15 @@
   />
   <ScatterplotViewportState
     bind:this={viewportManager}
+    {data}
     width={actualWidth}
     height={actualHeight}
     xExtent={!!data ? data.getXExtent() : null}
     yExtent={!!data ? data.getYExtent() : null}
     {padding}
     {followingMarks}
+    {pointRadius}
+    bind:rFactor
     on:update={rescale}
   />
 </div>

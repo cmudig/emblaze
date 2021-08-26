@@ -504,6 +504,21 @@ export function MarkSet(marks, decorations = null) {
 
   this.preloadableProperties = new Set();
 
+  let visibleMarks = null;
+  let visibleMarksChanged = false;
+
+  this.setVisibleMarks = function (ids) {
+    ids = Array.from(ids);
+    if (ids.length == 0) visibleMarks = null;
+    else visibleMarks = ids.map((id) => this.getMarkByID(id));
+    visibleMarksChanged = true;
+  }
+
+  this.getVisibleMarks = function () {
+    if (visibleMarks == null) return this.marks;
+    return visibleMarks;
+  }
+
   /**
    * Declares that the given attribute will only ever use preloadable animations.
    * Preloadable attributes will not be counted in calls to marksAnimating, and
@@ -525,7 +540,7 @@ export function MarkSet(marks, decorations = null) {
     timeProvider.advance(dt);
 
     updatedMarks = new Set();
-    if (animatingMarks.size == 0 && animatingDecorations.size == 0)
+    if (animatingMarks.size == 0 && animatingDecorations.size == 0 && !visibleMarksChanged)
       return false;
 
     let updatedDecorations = new Set();
@@ -547,6 +562,9 @@ export function MarkSet(marks, decorations = null) {
       if (updatedDecorations.has(decoration)) continue;
       if (!decoration.advance(dt)) animatingDecorations.delete(decoration);
     }
+
+    visibleMarksChanged = false;
+
     return true;
   };
 
@@ -555,7 +573,7 @@ export function MarkSet(marks, decorations = null) {
   // a non-preloadable property, this also returns true. Must be called BEFORE
   // advance().
   this.marksChanged = function () {
-    return updatedMarks.size > 0;
+    return updatedMarks.size > 0 || visibleMarksChanged;
   };
 
   // This reflects if any marks are currently animating. Can be called before or
@@ -580,10 +598,11 @@ export function MarkSet(marks, decorations = null) {
       );
       return;
     }
-    animatingMarks = new Set(this.marks);
-    updatedMarks = new Set(this.marks);
 
-    this.marks.forEach((mark, i) =>
+    animatingMarks = new Set(this.getVisibleMarks());
+    updatedMarks = new Set(this.getVisibleMarks());
+
+    this.forEach((mark, i) =>
       mark.animate(
         attrName,
         new Animator(interpolatorMapper(mark, i), duration, curve)
@@ -600,9 +619,9 @@ export function MarkSet(marks, decorations = null) {
     }
     // Don't update animatingMarks here because the animation will be computed
     // lazily
-    updatedMarks = new Set(this.marks);
+    updatedMarks = new Set(this.getVisibleMarks());
 
-    this.marks.forEach((mark, i) =>
+    this.forEach((mark, i) =>
       mark.animate(
         attrName,
         new PreloadableAnimator(finalValueMapper(mark, i), duration)
@@ -619,7 +638,7 @@ export function MarkSet(marks, decorations = null) {
     curve = null
   ) {
     let preloadable = this.preloadableProperties.has(attrName);
-    this.marks.forEach((mark, i) => {
+    this.forEach((mark, i) => {
       let newValue = mark.data(attrName);
       if (
         !approxEquals(newValue, mark.attributes[attrName].last()) ||
@@ -639,7 +658,7 @@ export function MarkSet(marks, decorations = null) {
 
   // Tells all marks to update a computed property.
   this.updateComputed = function (attrName) {
-    this.marks.forEach((mark) => {
+    this.forEach((mark) => {
       let attr = mark.attributes[attrName];
       let oldValue = attr.last();
       attr.compute();
@@ -657,7 +676,7 @@ export function MarkSet(marks, decorations = null) {
     duration = 1000,
     curve = null
   ) {
-    this.marks.forEach((mark, i) => {
+    this.forEach((mark, i) => {
       if (!predicateFn(mark, i)) return;
       animatingMarks.add(mark);
       updatedMarks.add(mark);
@@ -675,14 +694,14 @@ export function MarkSet(marks, decorations = null) {
   };
 
   this.setAll = function (attrName, valueFn) {
-    animatingMarks = new Set(this.marks);
-    updatedMarks = new Set(this.marks);
+    animatingMarks = new Set(this.getVisibleMarks());
+    updatedMarks = new Set(this.getVisibleMarks());
 
-    this.marks.forEach((mark, i) => mark.setAttr(attrName, valueFn(mark, i)));
+    this.forEach((mark, i) => mark.setAttr(attrName, valueFn(mark, i)));
   };
 
   this.setIf = function (attrName, predicateFn, valueFn) {
-    this.marks.forEach((mark, i) => {
+    this.forEach((mark, i) => {
       if (!predicateFn(mark, i)) return;
       animatingMarks.add(mark);
       updatedMarks.add(mark);
@@ -752,19 +771,19 @@ export function MarkSet(marks, decorations = null) {
   };
 
   this.forEach = function (callbackfn) {
-    this.marks.forEach(callbackfn);
+    this.getVisibleMarks().forEach(callbackfn);
   };
 
   this.map = function (mapper) {
-    return this.marks.map(mapper);
+    return this.getVisibleMarks().map(mapper);
   };
 
   this.filter = function (filterer) {
-    return this.marks.filter(filterer);
+    return this.getVisibleMarks().filter(filterer);
   };
 
   this.reduce = function (reducer, initial) {
-    return this.marks.reduce(reducer, initial);
+    return this.getVisibleMarks().reduce(reducer, initial);
   };
 
   this.updateTransform = function (attrName) {

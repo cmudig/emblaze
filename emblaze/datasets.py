@@ -28,7 +28,14 @@ class ColumnarData:
             self.data[field] = np.array(values)
 
         self.length = length
-        self.ids = ids if ids is not None else np.arange(length)
+        self.ids = np.array(ids) if ids is not None else np.arange(length)
+        self._id_index = {id: i for i, id in enumerate(self.ids)}
+        
+    def set_ids(self, new_ids):
+        """
+        Gives the ColumnarData a new set of ID numbers.
+        """
+        self.ids = np.array(new_ids) if new_ids is not None else np.arange(len(self))
         self._id_index = {id: i for i, id in enumerate(self.ids)}
         
     def copy(self):
@@ -81,6 +88,19 @@ class ColumnarData:
     def stack_fields(self, fields, ids=None):
         return np.hstack([self.field(field, ids) for field in fields])
     
+    def concat(self, other):
+        """
+        Returns a new ColumnarData with this ColumnarData and the given one
+        stacked together. Must have the same set of fields, and a disjoint set of
+        IDs.
+        """
+        assert set(self.data.keys()) == set(other.data.keys()), "Cannot concatenate ColumnarData objects with different sets of fields"
+        assert not (set(self.ids.tolist()) & set(other.ids.tolist())), "Cannot concatenate ColumnarData objects with overlapping ID values"
+        
+        return ColumnarData({k: np.concatenate([self.field(k), other.field(k)])
+                             for k in self.data.keys()},
+                            ids=np.concatenate([self.ids, other.ids]))
+    
     def set_field(self, field, values):
         assert self.length == len(values), "Field '{}' has mismatched length (expected {}, got {})".format(field, self.length, len(values))
         self.data[field] = np.array(values)
@@ -112,6 +132,20 @@ class Embedding(ColumnarData):
 
     def copy(self):
         return Embedding(self.data, self.ids, label=self.label, metric=self.metric, parent=self)
+    
+    def concat(self, other):
+        """
+        Returns a new Embedding with this Embedding and the given one
+        stacked together. Must have the same set of fields, and a disjoint set of
+        IDs.
+        """
+        assert set(self.data.keys()) == set(other.data.keys()), "Cannot concatenate Embedding objects with different sets of fields"
+        assert not (set(self.ids.tolist()) & set(other.ids.tolist())), "Cannot concatenate Embedding objects with overlapping ID values"
+        
+        return Embedding({k: np.concatenate([self.field(k), other.field(k)])
+                          for k in self.data.keys()},
+                         ids=np.concatenate([self.ids, other.ids]),
+                         label=self.label, metric=self.metric)
     
     def get_root(self):
         """Returns the root parent of this embedding."""
@@ -173,6 +207,16 @@ class Embedding(ColumnarData):
                                         n_neighbors=n_neighbors + 1).fit(pos)
         _, neigh_indexes = neighbor_clf.kneighbors(pos)
         self.set_field(Field.NEIGHBORS, neigh_indexes[:,1:])
+        
+    def neighbor_distances(self, ids=None, n_neighbors=100, metric=None):
+        """
+        Returns the list of nearest neighbors for each of the given IDs and the
+        distances to each of those points.
+        """
+        pos = self.field(Field.POSITION, ids=ids)
+        neighbor_clf = NearestNeighbors(metric=metric or self.metric).fit(self.field(Field.POSITION))
+        neigh_distances, neigh_indexes = neighbor_clf.kneighbors(pos, n_neighbors=n_neighbors + 1)
+        return neigh_indexes[:,1:], neigh_distances[:,1:]
         
     def distances(self, ids=None, comparison_ids=None, metric=None):
         """
@@ -239,6 +283,28 @@ class Embedding(ColumnarData):
         
         return result
     
+    @staticmethod
+    def from_json(data, label=None, metric='euclidean', parent=None):
+        """
+        Builds a 2-dimensional Embedding object from the given JSON object.
+        """
+        try:
+            ids = [int(id_val) for id_val in list(data.keys())]
+            data = {int(k): v for k, v in data.items()}
+        except:
+            ids = list(data.keys())
+        ids = sorted(ids)
+        mats = {}
+        mats[Field.POSITION] = np.array([[data[id_val]["x"], data[id_val]["y"]] for id_val in ids])
+        mats[Field.COLOR] = np.array([data[id_val]["color"] for id_val in ids])
+        if "alpha" in data[ids[0]]:
+            mats[Field.ALPHA] = np.array([data[id_val]["alpha"] for id_val in ids])
+        if "r" in data[ids[0]]:
+            mats[Field.RADIUS] = np.array([data[id_val]["r"] for id_val in ids])
+        if "highlight" in data[ids[0]]:
+            mats[Field.NEIGHBORS] = np.array([data[id_val]["highlight"] for id_val in ids])
+        return Embedding(mats, ids=ids, label=label, metric=metric, parent=parent)
+            
     def align_to(self, base_frame, ids=None, return_transform=False, base_transform=None, allow_flips=True):
         """
         Aligns this embedding to the base frame. The frames are aligned based
@@ -387,3 +453,15 @@ class EmbeddingSet:
             "data": [emb.to_json() for emb in self.embeddings],
             "frameLabels": [emb.label or "Frame {}".format(i) for i, emb in enumerate(self.embeddings)]
         }
+
+    @staticmethod
+    def from_json(data, metric='euclidean'):
+        """
+        Builds an EmbeddingSet from a JSON object. The provided object should
+        contain a "data" field containing frames, and optionally a "frameLabels"
+        field containing a list of string names for each field.
+        """
+        assert "data" in data, "JSON object must contain a 'data' field"
+        labels = data.get("frameLabels", [None for _ in range(len(data["data"]))])
+        embs = [Embedding.from_json(frame, label=label, metric=metric) for frame, label in zip(data["data"], labels)]
+        return EmbeddingSet(embs, align=False)

@@ -64,7 +64,7 @@
 
   function updateDataset(rawData) {
     if (!!rawData && !!rawData['data']) {
-      dataset = new Dataset(rawData, 'color', 3);
+      dataset = new Dataset(rawData, 'color');
       if (!!$frameTransformations && $frameTransformations.length > 0)
         updateTransformations(false);
     } else {

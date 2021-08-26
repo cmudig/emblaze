@@ -56,7 +56,11 @@
     if (!dataset || id === null || inFrame < 0) return null;
 
     let info = dataset.frame(inFrame).get(id, 'label');
-    if (!info) return null;
+    if (!info)
+      return {
+        id,
+        text: id.toString(),
+      };
 
     let result = {
       id,
@@ -265,7 +269,9 @@
       {#if sameIDs.length > 0}
         <div class="thumbnail-column">
           <div class="subheader">Both</div>
-          {#each sameIDs.map((id) => getThumbnailInfo(id)) as d}
+          {#each sameIDs
+            .map((id) => getThumbnailInfo(id))
+            .filter((d) => !!d) as d}
             <ThumbnailRow mini {blobURLs} {d} color="black" />
           {/each}
         </div>
@@ -274,7 +280,9 @@
       {#if lostIDs.length > 0}
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(frame).title}</div>
-          {#each lostIDs.map((id) => getThumbnailInfo(id)) as d}
+          {#each lostIDs
+            .map((id) => getThumbnailInfo(id))
+            .filter((d) => !!d) as d}
             <ThumbnailRow mini {blobURLs} {d} color="red" />
           {/each}
         </div>
@@ -283,7 +291,9 @@
       {#if gainedIDs.length > 0}
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(previewFrame).title}</div>
-          {#each gainedIDs.map((id) => getThumbnailInfo(id)) as d}
+          {#each gainedIDs
+            .map((id) => getThumbnailInfo(id))
+            .filter((d) => !!d) as d}
             <ThumbnailRow mini {blobURLs} {d} color="green" />
           {/each}
         </div>
@@ -313,7 +323,9 @@
       {#if previewSecondaryIDs.length > 0 && lostIDs.length == 0 && gainedIDs.length == 0 && sameIDs.length == 0}
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(previewFrame).title}</div>
-          {#each previewSecondaryIDs.map((id) => getThumbnailInfo(id)) as d}
+          {#each previewSecondaryIDs
+            .map((id) => getThumbnailInfo(id))
+            .filter((d) => !!d) as d}
             <ThumbnailRow
               mini
               {blobURLs}

@@ -71,6 +71,7 @@ class PointSetGeometry extends PIXI.Geometry {
   }
 
   update(currentTime) {
+    console.log("Updating point set,", this.marks.getVisibleMarks().length);
     this.getBuffer("x").update(this.makeArray("x", currentTime));
     this.getBuffer("y").update(this.makeArray("y", currentTime));
     this.getBuffer("r").update(this.makeArray("r", currentTime));
@@ -98,6 +99,7 @@ const VertexShader = `
 
     uniform vec2 transformA;
     uniform vec2 transformB;
+    uniform float rFactor;
 
     uniform float currentTime;
     
@@ -121,7 +123,7 @@ const VertexShader = `
       gl_Position = vec4((projectionMatrix * translationMatrix * vec3(transformedPosition, 1.0)).xy, 0.0, 1.0);
       float animatedR;
       animate(r, animatedR);
-      gl_PointSize = animatedR * 2.0;
+      gl_PointSize = animatedR * 2.0 * rFactor;
     }
 `;
 
@@ -131,6 +133,8 @@ const FragmentShader = `
     #endif
 
     precision mediump float;
+
+    uniform bool showBorders;
 
     const float fillAlpha = 0.5; // for some reason this isn't perceptually consistent with other alphas
     const float strokeWidth = 0.3;
@@ -143,7 +147,8 @@ const FragmentShader = `
       float r = 0.0, delta = 0.0, alpha = vAlpha;
       vec2 cxy = 2.0 * gl_PointCoord - 1.0;
       r = dot(cxy, cxy);
-      #ifdef GL_OES_standard_derivatives
+      if (showBorders) {
+        #ifdef GL_OES_standard_derivatives
           delta = fwidth(r);
           float strokeMinInner = inset - strokeWidth - delta;
           float strokeMinOuter = inset - strokeWidth + delta;
@@ -152,12 +157,28 @@ const FragmentShader = `
           alpha *= fillAlpha * step(-strokeMinOuter, -r) * (1.0 - smoothstep(strokeMinInner, strokeMinOuter, r)) + 
             1.0 * step(strokeMinInner, r) * step(-strokeMaxInner, -r) * smoothstep(strokeMinInner, strokeMinOuter, r) + 
             1.0 * step(strokeMaxInner, r) * (1.0 - smoothstep(strokeMaxInner, strokeMaxOuter, r));
-      #else
+        #else
           float strokeMin = inset - strokeWidth;
           float strokeMax = inset;
           alpha *= fillAlpha * step(-strokeMin, -r) + 
             1.0 * step(strokeMin, r) * step(-strokeMax, -r);
-      #endif
+        #endif
+      } else {
+        #ifdef GL_OES_standard_derivatives
+          delta = fwidth(r);
+          float borderInner = inset - delta;
+          float borderOuter = inset + delta;
+          if (r > inset + delta) {
+            discard;
+          }
+          alpha *= fillAlpha * step(-borderOuter, -r) * (1.0 - smoothstep(borderInner, borderOuter, r));
+        #else
+          if (r > inset) {
+            discard;
+          }
+          alpha *= fillAlpha;
+        #endif
+      }
 
       gl_FragColor = vec4(vFillStyle * alpha, alpha);
     }
@@ -191,6 +212,8 @@ export default class PixiPointSet extends PIXI.Mesh {
   renderBox = null;
   hidden = false;
 
+  showBorders = true;
+
   constructor(
     marks,
     transformInfo,
@@ -199,14 +222,17 @@ export default class PixiPointSet extends PIXI.Mesh {
     hidden = false
   ) {
     let geometry = new PointSetGeometry(marks, rFactor, hidden);
+    let uniforms = {
+      transformA: { x: transformInfo.x.a, y: transformInfo.y.a },
+      transformB: { x: transformInfo.x.b, y: transformInfo.y.b },
+      currentTime: 0.0,
+      rFactor
+    };
+    if (!hidden) uniforms.showBorders = true;
     let shader = new PIXI.Shader.from(
       VertexShader,
       hidden ? HiddenFragmentShader : FragmentShader,
-      {
-        transformA: { x: transformInfo.x.a, y: transformInfo.y.a },
-        transformB: { x: transformInfo.x.b, y: transformInfo.y.b },
-        currentTime: 0.0,
-      }
+      uniforms
     );
     super(geometry, shader, PIXI.State.for2d(), PIXI.DRAW_MODES.POINTS);
 
@@ -218,12 +244,18 @@ export default class PixiPointSet extends PIXI.Mesh {
   updateCoordinateTransform(info) {
     this.shader.uniforms.transformA = { x: info.x.a, y: info.y.a };
     this.shader.uniforms.transformB = { x: info.x.b, y: info.y.b };
+    if (!!info.rFactor) {
+      this.rFactor = info.rFactor;
+      this.shader.uniforms.rFactor = info.rFactor;
+    }
   }
 
   update(currentTime, needsGeometryUpdate = false) {
+    this.shader.uniforms.rFactor = this.rFactor;
     this.shader.uniforms.currentTime = currentTime;
-    if (needsGeometryUpdate) {
+    if (!this.hidden)
+      this.shader.uniforms.showBorders = this.showBorders;
+    if (needsGeometryUpdate)
       this.geometry.update(currentTime);
-    }
   }
 }

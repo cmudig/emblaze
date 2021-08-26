@@ -20,7 +20,6 @@ export class Dataset {
   frames = [];
   frameTransformations = [];
   colorKey = 'color';
-  r = 4.0;
   length = 0; // number of points
   frameCount = 0;
   hasPreviews = false;
@@ -31,7 +30,7 @@ export class Dataset {
   thumbnailData = null;
   spritesheets = null;
 
-  constructor(rawData, colorKey, r = 4.0) {
+  constructor(rawData, colorKey) {
     let frameSource;
     if (rawData['data']) {
       // There are other keys
@@ -46,7 +45,6 @@ export class Dataset {
       this.frameLabels = frameSource.map((f, i) => 'Frame ' + (i + 1));
     }
     this.colorKey = colorKey;
-    this.r = r;
 
     this.frameCount = frameSource.length;
     this.hasPreviews = !!this.previews;
@@ -71,7 +69,7 @@ export class Dataset {
           color: this.colorKey == 'constant' ? 0.0 : el[this.colorKey] || 0.0,
           alpha: el.alpha != undefined ? el.alpha : 1.0,
           highlight: el.highlight.map((h) => parseInt(h)),
-          r: this.r,
+          r: 1.0,
           visible: true,
         };
       });
