@@ -1,13 +1,23 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   export let d;
   export let color = 'black';
   export let blobURLs;
-
+  const dispatch = createEventDispatcher();
   export let mini = false;
   export let detail = false;
 </script>
 
-<div class="thumbnail-row">
+<div
+  class="thumbnail-row"
+  on:click={(e) =>
+    dispatch('thumbnailClick', {
+      id: d.id,
+      keyPressed: e.metaKey || e.ctrlKey,
+    })}
+  on:mouseover={() => dispatch('thumbnailHover', { id: d.id })}
+  on:mouseout={() => dispatch('thumbnailHover', { id: null })}
+>
   {#if !!d.sheet}
     <div
       class="image-parent"
@@ -51,6 +61,14 @@
     box-sizing: content-box;
   }
 
+  .thumbnail-row:hover {
+    background-color: #eee;
+  }
+
+  .thumbnail-row:focus {
+    background-color: #bbb;
+  }
+
   .image-parent {
     margin: 4px 12px 4px 4px;
     overflow: hidden;
@@ -67,7 +85,7 @@
   }
 
   .diff-green {
-    border: 3px solid #98fb98;
+    border: 3px solid #49c738;
   }
 
   .text-red {
@@ -75,6 +93,6 @@
   }
 
   .text-green {
-    color: #98fb98;
+    color: #49c738;
   }
 </style>

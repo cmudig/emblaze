@@ -234,6 +234,8 @@
           .filter((d) => !!d)
           .slice(0, showingFullSelection ? thumbnailIDs.length : MaxSelectionVisible) as d}
           <ThumbnailRow
+            on:thumbnailClick
+            on:thumbnailHover
             {blobURLs}
             {d}
             mini={blobURLs.size > 0 && thumbnailIDs.length > 1}
@@ -266,7 +268,14 @@
         <div class="thumbnail-column">
           <div class="subheader">Both</div>
           {#each sameIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow mini {blobURLs} {d} color="black" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="black"
+            />
           {/each}
         </div>
       {/if}
@@ -275,7 +284,14 @@
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(frame).title}</div>
           {#each lostIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow mini {blobURLs} {d} color="red" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="red"
+            />
           {/each}
         </div>
       {/if}
@@ -284,7 +300,14 @@
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(previewFrame).title}</div>
           {#each gainedIDs.map((id) => getThumbnailInfo(id)) as d}
-            <ThumbnailRow mini {blobURLs} {d} color="green" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="green"
+            />
           {/each}
         </div>
       {/if}
@@ -298,6 +321,8 @@
             .map((id) => getThumbnailInfo(id))
             .filter((d) => !!d) as d}
             <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
               mini={previewSecondaryIDs.length > 0}
               {blobURLs}
               {d}
@@ -315,6 +340,8 @@
           <div class="subheader">{dataset.frame(previewFrame).title}</div>
           {#each previewSecondaryIDs.map((id) => getThumbnailInfo(id)) as d}
             <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
               mini
               {blobURLs}
               {d}
