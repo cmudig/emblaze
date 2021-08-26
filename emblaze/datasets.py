@@ -281,7 +281,29 @@ class Embedding(ColumnarData):
                 obj["highlight"] = []
             result[id_val] = obj
         
-        return result
+        return standardize_json(result)
+    
+    @staticmethod
+    def from_json(data, label=None, metric='euclidean', parent=None):
+        """
+        Builds a 2-dimensional Embedding object from the given JSON object.
+        """
+        try:
+            ids = [int(id_val) for id_val in list(data.keys())]
+            data = {int(k): v for k, v in data.items()}
+        except:
+            ids = list(data.keys())
+        ids = sorted(ids)
+        mats = {}
+        mats[Field.POSITION] = np.array([[data[id_val]["x"], data[id_val]["y"]] for id_val in ids])
+        mats[Field.COLOR] = np.array([data[id_val]["color"] for id_val in ids])
+        if "alpha" in data[ids[0]]:
+            mats[Field.ALPHA] = np.array([data[id_val]["alpha"] for id_val in ids])
+        if "r" in data[ids[0]]:
+            mats[Field.RADIUS] = np.array([data[id_val]["r"] for id_val in ids])
+        if "highlight" in data[ids[0]]:
+            mats[Field.NEIGHBORS] = np.array([data[id_val]["highlight"] for id_val in ids])
+        return Embedding(mats, ids=ids, label=label, metric=metric, parent=parent)
     
     @staticmethod
     def from_json(data, label=None, metric='euclidean', parent=None):

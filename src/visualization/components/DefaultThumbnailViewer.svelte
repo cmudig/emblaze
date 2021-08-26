@@ -123,7 +123,7 @@
       }
     }
 
-    return neighborArray;
+    return neighborArray.filter((x) => !thumbnailIDs.includes(x));
   }
 
   // without preview frame, single or multiple:

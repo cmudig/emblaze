@@ -205,13 +205,18 @@ class Viewer(DOMWidget):
             thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
             thread.start()
     
+    @observe("selectedIDs")
+    def _observe_selected_ids(self, change):
+        """Change the color scheme to match the arrangement of the selected IDs."""
+        self.update_frame_colors()    
+            
     def reset_alignment(self):
         """Removes any transformations applied to the embedding frames."""
         self.frameTransformations = [
             np.eye(3).tolist()
             for i in range(len(self.embeddings))
         ]
-        self.frameColors = []
+        self.update_frame_colors()
         
     def align_to_points(self, point_ids, peripheral_points):
         """
@@ -239,7 +244,27 @@ class Viewer(DOMWidget):
                 allow_flips=False)).tolist())
 
         self.frameTransformations = transformations
-        self.frameColors = compute_colors(self.embeddings, point_ids, peripheral_points)
+        self.update_frame_colors()
+
+    def update_frame_colors(self):
+        """
+        Updates the colors of the color stripes next to each frame thumbnail in
+        the sidebar. The selectedIDs property is used first, followed by
+        alignedIDs if applicable.
+        """
+        if not self.selectedIDs:
+            if self.alignedIDs:
+                self.frameColors = compute_colors(self.embeddings, self.alignedIDs, self.alignedIDs)
+            else:
+                self.frameColors = []
+        else:
+            if len(self.selectedIDs) >= 3:
+                self.frameColors = compute_colors(self.embeddings, self.selectedIDs, self.selectedIDs)
+            else:
+                peripheral_points = set(self.selectedIDs)
+                for frame in self.embeddings.embeddings:
+                    peripheral_points |= set(frame.field(Field.NEIGHBORS, self.selectedIDs).flatten().tolist())
+                self.frameColors = compute_colors(self.embeddings, self.selectedIDs, list(peripheral_points))
 
     @observe("selectionOrderRequest")
     def _compute_selection_order(self, change):
