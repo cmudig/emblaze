@@ -238,6 +238,8 @@
           .filter((d) => !!d)
           .slice(0, showingFullSelection ? thumbnailIDs.length : MaxSelectionVisible) as d}
           <ThumbnailRow
+            on:thumbnailClick
+            on:thumbnailHover
             {blobURLs}
             {d}
             mini={blobURLs.size > 0 && thumbnailIDs.length > 1}
@@ -272,7 +274,14 @@
           {#each sameIDs
             .map((id) => getThumbnailInfo(id))
             .filter((d) => !!d) as d}
-            <ThumbnailRow mini {blobURLs} {d} color="black" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="black"
+            />
           {/each}
         </div>
       {/if}
@@ -283,7 +292,14 @@
           {#each lostIDs
             .map((id) => getThumbnailInfo(id))
             .filter((d) => !!d) as d}
-            <ThumbnailRow mini {blobURLs} {d} color="red" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="red"
+            />
           {/each}
         </div>
       {/if}
@@ -294,7 +310,14 @@
           {#each gainedIDs
             .map((id) => getThumbnailInfo(id))
             .filter((d) => !!d) as d}
-            <ThumbnailRow mini {blobURLs} {d} color="green" />
+            <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
+              mini
+              {blobURLs}
+              {d}
+              color="green"
+            />
           {/each}
         </div>
       {/if}
@@ -308,6 +331,8 @@
             .map((id) => getThumbnailInfo(id))
             .filter((d) => !!d) as d}
             <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
               mini={previewSecondaryIDs.length > 0}
               {blobURLs}
               {d}
@@ -327,6 +352,8 @@
             .map((id) => getThumbnailInfo(id))
             .filter((d) => !!d) as d}
             <ThumbnailRow
+              on:thumbnailClick
+              on:thumbnailHover
               mini
               {blobURLs}
               {d}

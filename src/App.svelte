@@ -88,6 +88,9 @@
   let canvas;
   let thumbnailViewer;
 
+  //let thumbnailHoveredID = null;
+  let scatterplotHoveredID = null;
+
   let selectedIDs = syncValue(model, 'selectedIDs', []);
   //$: console.log($selectedIDs);
 
@@ -177,6 +180,21 @@
         );
       }
     }
+  }
+
+  function handleThumbnailClick(event) {
+    if (event.detail.keyPressed) {
+      if ($selectedIDs.indexOf(event.detail.id) == -1) {
+        $selectedIDs = [...$selectedIDs, event.detail.id];
+      }
+    } else {
+      $selectedIDs = [event.detail.id];
+    }
+  }
+
+  function handleThumbnailHover(event) {
+    //thumbnailHoveredID = event.detail.id;
+    scatterplotHoveredID = event.detail.id;
   }
 
   let showLegend = true;
@@ -391,6 +409,7 @@
           backgroundColor={previewFrame != $currentFrame && previewFrame != -1
             ? '#f8f8ff'
             : 'white'}
+          bind:hoveredID={scatterplotHoveredID}
           bind:clickedIDs={$selectedIDs}
           bind:alignedIDs={$alignedIDs}
           bind:filterIDs={$filterIDs}
@@ -437,6 +456,8 @@
           />
         {:else if visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
           <DefaultThumbnailViewer
+            on:thumbnailClick={handleThumbnailClick}
+            on:thumbnailHover={handleThumbnailHover}
             bind:this={thumbnailViewer}
             {dataset}
             primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
