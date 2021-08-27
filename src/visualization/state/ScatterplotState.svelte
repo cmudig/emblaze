@@ -317,9 +317,9 @@
     updatePreviewLines(previewInfo);
 
   function updatePreviewLines(info) {
-    if (!marks || !previewLinePool || !showPreviewLines) return;
+    if (!marks || !previewLinePool) return;
 
-    if (!!info) {
+    if (!!info && showPreviewLines) {
       marks.forEach((mark) => {
         if (_getLineAlpha(mark) <= 0.01) {
           previewLinePool.hide(mark.id);
@@ -459,6 +459,12 @@
       marks.updateComputed('alpha');
     }
     oldHighlightFocusedPoints = highlightFocusedPoints;
+  }
+
+  let oldShowPreviewLines = true;
+  $: if (oldShowPreviewLines != showPreviewLines && !!previewInfo) {
+    updatePreviewLines(previewInfo);
+    oldShowPreviewLines = showPreviewLines;
   }
 
   function setupDecorationPools() {

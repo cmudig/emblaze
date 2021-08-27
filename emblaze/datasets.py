@@ -225,16 +225,6 @@ class Embedding(ColumnarData):
         the default metric for this Embedding object is used.
         """
         metric = metric or self.metric
-        if metric not in self._distances:
-            locations = self.field(Field.POSITION)
-            if metric == "euclidean":
-                self._distances[metric] = euclidean_distances(locations, locations)
-            elif metric == "cosine":
-                self._distances[metric] = cosine_distances(locations, locations)
-            elif metric == "precomputed":
-                self._distances[metric] = locations
-            else:
-                raise NotImplementedError("Unsupported metric for distances")
         
         if ids is None:
             indexes = np.arange(len(self))
@@ -246,7 +236,32 @@ class Embedding(ColumnarData):
         else:
             comparison_indexes = self.index(comparison_ids)
 
-        return self._distances[metric][indexes,:][:,comparison_indexes]
+        if len(self) > 2000 and len(indexes) < 2000 and len(comparison_indexes) < 2000:
+            # Just compute the requested distances
+            if metric == "euclidean":
+                return euclidean_distances(self.field(Field.POSITION, indexes),
+                                           self.field(Field.POSITION, comparison_indexes))
+            elif metric == "cosine":
+                return cosine_distances(self.field(Field.POSITION, indexes),
+                                        self.field(Field.POSITION, comparison_indexes))
+            elif metric == "precomputed":
+                return self.field(Field.POSITION, indexes)
+            else:
+                raise NotImplementedError("Unsupported metric for distances")
+        else:
+            # Cache all pairwise distances
+            if metric not in self._distances:
+                locations = self.field(Field.POSITION)
+                if metric == "euclidean":
+                    self._distances[metric] = euclidean_distances(locations, locations)
+                elif metric == "cosine":
+                    self._distances[metric] = cosine_distances(locations, locations)
+                elif metric == "precomputed":
+                    self._distances[metric] = locations
+                else:
+                    raise NotImplementedError("Unsupported metric for distances")
+        
+            return self._distances[metric][indexes,:][:,comparison_indexes]
 
     def to_json(self):
         """

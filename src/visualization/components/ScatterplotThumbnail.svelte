@@ -61,7 +61,7 @@
   class:preview-frame={isPreviewing}
   style="background-color: {canvasBG}; {!!accentColor
     ? `border-right: 6px solid hsl(${accentColor[0]}, ${accentColor[1]}%, ${accentColor[2]}%);`
-    : ''}"
+    : 'border-right: 6px solid #bbb;'}"
   on:mouseover={onMouseover}
   on:mousedown={onMousedown}
   on:mouseup={onMouseup}

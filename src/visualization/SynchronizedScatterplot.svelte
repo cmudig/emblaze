@@ -146,7 +146,7 @@
 
   // Radius select button
   let showRadiusselectButton = false;
-  $: showRadiusselectButton = clickedIDs.length == 1;
+  $: showRadiusselectButton = clickedIDs.length == 1 && filterIDs.length == 0;
 
   export let inRadiusselect = false;
   const DefaultSelectionRadius = 30;
@@ -449,8 +449,6 @@
             href="#">Select alignment anchors</a
           >
         {/if}
-      {:else if performanceMode}
-        (Performance mode)
       {/if}
     </div>
     {#if warningMessage.length > 0}

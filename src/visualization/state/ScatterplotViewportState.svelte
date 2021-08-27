@@ -15,8 +15,10 @@
   export let xExtent = null;
   export let yExtent = null;
 
-  export let pointRadius = 3.0;
-  export let rFactor = 1.0;
+  // Point display attributes
+  export let pointRadius = 3.0; // this component reads this information
+  export let rFactor = 1.0; // this component writes the rFactor
+  export let showPointBorders = true; // this component decides whether to show point borders
 
   // Data is used to determine how much the viewport should be allowed to scale by
   export let data = null;
@@ -51,33 +53,44 @@
         if (Math.random() < 100 / ids.length) {
           let point = frame.byID(id);
           if (!point.highlightIndexes) return;
-          let dist = euclideanDistance(
-            point,
-            frame.byID(point.highlightIndexes[0])
+          collectedDistances.push(
+            euclideanDistance(
+              point,
+              frame.byID(
+                point.highlightIndexes[
+                  Math.floor(
+                    Math.random() * Math.min(point.highlightIndexes.length, 10)
+                  )
+                ]
+              )
+            )
           );
-          collectedDistances.push(dist);
         }
       });
     });
 
-    collectedDistances.sort((a, b) => a - b);
-    minPointDistance =
-      collectedDistances[Math.min(10, collectedDistances.length)];
-    scales.maxScale = scales.scaleFactorForDistance(
-      minPointDistance,
-      pixelDistance
-    );
+    console.log('collected distances:', collectedDistances);
+    if (collectedDistances.length > 0) {
+      collectedDistances.sort((a, b) => a - b);
+      minPointDistance =
+        collectedDistances[Math.round(collectedDistances.length * 0.1)];
+      scales.maxScale = scales.scaleFactorForDistance(
+        minPointDistance,
+        pixelDistance
+      );
+      console.log('max scale', minPointDistance, scales.maxScale);
+    }
   }
 
   $: if (!!scales) {
     scales.onUpdate(() => {
       scalesNeutral = scales.isNeutral();
-      updateRFactor();
+      updatePointDisplay();
       dispatch('update');
     });
   }
 
-  function updateRFactor() {
+  function updatePointDisplay() {
     // Add an rFactor property indicating how much to scale the points by for
     // appropriate display
     if (minPointDistance != null) {
@@ -89,8 +102,12 @@
         Math.min((minPointDistance * scale) / (2 * pointRadius), 1.0),
         0.2
       );
+
+      showPointBorders = minPointDistance * scale >= 20;
     } else {
-      rFactor = Math.min(scales.scaleFactor.get() / 5.0, 1.0);
+      let scale = scales.scaleFactor.get();
+      rFactor = Math.min(scale / 5.0, 1.0);
+      showPointBorders = scale >= 1.0;
     }
   }
 

@@ -44,6 +44,7 @@
   export let scalesNeutral = true;
 
   export let performanceMode = true;
+  let showPointBorders = true;
 
   export let thumbnailsURL = null;
 
@@ -162,7 +163,7 @@
       viewportManager.getTransformInfo(),
       rFactor
     );
-    scatterplot.showPointBorders = !performanceMode;
+    scatterplot.showPointBorders = showPointBorders;
     scatterplot.addTo(pixiApp.stage, pixiApp.ticker, pixiApp.renderer);
     let renderMargin = 50.0;
     scatterplot.setRenderBox([
@@ -180,7 +181,7 @@
     actualHeight = container.clientHeight;
   }
 
-  $: if (!!scatterplot) scatterplot.showPointBorders = !performanceMode;
+  $: if (!!scatterplot) scatterplot.showPointBorders = showPointBorders;
   $: if (!!scatterplot) scatterplot.rFactor = rFactor;
 
   // Texture loading (for image labels)
@@ -573,10 +574,6 @@
     prevFilterIDs = filterIDs;
   }
 
-  $: if (!!data && !!scatterplot) {
-    scatterplot.showPointBorders = !performanceMode;
-  }
-
   function rescale() {
     scalesNeutral = viewportManager.scalesNeutral;
     if (inRadiusselect && !!scatterplot.radiusselect) autosizeRadiusSelect();
@@ -634,6 +631,7 @@
     {followingMarks}
     {pointRadius}
     bind:rFactor
+    bind:showPointBorders
     on:update={rescale}
   />
 </div>
