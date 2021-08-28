@@ -238,6 +238,10 @@
   var mouseDown = false;
   var mouseMoved = true;
 
+  var hoveringDelayPassed = false;
+  var hoveringDelayTimeout = null;
+  const HoveringDelayInterval = 200;
+
   var lastX = 0;
   var lastY = 0;
 
@@ -274,6 +278,16 @@
           hoveredID = null;
           dispatch('datahover', hoveredID);
         }
+      })
+      .on('mouseenter', () => {
+        hoveringDelayTimeout = setTimeout(
+          () => (hoveringDelayPassed = true),
+          HoveringDelayInterval
+        );
+      })
+      .on('mouseleave', () => {
+        hoveringDelayPassed = false;
+        if (!!hoveringDelayTimeout) clearTimeout(hoveringDelayTimeout);
       })
       .on('mousewheel', handleMouseWheel)
       .on('DOMMouseScroll', handleMouseWheel)
@@ -314,7 +328,7 @@
 
         viewportManager.translateBy(-dx, -dy);
       }
-    } else if (!mouseDown) {
+    } else if (!mouseDown && hoveringDelayPassed) {
       let hoveredItem = getElementAtPoint(mouseX, mouseY);
       if (!!hoveredItem && hoveredItem.type == 'mark') {
         // centerX = mouseX;
