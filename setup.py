@@ -95,7 +95,8 @@ setup_args = dict(
         'scipy>=1.6.0',
         'pillow>=8.2.0',
         'umap-learn>=0.5.1',
-        'flask>=1.1.2'
+        'flask>=1.1.2',
+        'numba>=0.53.1',
     ],
     entry_points={
     },

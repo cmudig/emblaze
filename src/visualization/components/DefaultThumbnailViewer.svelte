@@ -257,12 +257,6 @@
     currentFrameNumber,
     previewFrameNumber
   ) {
-    console.log(
-      'updating neighbor arrays',
-      primaryIDs,
-      currentFrameNumber,
-      previewFrameNumber
-    );
     if (previewFrameNumber >= 0 && previewFrameNumber != currentFrameNumber) {
       if (primaryIDs.length == 1) {
         // with preview frame, single
@@ -315,12 +309,6 @@
         secondaryItems = [];
       }
     }
-    console.log(
-      'done',
-      secondaryItems,
-      previewSecondaryItems,
-      commonChangeItems
-    );
   }
 
   onMount(() => {

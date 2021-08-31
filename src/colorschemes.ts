@@ -16,6 +16,11 @@ class ColorScheme {
 let colorSchemes: Array<ColorScheme> = [
   new ColorScheme('turbo', d3.interpolateTurbo),
   new ColorScheme('tableau', d3.schemeTableau10, 'categorical'),
+  new ColorScheme('dark2', d3.schemeDark2, 'categorical'),
+  new ColorScheme('paired', d3.schemePaired, 'categorical'),
+  new ColorScheme('set1', d3.schemeSet1, 'categorical'),
+  new ColorScheme('set2', d3.schemeSet2, 'categorical'),
+  new ColorScheme('set3', d3.schemeSet3, 'categorical'),
   new ColorScheme('plasma', d3.interpolatePlasma),
   new ColorScheme('magma', d3.interpolateMagma),
   new ColorScheme('viridis', d3.interpolateViridis),

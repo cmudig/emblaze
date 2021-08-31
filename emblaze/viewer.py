@@ -50,6 +50,7 @@ class Viewer(DOMWidget):
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
+    _defaultFrameColors = None
     # List of 3 x 3 matrices (expressed as 3x3 nested lists)
     frameTransformations = List([]).tag(sync=True)
     
@@ -254,17 +255,13 @@ class Viewer(DOMWidget):
         """
         if not self.selectedIDs:
             if self.alignedIDs:
-                self.frameColors = compute_colors(self.embeddings, self.alignedIDs, self.alignedIDs)
+                self.frameColors = compute_colors(self.embeddings, self.alignedIDs)
             else:
-                self.frameColors = []
+                if self._defaultFrameColors is None:
+                    self._defaultFrameColors = compute_colors(self.embeddings, None)
+                self.frameColors = self._defaultFrameColors
         else:
-            if len(self.selectedIDs) >= 3:
-                self.frameColors = compute_colors(self.embeddings, self.selectedIDs, self.selectedIDs)
-            else:
-                peripheral_points = set(self.selectedIDs)
-                for frame in self.embeddings.embeddings:
-                    peripheral_points |= set(frame.field(Field.NEIGHBORS, self.selectedIDs).flatten().tolist())
-                self.frameColors = compute_colors(self.embeddings, self.selectedIDs, list(peripheral_points))
+            self.frameColors = compute_colors(self.embeddings, self.selectedIDs)
 
     @observe("selectionOrderRequest")
     def _compute_selection_order(self, change):

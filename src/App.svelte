@@ -184,8 +184,14 @@
 
   function handleThumbnailClick(event) {
     if (event.detail.keyPressed) {
-      if ($selectedIDs.indexOf(event.detail.id) == -1) {
+      let idx = $selectedIDs.indexOf(event.detail.id);
+      if (idx == -1) {
         $selectedIDs = [...$selectedIDs, event.detail.id];
+      } else {
+        $selectedIDs = [
+          ...$selectedIDs.slice(0, idx),
+          ...$selectedIDs.slice(idx + 1),
+        ];
       }
     } else {
       $selectedIDs = [event.detail.id];

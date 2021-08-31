@@ -45,7 +45,7 @@
     // set the max scale such that the closest distance can scale to a certain
     // number of pixels
 
-    let pixelDistance = 50;
+    let pixelDistance = 100;
     let collectedDistances = [];
     data.frames.forEach((frame) => {
       let ids = frame.getIDs();
@@ -53,18 +53,14 @@
         if (Math.random() < 100 / ids.length) {
           let point = frame.byID(id);
           if (!point.highlightIndexes) return;
-          collectedDistances.push(
-            euclideanDistance(
-              point,
-              frame.byID(
-                point.highlightIndexes[
-                  Math.floor(
-                    Math.random() * Math.min(point.highlightIndexes.length, 10)
-                  )
-                ]
+          let randomNeighbor = frame.byID(
+            point.highlightIndexes[
+              Math.floor(
+                Math.random() * Math.min(point.highlightIndexes.length, 10)
               )
-            )
+            ]
           );
+          collectedDistances.push(euclideanDistance(point, randomNeighbor));
         }
       });
     });

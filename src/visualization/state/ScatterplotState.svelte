@@ -352,8 +352,17 @@
   let prevFilter = null;
   $: if (prevFilter !== filter) {
     if (prevFilter != null && !!marks) {
-      // marks.animateComputed('alpha', interpolateTo, defaultDuration);
       marks.setVisibleMarks(filter);
+      if (highlightFocusedPoints) {
+        marks.animateComputed('r', interpolateTo, defaultDuration);
+        marks.animateComputed('alpha', interpolateTo, defaultDuration);
+      } else {
+        marks.updateComputed('x');
+        marks.updateComputed('y');
+        marks.updateComputed('r');
+        marks.updateComputed('alpha');
+        marks.updateComputed('fillStyle');
+      }
     }
     if (previewInfo != null) {
       updatePreviewLines(previewInfo);

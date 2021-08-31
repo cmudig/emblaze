@@ -1,8 +1,8 @@
-import * as PIXI from "pixi.js";
-import * as d3 from "d3";
+import * as PIXI from 'pixi.js';
+import * as d3 from 'd3';
 
 function _rgbStringToArray(rgb) {
-  let comps = rgb.substring(4, rgb.length - 1).split(",");
+  let comps = rgb.substring(4, rgb.length - 1).split(',');
   return [
     parseInt(comps[0]) / 255.0,
     parseInt(comps[1]) / 255.0,
@@ -23,20 +23,20 @@ class PointSetGeometry extends PIXI.Geometry {
     this.marks = marks;
     this.rFactor = rFactor;
     this.hidden = hidden;
-    this.addAttribute("x", PIXI.Buffer.from(this.makeArray("x")), 4);
-    this.addAttribute("y", PIXI.Buffer.from(this.makeArray("y")), 4);
-    this.addAttribute("r", PIXI.Buffer.from(this.makeArray("r")), 4);
+    this.addAttribute('x', PIXI.Buffer.from(this.makeArray('x')), 4);
+    this.addAttribute('y', PIXI.Buffer.from(this.makeArray('y')), 4);
+    this.addAttribute('r', PIXI.Buffer.from(this.makeArray('r')), 4);
     this.addAttribute(
-      "fillStyle",
-      PIXI.Buffer.from(this.makeArray("fillStyle"))
+      'fillStyle',
+      PIXI.Buffer.from(this.makeArray('fillStyle'))
     );
-    this.addAttribute("alpha", PIXI.Buffer.from(this.makeArray("alpha")), 4);
+    this.addAttribute('alpha', PIXI.Buffer.from(this.makeArray('alpha')), 4);
   }
 
   // Creates a buffer for the given attribute (PIXI attributes, not Mark attributes).
   makeArray(attrName, currentTime = null) {
     let arr;
-    if (attrName == "r") {
+    if (attrName == 'r') {
       arr = [];
       this.marks.forEach((mark) => {
         let anim = mark.attributes[attrName].getPreload(false, currentTime);
@@ -45,14 +45,14 @@ class PointSetGeometry extends PIXI.Geometry {
         arr.push(anim.startTime);
         arr.push(anim.endTime);
       });
-    } else if (attrName == "fillStyle") {
+    } else if (attrName == 'fillStyle') {
       // Expects fill style to be an [R, G, B] array
       if (this.hidden) {
         arr = this.marks
-          .map((mark) => _rgbStringToArray(mark.attr("colorID")))
+          .map((mark) => _rgbStringToArray(mark.attr('colorID')))
           .flat();
       } else {
-        arr = this.marks.map((mark) => mark.attr("fillStyle")).flat();
+        arr = this.marks.map((mark) => mark.attr('fillStyle')).flat();
       }
     }
     // Assume it's the same attribute as the Mark
@@ -71,14 +71,14 @@ class PointSetGeometry extends PIXI.Geometry {
   }
 
   update(currentTime) {
-    console.log("Updating point set,", this.marks.getVisibleMarks().length);
-    this.getBuffer("x").update(this.makeArray("x", currentTime));
-    this.getBuffer("y").update(this.makeArray("y", currentTime));
-    this.getBuffer("r").update(this.makeArray("r", currentTime));
-    this.getBuffer("fillStyle").update(
-      this.makeArray("fillStyle", currentTime)
+    console.log('Updating point set,', this.marks.getVisibleMarks().length);
+    this.getBuffer('x').update(this.makeArray('x', currentTime));
+    this.getBuffer('y').update(this.makeArray('y', currentTime));
+    this.getBuffer('r').update(this.makeArray('r', currentTime));
+    this.getBuffer('fillStyle').update(
+      this.makeArray('fillStyle', currentTime)
     );
-    this.getBuffer("alpha").update(this.makeArray("alpha", currentTime));
+    this.getBuffer('alpha').update(this.makeArray('alpha', currentTime));
   }
 }
 
@@ -191,8 +191,6 @@ const HiddenFragmentShader = `
     varying vec3 vFillStyle;
     varying float vAlpha;
 
-    const float inset = 0.6;
-
     void main () {
       float r = 0.0, delta = 0.0;
       if (vAlpha < 0.001) {
@@ -200,7 +198,7 @@ const HiddenFragmentShader = `
       }
       vec2 cxy = 2.0 * gl_PointCoord - 1.0;
       r = dot(cxy, cxy);
-      if (r > inset) {
+      if (r > 1.0) {
         discard;
       }
 
@@ -228,7 +226,7 @@ export default class PixiPointSet extends PIXI.Mesh {
       transformA: { x: transformInfo.x.a, y: transformInfo.y.a },
       transformB: { x: transformInfo.x.b, y: transformInfo.y.b },
       currentTime: 0.0,
-      rFactor
+      rFactor,
     };
     if (!hidden) uniforms.showBorders = true;
     let shader = new PIXI.Shader.from(
@@ -255,9 +253,7 @@ export default class PixiPointSet extends PIXI.Mesh {
   update(currentTime, needsGeometryUpdate = false) {
     this.shader.uniforms.rFactor = this.rFactor;
     this.shader.uniforms.currentTime = currentTime;
-    if (!this.hidden)
-      this.shader.uniforms.showBorders = this.showBorders;
-    if (needsGeometryUpdate)
-      this.geometry.update(currentTime);
+    if (!this.hidden) this.shader.uniforms.showBorders = this.showBorders;
+    if (needsGeometryUpdate) this.geometry.update(currentTime);
   }
 }
