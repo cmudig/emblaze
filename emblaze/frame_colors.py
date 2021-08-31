@@ -148,7 +148,10 @@ def compute_colors(frames, ids_of_interest=None, scale_factor=1.0):
                                                                         False))
 
     if ids_of_interest is not None and len(ids_of_interest):
-        distances = 0.5 * (outer_jaccard_distances + inner_jaccard_distances)
+        if len(ids_of_interest) == 1:
+            distances = outer_jaccard_distances
+        else:
+            distances = 0.5 * (outer_jaccard_distances + inner_jaccard_distances)
     else:
         distances = inner_jaccard_distances
     
