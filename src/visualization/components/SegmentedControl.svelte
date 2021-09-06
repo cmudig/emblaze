@@ -5,7 +5,10 @@
 
 <ul class="segmented-control">
   {#each options as option, i}
-    <li class="segmented-control__item">
+    <li
+      class="segmented-control__item"
+      style="width: {(100.0 / options.length).toFixed(0)}%;"
+    >
       <input
         class="segmented-control__input"
         type="radio"

@@ -30,6 +30,13 @@ class PreviewMode:
     """Ways of calculating preview lines."""
     PROJECTION_SIMILARITY = "projectionNeighborSimilarity"
     NEIGHBOR_SIMILARITY = "neighborSimilarity"
+    
+class SidebarPane:
+    """Indexes of sidebar panes in the widget."""
+    CURRENT = 0
+    SAVED = 1
+    RECENT = 2
+    SUGGESTED = 3
 
 FLIP_FACTORS = [
     np.array([1, 1, 1]),

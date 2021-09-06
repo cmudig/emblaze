@@ -5,12 +5,20 @@
 
   const dispatch = createEventDispatcher();
   export let data = [];
+  export let loading = false;
+
+  export let emptyMessage = 'No items yet';
+  export let loadingMessage = 'Loading...';
 </script>
 
-{#if data.length == 0}
-  <div class="no-history">
-    No saved selections yet! To create one, first select, align, or isolate some
-    points, then click Save Selection.
+{#if loading}
+  <div class="placeholder-text">
+    {loadingMessage}
+    <i class="fa fa-spinner fa-spin" />
+  </div>
+{:else if data.length == 0}
+  <div class="placeholder-text">
+    {emptyMessage}
   </div>
 {:else}
   <div class="selection-browser-container">
@@ -25,7 +33,7 @@
     background: white;
   }
 
-  .no-history {
+  .placeholder-text {
     max-width: 100%;
     text-align: center;
     color: #999;

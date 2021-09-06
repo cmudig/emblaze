@@ -15,7 +15,8 @@ from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
-from .utils import Field, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
+from .utils import Field, SidebarPane, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
+from .recommender import SelectionRecommender
 from datetime import datetime
 import json
 import glob
@@ -41,6 +42,7 @@ class Viewer(DOMWidget):
     plotPadding = Float(10.0).tag(sync=True)
     
     currentFrame = Integer(0).tag(sync=True)
+    previewFrame = Integer(0).tag(sync=True)
     alignedFrame = Integer(0).tag(sync=True)
     selectedIDs = List([]).tag(sync=True)
     alignedIDs = List([]).tag(sync=True)
@@ -50,7 +52,7 @@ class Viewer(DOMWidget):
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
-    _defaultFrameColors = None
+    _defaultFrameColors = List([])
     # List of 3 x 3 matrices (expressed as 3x3 nested lists)
     frameTransformations = List([]).tag(sync=True)
     
@@ -62,8 +64,13 @@ class Viewer(DOMWidget):
     selectionName = Unicode("").tag(sync=True)
     selectionDescription = Unicode("").tag(sync=True)
 
-    loadSelectionFlag = Bool(False).tag(sync=True)
+    visibleSidebarPane = Integer(SidebarPane.CURRENT).tag(sync=True)
     selectionList = List([]).tag(sync=True)
+    recommender = None
+    suggestedSelections = List([]).tag(sync=True)
+    loadingSuggestions = Bool(False).tag(sync=True)
+    recomputeSuggestionsFlag = Bool(False).tag(sync=True)
+    suggestedSelectionWindow = List([]).tag(sync=True)
     
     # Contains three keys: centerID (int), frame (int), unit (string)
     selectionUnit = Unicode("").tag(sync=True)
@@ -93,7 +100,7 @@ class Viewer(DOMWidget):
         if not self.previewMode:
             self.previewMode = self.detect_preview_mode()
         if len(self.previewParameters) == 0:
-            self.previewParameters = {'k': 10, 'similarityThreshold': 0.5}
+            self.previewParameters = {'k': 10, 'similarityThreshold': 0.5}            
 
     @observe("saveSelectionFlag")
     def _observe_save_selection(self, change):
@@ -115,11 +122,6 @@ class Viewer(DOMWidget):
             self.selectionDescription = ""
             self.refresh_saved_selections()
 
-    @observe("loadSelectionFlag")
-    def _observe_load_selection(self, change):
-        if change.new:
-            self.refresh_saved_selections()
-            
     def refresh_saved_selections(self):
         """
         Updates the selectionList property, which is displayed in the sidebar
@@ -184,10 +186,17 @@ class Viewer(DOMWidget):
         self.colorScheme = self.detect_color_scheme()
         self.previewMode = self.detect_preview_mode()
         self.selectionUnit = embeddings[0].metric
+        
+        self._update_suggested_selections()
 
     @observe("currentFrame")
     def _observe_current_frame(self, change):
         self.selectionUnit = self.embeddings[change.new].metric
+        self._update_suggested_selections()
+
+    @observe("previewFrame")
+    def _observe_preview_frame(self, change):
+        self._update_suggested_selections()
 
     @observe("thumbnails")
     def _observe_thumbnails(self, change):
@@ -209,7 +218,8 @@ class Viewer(DOMWidget):
     @observe("selectedIDs")
     def _observe_selected_ids(self, change):
         """Change the color scheme to match the arrangement of the selected IDs."""
-        self.update_frame_colors()    
+        self.update_frame_colors()
+        self._update_suggested_selections()
             
     def reset_alignment(self):
         """Removes any transformations applied to the embedding frames."""
@@ -257,7 +267,7 @@ class Viewer(DOMWidget):
             if self.alignedIDs:
                 self.frameColors = compute_colors(self.embeddings, self.alignedIDs)
             else:
-                if self._defaultFrameColors is None:
+                if not self._defaultFrameColors:
                     self._defaultFrameColors = compute_colors(self.embeddings, None)
                 self.frameColors = self._defaultFrameColors
         else:
@@ -281,3 +291,69 @@ class Viewer(DOMWidget):
             order.flatten(),
             distances.flatten()
         ]).T.tolist()]
+
+    @observe("visibleSidebarPane")
+    def _observe_sidebar_pane(self, change):
+        if change.new == SidebarPane.SUGGESTED:
+            self._update_suggested_selections()
+        elif change.new == SidebarPane.SAVED:
+            self.refresh_saved_selections()
+
+    def _get_filter_points(self, selection):
+        """Returns a list of points that should be visible if the given selection
+        is highlighted."""
+        filtered_points = set()
+        for id_val in selection:
+            filtered_points.add(id_val)
+        for frame in self.embeddings.embeddings:
+            filtered_points |= set(frame.field(Field.NEIGHBORS, ids=selection)[:,:self.numNeighbors].flatten().tolist())
+        return list(filtered_points)
+    
+    @observe("recomputeSuggestionsFlag")
+    def _observe_suggestion_flag(self, change):
+        """Recomputes suggestions when recomputeSuggestionsFlag is set to True."""
+        if change.new and not self.loadingSuggestions:
+            self._update_suggested_selections()
+    
+    def _update_suggested_selections_background(self):
+        """Function that runs in the background to recompute suggested selections."""
+        self.recomputeSuggestionsFlag = False
+        if self.loadingSuggestions: 
+            self.recomputeSuggestionsFlag = True
+            return
+        self.loadingSuggestions = True
+        
+        if self.recommender is None:
+            self.recommender = SelectionRecommender(self.embeddings)
+
+        if self.previewFrame >= 0 and self.previewFrame != self.currentFrame:
+            preview_frame_idx = self.previewFrame
+        else:
+            preview_frame_idx = None
+
+        suggestions = []
+        for result, reason in self.recommender.query(ids_of_interest=self.selectedIDs or None, frame_idx=self.currentFrame, preview_frame_idx=preview_frame_idx):
+            ids = list(result["ids"])
+            name = "{} points".format(len(ids))
+            if self.thumbnails is not None:
+                thumbnail = self.thumbnails[ids[0]]
+                if "name" in thumbnail:
+                    name = "{} and {} others".format(thumbnail["name"], len(result["ids"]) - 1)
+    
+            suggestions.append({
+                "selectionName": name,
+                "selectionDescription": reason,
+                "currentFrame": result["frame"],
+                "selectedIDs": ids,
+                "alignedIDs": ids,
+                "filterIDs": self._get_filter_points(ids)
+            })
+        self.suggestedSelections = suggestions
+        self.loadingSuggestions = False
+        if self.recomputeSuggestionsFlag:
+            self._update_suggested_selections_background()
+        
+    def _update_suggested_selections(self):
+        """Recomputes the suggested selections."""        
+        thread = threading.Thread(target=self._update_suggested_selections_background)
+        thread.start()

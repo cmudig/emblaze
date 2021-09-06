@@ -107,7 +107,7 @@
   let previewThumbnailNeighbors = [];
 
   let currentFrame = syncValue(model, 'currentFrame', 0);
-  let previewFrame = -1;
+  let previewFrame = syncValue(model, 'previewFrame', 0);
 
   let saveSelectionFlag = syncValue(model, 'saveSelectionFlag', false);
   let selectionName = syncValue(model, 'selectionName', '');
@@ -121,16 +121,20 @@
   const SidebarPanes = {
     CURRENT: 0,
     SAVED: 1,
+    RECENT: 2,
+    SUGGESTED: 3,
   };
-  let visibleSidebarPane = SidebarPanes.CURRENT; // 0 = current, 1 = saved
-  let loadSelectionFlag = syncValue(model, 'loadSelectionFlag', false);
-  $: $loadSelectionFlag = visibleSidebarPane == SidebarPanes.SAVED;
-  let selectionList = syncValue(model, 'selectionList', []);
-  //$: console.log("selectionList: ", $selectionList);
+  let visibleSidebarPane = syncValue(
+    model,
+    'visibleSidebarPane',
+    SidebarPanes.CURRENT
+  );
 
   let filterIDs = syncValue(model, 'filterIDs', []);
 
   // Saving and loading selections
+
+  let selectionList = syncValue(model, 'selectionList', []);
 
   function openSaveSelectionDialog() {
     $selectionName = '';
@@ -158,15 +162,15 @@
         'This saved selection has an invalid frame number and cannot be loaded.'
       );
     } else {
-      let invalidSelected = !event.detail.selectedIDs.every(filterFn);
-      let invalidAligned = !event.detail.alignedIDs.every(filterFn);
-      let invalidFilter = !event.detail.filterIDs.every(filterFn);
+      let invalidSelected = !(event.detail.selectedIDs || []).every(filterFn);
+      let invalidAligned = !(event.detail.alignedIDs || []).every(filterFn);
+      let invalidFilter = !(event.detail.filterIDs || []).every(filterFn);
 
-      $currentFrame = event.detail.currentFrame;
-      $alignedFrame = event.detail.alignedFrame;
-      $selectedIDs = event.detail.selectedIDs.filter(filterFn);
-      $alignedIDs = event.detail.alignedIDs.filter(filterFn);
-      $filterIDs = event.detail.filterIDs.filter(filterFn);
+      $currentFrame = event.detail.currentFrame || $currentFrame;
+      $alignedFrame = event.detail.alignedFrame || $currentFrame;
+      $selectedIDs = (event.detail.selectedIDs || []).filter(filterFn);
+      $alignedIDs = (event.detail.alignedIDs || []).filter(filterFn);
+      $filterIDs = (event.detail.filterIDs || []).filter(filterFn);
 
       if (invalidSelected || invalidAligned || invalidFilter) {
         let messages = [];
@@ -180,7 +184,21 @@
         );
       }
     }
+
+    $visibleSidebarPane = SidebarPanes.CURRENT;
   }
+
+  // Suggested selections
+
+  let suggestedSelections = syncValue(model, 'suggestedSelections', []);
+  let loadingSuggestions = syncValue(model, 'loadingSuggestions', false);
+  let recomputeSuggestionsFlag = syncValue(
+    model,
+    'recomputeSuggestionsFlag',
+    false
+  );
+
+  // Thumbnails
 
   function handleThumbnailClick(event) {
     if (event.detail.keyPressed) {
@@ -204,8 +222,6 @@
   }
 
   let showLegend = true;
-
-  // Thumbnails
 
   $: {
     thumbnailIDs = $selectedIDs;
@@ -381,14 +397,15 @@
           <div class="frame-thumbnail-item">
             <ScatterplotThumbnail
               on:click={() => {
-                if (previewFrame == i) {
+                if ($previewFrame == i) {
                   $currentFrame = i;
-                  previewFrame = -1;
-                } else if ($currentFrame != i) previewFrame = i;
-                else if ($currentFrame == i) previewFrame = -1;
+                  $previewFrame = -1;
+                } else if ($currentFrame != i) $previewFrame = i;
+                else if ($currentFrame == i) $previewFrame = -1;
               }}
               isSelected={$currentFrame == i}
-              isPreviewing={previewFrame == i && previewFrame != $currentFrame}
+              isPreviewing={$previewFrame == i &&
+                $previewFrame != $currentFrame}
               colorScale={!!dataset
                 ? dataset.colorScale(colorSchemeObject)
                 : null}
@@ -413,12 +430,12 @@
           data={dataset}
           padding={$plotPadding}
           frame={$currentFrame}
-          {previewFrame}
+          previewFrame={$previewFrame}
           numNeighbors={$numNeighbors}
           hoverable
           showPreviewControls
           animateTransitions
-          backgroundColor={previewFrame != $currentFrame && previewFrame != -1
+          backgroundColor={$previewFrame != $currentFrame && $previewFrame != -1
             ? '#f8f8ff'
             : 'white'}
           bind:hoveredID={scatterplotHoveredID}
@@ -456,17 +473,12 @@
       </div>
       <div class="action-toolbar">
         <SegmentedControl
-          bind:selected={visibleSidebarPane}
-          options={['Current', 'Saved']}
+          bind:selected={$visibleSidebarPane}
+          options={['Current', 'Saved', 'Recent', 'Suggested']}
         />
       </div>
       <div class="sidebar-content">
-        {#if visibleSidebarPane == SidebarPanes.SAVED}
-          <SelectionBrowser
-            bind:data={$selectionList}
-            on:loadSelection={handleLoadSelection}
-          />
-        {:else if visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
+        {#if $visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
           <DefaultThumbnailViewer
             on:thumbnailClick={handleThumbnailClick}
             on:thumbnailHover={handleThumbnailHover}
@@ -474,9 +486,28 @@
             {dataset}
             primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
             frame={$currentFrame}
-            {previewFrame}
+            previewFrame={$previewFrame}
             {thumbnailIDs}
             numNeighbors={$numNeighbors}
+          />
+        {:else if $visibleSidebarPane == SidebarPanes.SAVED}
+          <SelectionBrowser
+            data={$selectionList}
+            emptyMessage="No saved selections yet! To create one, first select, align, or isolate some points, then click Save Selection."
+            on:loadSelection={handleLoadSelection}
+          />
+        {:else if $visibleSidebarPane == SidebarPanes.RECENT}
+          <SelectionBrowser
+            data={[]}
+            emptyMessage="No recent selections yet! Start selecting some points."
+            on:loadSelection={handleLoadSelection}
+          />
+        {:else if $visibleSidebarPane == SidebarPanes.SUGGESTED}
+          <SelectionBrowser
+            data={$suggestedSelections}
+            loading={$loadingSuggestions}
+            emptyMessage="No suggested selections right now."
+            on:loadSelection={handleLoadSelection}
           />
         {/if}
       </div>

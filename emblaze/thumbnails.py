@@ -98,6 +98,18 @@ class TextThumbnails(Thumbnails):
         descriptions = [items[id_val].get("description", "") for id_val in ids]
         return TextThumbnails(names, descriptions, ids)
     
+    def __getitem__(self, ids):
+        """
+        Returns text thumbnail information for the given IDs.
+        """
+        if isinstance(ids, (list, np.ndarray, set)):
+            return [self[id_val] for id_val in ids]
+        else:
+            result = { "name": self.data.field(Field.NAME, ids) }
+            if self.data.has_field(Field.DESCRIPTION):
+                result["description"] = self.data.field(Field.DESCRIPTION, ids)
+            return result
+    
 MAX_IMAGE_DIM = 100
 MAX_SPRITESHEET_DIM = 1000
  
@@ -131,9 +143,14 @@ class ImageThumbnails(Thumbnails):
         """
         super().__init__("spritesheet")
         if spritesheets is not None:
+            self.images = None
+            self.ids = ImageThumbnails._get_spritesheet_ids(spritesheets)
             self.spritesheets = spritesheets
         else:
-            self.make_spritesheets(images, ids or np.arange(len(images)), grid_dimensions, image_size)
+            self.images = images
+            self.ids = ids or np.arange(len(images))
+            self.make_spritesheets(images, self.ids, grid_dimensions, image_size)
+        self._id_index = {id: i for i, id in enumerate(self.ids)}
         
         if names is not None:
             self.text_data = ColumnarData({
@@ -148,6 +165,22 @@ class ImageThumbnails(Thumbnails):
         else:
             self.text_data = None
         
+    def __getitem__(self, ids):
+        """
+        Returns image/text thumbnail information for the given IDs.
+        """
+        if isinstance(ids, (list, np.ndarray, set)):
+            return [self[id_val] for id_val in ids]
+        else:
+            result = {}
+            if self.images is not None:
+                result["image"] = self.images[self._id_index[ids]]
+            if self.text_data is not None:
+                result["name"] = self.text_data.field(Field.NAME, ids)
+                if self.text_data.has_field(Field.DESCRIPTION):
+                    result["description"] = self.text_data.field(Field.DESCRIPTION, ids)
+            return result
+
     def to_json(self):
         result = super().to_json()
         result["spritesheets"] = self.spritesheets
@@ -176,12 +209,7 @@ class ImageThumbnails(Thumbnails):
         assert "spritesheets" in data, "JSON object must contain a 'spritesheets' field"
         spritesheets = data["spritesheets"]
         if ids is None:
-            ids = sorted([k for sp in spritesheets.values() for k in sp["spec"]["frames"].keys()])
-            try:
-                ids = [int(id_val) for id_val in ids]
-            except:
-                pass
-            ids = sorted(ids)
+            ids = ImageThumbnails._get_spritesheet_ids(spritesheets)
             
         names = None
         descriptions = None
@@ -196,6 +224,15 @@ class ImageThumbnails(Thumbnails):
                                names=names,
                                descriptions=descriptions)
 
+    @staticmethod
+    def _get_spritesheet_ids(spritesheets):
+        ids = sorted([k for sp in spritesheets.values() for k in sp["spec"]["frames"].keys()])
+        try:
+            ids = [int(id_val) for id_val in ids]
+        except:
+            pass
+        ids = sorted(ids)
+        
     def make_spritesheets(self, images, ids, grid_dimensions=None, image_size=None):
         """
         Generates a set of spritesheets from the given image data.
