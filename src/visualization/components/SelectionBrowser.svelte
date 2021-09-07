@@ -5,6 +5,7 @@
 
   const dispatch = createEventDispatcher();
   export let data = [];
+  export let thumbnailProvider = null;
   export let loading = false;
 
   export let emptyMessage = 'No items yet';
@@ -23,7 +24,7 @@
 {:else}
   <div class="selection-browser-container">
     {#each data as entry}
-      <SelectionBrowseItem {entry} on:loadSelection />
+      <SelectionBrowseItem {entry} {thumbnailProvider} on:loadSelection />
     {/each}
   </div>
 {/if}

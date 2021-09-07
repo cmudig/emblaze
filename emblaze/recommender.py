@@ -11,7 +11,7 @@ class SelectionRecommender:
     recommender works by pre-generating a list of clusters at various
     granularities, then sorting them by relevance to a given query.
     """
-    def __init__(self, embeddings):
+    def __init__(self, embeddings, progress_fn=None):
         super().__init__()
         self.embeddings = embeddings
         self.clusters = {}
@@ -19,6 +19,8 @@ class SelectionRecommender:
             for j in range(len(self.embeddings)):
                 if i == j: continue
                 self.clusters[(i, j)] = self._make_clusters(i, j, np.log10(len(self.embeddings[i])))
+                if progress_fn is not None:
+                    progress_fn(len(self.clusters) / (len(self.embeddings) * (len(self.embeddings) - 1)))
         
     def _make_neighbor_mat(self, neighbors, num_columns):
         """Converts a list of neighbor indexes into a one-hot encoded matrix."""
@@ -101,7 +103,7 @@ class SelectionRecommender:
                 })
         return clusters
     
-    def query(self, ids_of_interest=None, frame_idx=None, preview_frame_idx=None, bounding_box=None, num_results=10):
+    def query(self, ids_of_interest=None, frame_idx=None, preview_frame_idx=None, bounding_box=None, num_results=10, id_type="selection"):
         """
         Returns a list of clusters in sorted order of relevance that match the
         given filters.
@@ -118,6 +120,8 @@ class SelectionRecommender:
             min y, and max y. At least one point in each cluster will be required to
             be within the bounding box.
         num_results: Maximum number of results to return.
+        id_type: The type of ID that ids_of_interest corresponds to. This goes into
+            the explanation string for clusters, e.g. "shares 3 points with <id_type>".
         """
         
         # Determine which frames to look for clusters in
@@ -130,18 +134,9 @@ class SelectionRecommender:
         else:
             frames_to_check = [(i, j) for i in range(len(self.embeddings)) for j in range(len(self.embeddings))]
             
-        # Assemble a list of candidates
-        candidates = []
-        if ids_of_interest is not None:
-            neighbor_ids = set([n
-                                for frame in self.embeddings.embeddings
-                                for n in frame.field(Field.NEIGHBORS, ids_of_interest)[:,:NUM_NEIGHBORS_FOR_SEARCH].flatten()])
-            ids_of_interest = set(ids_of_interest)
-        else:
-            neighbor_ids = None
-            
         assert ids_of_interest is None or bounding_box is None, "Cannot query with both ids_of_interest and bounding_box"
             
+        candidates = []
         for frame_key in frames_to_check:
             base_frame = self.embeddings[frame_key[0]]
             if bounding_box is not None:
@@ -149,31 +144,43 @@ class SelectionRecommender:
             else:
                 positions = None
                 
+            # Assemble a list of candidates
+            if ids_of_interest is not None:
+                neighbor_ids = set([n for n in self.embeddings[frame_key[0]].field(Field.NEIGHBORS, ids_of_interest)[:,:NUM_NEIGHBORS_FOR_SEARCH].flatten()])
+                ids_of_interest = set(ids_of_interest)
+            else:
+                neighbor_ids = None    
+
             for cluster in self.clusters[frame_key]:
+                frame_labels = "{} &rarr; {}".format(self.embeddings[cluster['frame']].label, self.embeddings[cluster['previewFrame']].label)
                 base_score = (cluster['consistency'] + cluster['gain'] + cluster['loss']) * np.log(len(cluster['ids']))
-                if bounding_box is not None:
+                if ids_of_interest is not None and cluster['ids'] & ids_of_interest:
+                    candidates.append((cluster, 
+                                       base_score * len(cluster['ids'] & ids_of_interest) / len(cluster['ids']),
+                                       "shares {} points with {} {}".format(len(cluster['ids'] & ids_of_interest), id_type, frame_labels)))
+                elif neighbor_ids is not None and cluster['ids'] & neighbor_ids:
+                    candidates.append((cluster,
+                                       base_score * 0.5 * len(cluster['ids'] & ids_of_interest) / len(cluster['ids']),
+                                      "shares {} points with neighbors of {} {}".format(len(cluster['ids'] & neighbor_ids), id_type, frame_labels)))
+                elif bounding_box is not None:
                     point_positions = positions[base_frame.index(np.array(list(cluster['ids'])))]
                     num_within = np.sum((point_positions[:,0] >= bounding_box[0]) *
                               (point_positions[:,0] <= bounding_box[1]) *
                               (point_positions[:,1] >= bounding_box[2]) *
                               (point_positions[:,1] <= bounding_box[3]))
                     if num_within > 0:
-                        candidates.append((cluster, base_score * np.log(num_within), "within bounding box"))
+                        candidates.append((cluster, base_score * np.log(num_within), frame_labels))
                 elif ids_of_interest is None:
-                    candidates.append((cluster, base_score, "matches frames"))
-                elif cluster['ids'] & ids_of_interest:
-                    candidates.append((cluster, 
-                                       base_score * len(cluster['ids'] & ids_of_interest) / len(cluster['ids']),
-                                       "shares {} points".format(len(cluster['ids'] & ids_of_interest))))
-                elif neighbor_ids is not None and cluster['ids'] & neighbor_ids:
-                    candidates.append((cluster,
-                                       base_score * 0.5 * len(cluster['ids'] & ids_of_interest) / len(cluster['ids']),
-                                      "shares {} points with neighbors".format(len(cluster['ids'] & neighbor_ids))))
+                    if frame_idx is not None and preview_frame_idx is not None:
+                        reason = "matches frames "
+                    elif preview_frame_idx is not None:
+                        reason = "matches preview frame "
+                    candidates.append((cluster, base_score, "{}{}".format(reason, frame_labels)))
         
         # Sort candidates and make sure they don't include overlapping IDs
         seen_ids = set()
         results = []
-        for cluster, score, reason in sorted(candidates, key=lambda x: x[1], reverse=True):
+        for cluster, _, reason in sorted(candidates, key=lambda x: x[1], reverse=True):
             if cluster['ids'] & seen_ids: continue
             results.append((cluster, reason))
             seen_ids |= cluster['ids']

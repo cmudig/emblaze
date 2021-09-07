@@ -21,6 +21,7 @@
   import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
   import SegmentedControl from './visualization/components/SegmentedControl.svelte';
   import SettingsPane from './visualization/components/SettingsPane.svelte';
+  import { ThumbnailProvider } from './visualization/models/thumbnails';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -87,6 +88,8 @@
 
   let canvas;
   let thumbnailViewer;
+
+  let thumbnailProvider;
 
   //let thumbnailHoveredID = null;
   let scatterplotHoveredID = null;
@@ -186,17 +189,34 @@
     }
 
     $visibleSidebarPane = SidebarPanes.CURRENT;
+    setTimeout(() => canvas.showVicinityOfClickedPoint());
   }
 
   // Suggested selections
 
   let suggestedSelections = syncValue(model, 'suggestedSelections', []);
+  let suggestedSelectionWindow = syncValue(
+    model,
+    'suggestedSelectionWindow',
+    []
+  );
   let loadingSuggestions = syncValue(model, 'loadingSuggestions', false);
+  let loadingSuggestionsProgress = syncValue(
+    model,
+    'loadingSuggestionsProgress',
+    0.0
+  );
   let recomputeSuggestionsFlag = syncValue(
     model,
     'recomputeSuggestionsFlag',
     false
   );
+
+  function suggestInViewport(bbox) {
+    if (!canvas) return;
+    $suggestedSelectionWindow = bbox;
+    $recomputeSuggestionsFlag = true;
+  }
 
   // Thumbnails
 
@@ -246,7 +266,9 @@
     if (!!td && !!td.format) dataset.addThumbnails(td);
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
-    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
+    if (!!thumbnailProvider) thumbnailProvider.destroy();
+    console.log('setting thumbnail provider');
+    thumbnailProvider = new ThumbnailProvider(dataset);
     updatePointSelectorOptions();
   }
 
@@ -448,6 +470,7 @@
           selectionUnits={!!$selectionUnit
             ? ['pixels', $selectionUnit]
             : ['pixels']}
+          on:viewportChanged={(e) => suggestInViewport(e.detail)}
         />
         {#if showLegend}
           <div class="legend-container">
@@ -484,6 +507,7 @@
             on:thumbnailHover={handleThumbnailHover}
             bind:this={thumbnailViewer}
             {dataset}
+            {thumbnailProvider}
             primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
             frame={$currentFrame}
             previewFrame={$previewFrame}
@@ -493,19 +517,27 @@
         {:else if $visibleSidebarPane == SidebarPanes.SAVED}
           <SelectionBrowser
             data={$selectionList}
+            {thumbnailProvider}
             emptyMessage="No saved selections yet! To create one, first select, align, or isolate some points, then click Save Selection."
             on:loadSelection={handleLoadSelection}
           />
         {:else if $visibleSidebarPane == SidebarPanes.RECENT}
           <SelectionBrowser
             data={[]}
+            {thumbnailProvider}
             emptyMessage="No recent selections yet! Start selecting some points."
             on:loadSelection={handleLoadSelection}
           />
         {:else if $visibleSidebarPane == SidebarPanes.SUGGESTED}
           <SelectionBrowser
             data={$suggestedSelections}
+            {thumbnailProvider}
             loading={$loadingSuggestions}
+            loadingMessage={'Loading suggestions' +
+              ($loadingSuggestionsProgress > 0.0
+                ? ` (${($loadingSuggestionsProgress * 100.0).toFixed(0)}%)`
+                : '') +
+              '...'}
             emptyMessage="No suggested selections right now."
             on:loadSelection={handleLoadSelection}
           />
@@ -608,6 +640,7 @@
     overflow-y: scroll;
     box-sizing: border-box;
   }
+
   .search-bar {
     display: flex;
     align-items: center;
