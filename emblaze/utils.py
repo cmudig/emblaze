@@ -65,3 +65,14 @@ def affine_transform(transform, points):
     reshaped_points = np.vstack([points.T, np.ones((1, points.shape[0]))])
     transformed = np.dot(affine_to_matrix(transform), reshaped_points)
     return transformed.T[:,:2] # pylint: disable=unsubscriptable-object
+
+def standardize_json(o, round_digits=4):
+    """
+    Produces a JSON-compliant object by replacing numpy types with system types
+    and rounding floats to save space.
+    """
+    if isinstance(o, (float, np.float32, np.float64)): return round(float(o), round_digits)
+    if isinstance(o, (np.int64, np.int32)): return int(o)
+    if isinstance(o, dict): return {standardize_json(k, round_digits): standardize_json(v, round_digits) for k, v in o.items()}
+    if isinstance(o, (list, tuple)): return [standardize_json(x, round_digits) for x in o]
+    return o

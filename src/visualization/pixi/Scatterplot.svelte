@@ -21,7 +21,8 @@
   export let hoverable = false;
   export let thumbnail = false;
 
-  export let rFactor = 1.0;
+  export let pointRadius = 3.0;
+  let rFactor = 1.0;
   export let colorScale = (c) => c;
 
   export let frame = null;
@@ -41,6 +42,9 @@
 
   export let animateTransitions = false;
   export let scalesNeutral = true;
+
+  export let performanceMode = true;
+  let showPointBorders = true;
 
   export let thumbnailsURL = null;
 
@@ -159,6 +163,7 @@
       viewportManager.getTransformInfo(),
       rFactor
     );
+    scatterplot.showPointBorders = showPointBorders;
     scatterplot.addTo(pixiApp.stage, pixiApp.ticker, pixiApp.renderer);
     let renderMargin = 50.0;
     scatterplot.setRenderBox([
@@ -175,6 +180,9 @@
     actualWidth = container.clientWidth;
     actualHeight = container.clientHeight;
   }
+
+  $: if (!!scatterplot) scatterplot.showPointBorders = showPointBorders;
+  $: if (!!scatterplot) scatterplot.rFactor = rFactor;
 
   // Texture loading (for image labels)
 
@@ -230,6 +238,10 @@
   var mouseDown = false;
   var mouseMoved = true;
 
+  var hoveringDelayPassed = false;
+  var hoveringDelayTimeout = null;
+  const HoveringDelayInterval = 200;
+
   var lastX = 0;
   var lastY = 0;
 
@@ -266,6 +278,16 @@
           hoveredID = null;
           dispatch('datahover', hoveredID);
         }
+      })
+      .on('mouseenter', () => {
+        hoveringDelayTimeout = setTimeout(
+          () => (hoveringDelayPassed = true),
+          HoveringDelayInterval
+        );
+      })
+      .on('mouseleave', () => {
+        hoveringDelayPassed = false;
+        if (!!hoveringDelayTimeout) clearTimeout(hoveringDelayTimeout);
       })
       .on('mousewheel', handleMouseWheel)
       .on('DOMMouseScroll', handleMouseWheel)
@@ -306,7 +328,7 @@
 
         viewportManager.translateBy(-dx, -dy);
       }
-    } else if (!mouseDown) {
+    } else if (!mouseDown && hoveringDelayPassed) {
       let hoveredItem = getElementAtPoint(mouseX, mouseY);
       if (!!hoveredItem && hoveredItem.type == 'mark') {
         // centerX = mouseX;
@@ -418,10 +440,12 @@
   }
 
   $: if (inRadiusselect) {
+    console.log('updating selection order');
     updateSelectionOrder(selectionUnit);
-    if (!!scatterplot.radiusselect)
-      scatterplot.radiusselect.visible = selectionUnit == 'pixels';
   }
+
+  $: if (!!scatterplot && !!scatterplot.radiusselect)
+    scatterplot.radiusselect.visible = selectionUnit == 'pixels';
 
   const SelectionRadiusPadding = 10;
 
@@ -595,10 +619,13 @@
     {previewInfo}
     {numNeighbors}
     {idsOfInterest}
+    {pointRadius}
     colorScale={(c) => colorScale(c)}
     colorFormat="rgbArray"
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}
     yScale={!!viewportManager ? (y) => viewportManager.scaleY(y) : null}
+    highlightFocusedPoints={!performanceMode}
+    showPreviewLines={!performanceMode}
     bind:marks
     bind:filterIDs
     bind:hoveredID
@@ -609,12 +636,16 @@
   />
   <ScatterplotViewportState
     bind:this={viewportManager}
+    {data}
     width={actualWidth}
     height={actualHeight}
     xExtent={!!data ? data.getXExtent() : null}
     yExtent={!!data ? data.getYExtent() : null}
     {padding}
     {followingMarks}
+    {pointRadius}
+    bind:rFactor
+    bind:showPointBorders
     on:update={rescale}
   />
 </div>

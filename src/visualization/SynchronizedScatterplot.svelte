@@ -20,9 +20,12 @@
 
   // Props passed directly to scatterplot
   export let padding = 0.3;
-  export let rFactor = 1.0;
+  export let pointRadius = 3.0;
   export let colorScheme = { value: d3.interpolateTurbo };
   export let animateTransitions = false;
+
+  // when number of points is greater than this, performance mode will be used
+  export let performanceModeThreshold = 2000;
 
   // Enable/disable interaction
   export let hoverable = false;
@@ -65,6 +68,18 @@
     colorScale = data.colorScale(colorScheme);
   }
 
+  // Display
+
+  let performanceMode = false;
+
+  $: if (!!data) {
+    performanceMode =
+      (filterIDs == null ||
+        filterIDs.length == 0 ||
+        filterIDs.length > performanceModeThreshold) &&
+      data.frame(0).length > performanceModeThreshold;
+  }
+
   // Selection
 
   var prevClickedIDs = null;
@@ -76,7 +91,7 @@
 
   function updateSelection() {
     if (clickedIDs.length > 0) {
-      showVicinityOfClickedPoint();
+      if (clickedIDs.length == 1) showVicinityOfClickedPoint();
       if (filterIDs.length > 0) filterToSelection(true);
     } else {
       followingIDs = [];
@@ -131,7 +146,7 @@
 
   // Radius select button
   let showRadiusselectButton = false;
-  $: showRadiusselectButton = clickedIDs.length == 1;
+  $: showRadiusselectButton = clickedIDs.length == 1 && filterIDs.length == 0;
 
   export let inRadiusselect = false;
   const DefaultSelectionRadius = 30;
@@ -177,9 +192,13 @@
     let detailMessage = null;
     let labels = datapt.label;
     if (!!labels) {
-      if (!labels.hasOwnProperty(frame))
+      if (!!labels[frame]) detailMessage = labels[frame].text || null;
+      else if (
+        Object.keys(labels).length > 0 &&
+        !!labels[Object.keys(labels)[0]]
+      )
         detailMessage = labels[Object.keys(labels)[0]].text || null;
-      else detailMessage = labels[frame].text || null;
+      else detailMessage = null;
     }
     if (!!detailMessage) detailMessage = ' - ' + detailMessage;
     else detailMessage = '';
@@ -288,7 +307,8 @@
     {height}
     {hoverable}
     {thumbnail}
-    {rFactor}
+    {pointRadius}
+    {performanceMode}
     {colorScale}
     {animateTransitions}
     {thumbnailsURL}

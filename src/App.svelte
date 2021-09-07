@@ -64,7 +64,7 @@
 
   function updateDataset(rawData) {
     if (!!rawData && !!rawData['data']) {
-      dataset = new Dataset(rawData, 'color', 3);
+      dataset = new Dataset(rawData, 'color');
       if (!!$frameTransformations && $frameTransformations.length > 0)
         updateTransformations(false);
     } else {
@@ -184,8 +184,14 @@
 
   function handleThumbnailClick(event) {
     if (event.detail.keyPressed) {
-      if ($selectedIDs.indexOf(event.detail.id) == -1) {
+      let idx = $selectedIDs.indexOf(event.detail.id);
+      if (idx == -1) {
         $selectedIDs = [...$selectedIDs, event.detail.id];
+      } else {
+        $selectedIDs = [
+          ...$selectedIDs.slice(0, idx),
+          ...$selectedIDs.slice(idx + 1),
+        ];
       }
     } else {
       $selectedIDs = [event.detail.id];
@@ -225,6 +231,7 @@
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
     if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
+    updatePointSelectorOptions();
   }
 
   // Previews and settings
@@ -368,30 +375,35 @@
   </Modal>
 
   <div class="vis-container">
-    <div class="thumbnail-container">
-      {#each [...d3.range(dataset.frameCount)] as i}
-        <div class="thumbnail-item">
-          <ScatterplotThumbnail
-            on:click={() => {
-              if (previewFrame == i) {
-                $currentFrame = i;
-                previewFrame = -1;
-              } else if ($currentFrame != i) previewFrame = i;
-              else if ($currentFrame == i) previewFrame = -1;
-            }}
-            isSelected={$currentFrame == i}
-            isPreviewing={previewFrame == i && previewFrame != $currentFrame}
-            colorScale={!!dataset
-              ? dataset.colorScale(colorSchemeObject)
-              : null}
-            data={dataset}
-            frame={!!dataset ? dataset.frame(i) : null}
-            accentColor={!!$frameColors && $frameColors.length > i
-              ? $frameColors[i]
-              : null}
-          />
-        </div>
-      {/each}
+    <div class="frame-sidebar">
+      <div class="frame-thumbnail-container">
+        {#each [...d3.range(dataset.frameCount)] as i}
+          <div class="frame-thumbnail-item">
+            <ScatterplotThumbnail
+              on:click={() => {
+                if (previewFrame == i) {
+                  $currentFrame = i;
+                  previewFrame = -1;
+                } else if ($currentFrame != i) previewFrame = i;
+                else if ($currentFrame == i) previewFrame = -1;
+              }}
+              isSelected={$currentFrame == i}
+              isPreviewing={previewFrame == i && previewFrame != $currentFrame}
+              colorScale={!!dataset
+                ? dataset.colorScale(colorSchemeObject)
+                : null}
+              data={dataset}
+              frame={!!dataset ? dataset.frame(i) : null}
+              accentColor={!!$frameColors && $frameColors.length > i
+                ? $frameColors[i]
+                : null}
+            />
+          </div>
+        {/each}
+      </div>
+      <div class="frame-sidebar-message">
+        Similar color stripes = similar arrangements of selected points
+      </div>
     </div>
 
     <div class="scatterplot">
@@ -514,14 +526,31 @@
     /*border: 2px solid #bbb;*/
   }
 
-  .thumbnail-item {
+  .frame-sidebar {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #bbb;
+  }
+
+  .frame-thumbnail-item {
     border-bottom: 1px solid #bbb;
   }
 
-  .thumbnail-container {
-    flex-shrink: 0;
+  .frame-thumbnail-container {
+    flex-grow: 1;
     overflow-y: scroll;
-    border: 1px solid #bbb;
+  }
+
+  .frame-sidebar-message {
+    color: #999;
+    background-color: #eee;
+    border-top: 1px solid #bbb;
+    padding: 8px;
+    text-align: center;
+    font-size: 8pt;
+    max-width: 100px;
+    line-height: 1.3em;
   }
 
   .legend-container {

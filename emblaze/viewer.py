@@ -50,6 +50,7 @@ class Viewer(DOMWidget):
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
+    _defaultFrameColors = None
     # List of 3 x 3 matrices (expressed as 3x3 nested lists)
     frameTransformations = List([]).tag(sync=True)
     
@@ -205,13 +206,18 @@ class Viewer(DOMWidget):
             thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
             thread.start()
     
+    @observe("selectedIDs")
+    def _observe_selected_ids(self, change):
+        """Change the color scheme to match the arrangement of the selected IDs."""
+        self.update_frame_colors()    
+            
     def reset_alignment(self):
         """Removes any transformations applied to the embedding frames."""
         self.frameTransformations = [
             np.eye(3).tolist()
             for i in range(len(self.embeddings))
         ]
-        self.frameColors = compute_colors(self.embeddings)
+        self.update_frame_colors()
         
     def align_to_points(self, point_ids, peripheral_points):
         """
@@ -224,7 +230,7 @@ class Viewer(DOMWidget):
         """
         if point_ids is None:
             self.reset_alignment()
-            self.frameColors = compute_colors(self.embeddings)
+            self.frameColors = []
             return
     
         transformations = []
@@ -239,7 +245,23 @@ class Viewer(DOMWidget):
                 allow_flips=False)).tolist())
 
         self.frameTransformations = transformations
-        self.frameColors = compute_colors(self.embeddings, point_ids, peripheral_points)
+        self.update_frame_colors()
+
+    def update_frame_colors(self):
+        """
+        Updates the colors of the color stripes next to each frame thumbnail in
+        the sidebar. The selectedIDs property is used first, followed by
+        alignedIDs if applicable.
+        """
+        if not self.selectedIDs:
+            if self.alignedIDs:
+                self.frameColors = compute_colors(self.embeddings, self.alignedIDs)
+            else:
+                if self._defaultFrameColors is None:
+                    self._defaultFrameColors = compute_colors(self.embeddings, None)
+                self.frameColors = self._defaultFrameColors
+        else:
+            self.frameColors = compute_colors(self.embeddings, self.selectedIDs)
 
     @observe("selectionOrderRequest")
     def _compute_selection_order(self, change):
@@ -253,10 +275,9 @@ class Viewer(DOMWidget):
         # metric = change.new['metric'] # for now, unused
         
         hi_d = self.embeddings[frame].get_root()
-        distances = hi_d.distances(ids=[centerID], comparison_ids=hi_d.ids).flatten()
+        order, distances = hi_d.neighbor_distances(ids=[centerID], n_neighbors=2000)
         
-        order = np.argsort(distances)
         self.selectionOrder = [(int(x), y) for x, y in np.vstack([
-            order,
-            distances[order]
+            order.flatten(),
+            distances.flatten()
         ]).T.tolist()]

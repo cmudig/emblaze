@@ -40,6 +40,7 @@ export class PixiOutlineDecoration extends PIXI.Graphics {
   decoration = null;
   lastColor = null;
   colorHex = null;
+  rFactor = 1.0;
 
   constructor(dec) {
     super();
@@ -68,7 +69,7 @@ export class PixiOutlineDecoration extends PIXI.Graphics {
 
     this.clear();
     this.lineStyle(this.decoration.attr('lineWidth'), this.colorHex, alpha);
-    this.drawCircle(x, y, this.decoration.attr('r'));
+    this.drawCircle(x, y, this.decoration.attr('r') * this.rFactor);
   }
 }
 

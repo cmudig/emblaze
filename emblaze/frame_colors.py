@@ -9,6 +9,9 @@ from sklearn.cluster import AgglomerativeClustering
 from colormath.color_objects import LabColor, HSLColor
 from colormath.color_conversions import convert_color
 import itertools
+from numba import jit
+from numba.typed import List
+from .utils import Field
 
 def _clustered_ordering(distances):
     """
@@ -70,9 +73,11 @@ def _arrange_around_circle(distances, offset, ordering):
     # thetas += np.random.uniform(0.0, 2.0 * np.pi) # random offset
     
     # Determine radius
-    R = np.abs(theta_distances - np.mean(theta_distances)).mean() / np.max(theta_distances)
+    # R = np.abs(theta_distances - np.mean(theta_distances)).mean() / np.max(theta_distances)
     # absolute distance-based measure
     # R = (distances.sum() / (len(distances.flatten()) - len(distances))) / max_dist
+    R = np.max([distances[i,j] for i in range(distances.shape[0]) for j in range(distances.shape[1]) if i != j])
+    R = 0.5 * np.log10(1 + 19 * R)
     
     # Create the points
     reduced = np.zeros((len(ordering), 2))
@@ -81,7 +86,33 @@ def _arrange_around_circle(distances, offset, ordering):
     
     return reduced
 
-def compute_colors(frames, ids_of_interest=None, peripheral_points=None, scale_factor=1.0):
+@jit(nopython=True)
+def inverse_intersection(seqs1, seqs2, mask_ids, outer):
+    """
+    Computes the inverse intersection size of the two lists of sets.
+    
+    Args:
+        seqs1: A list of iterables
+        seqs2: Another list of iterables - must be the same length as seqs1
+        mask_ids: Iterable containing objects that should be EXCLUDED if outer
+            is True, and INCLUDED if outer is False
+        outer: Determines the behavior of mask_ids
+        
+    Returns:
+        A numpy array of inverse intersection sizes between each element in
+        seqs1 and seqs2.
+    """
+    distances = np.zeros(len(seqs1))
+    mask_ids = set(mask_ids)
+    for i in range(len(seqs1)):
+        set1 = set([n for n in seqs1[i] if (n in mask_ids) != outer])
+        set2 = set([n for n in seqs2[i] if (n in mask_ids) != outer])
+        num_intersection = len(set1 & set2)
+        if len(set1) or len(set2):
+            distances[i] = 1 / (1 + num_intersection)
+    return distances
+
+def compute_colors(frames, ids_of_interest=None, scale_factor=1.0):
     """
     Computes HSV colors for each frame.
     
@@ -96,16 +127,41 @@ def compute_colors(frames, ids_of_interest=None, peripheral_points=None, scale_f
     Returns:
         A list of HSV colors, expressed as tuples of (hue, saturation, value).
     """
-    
+
     # First compute a distance matrix for the IDs for each frame
-    neighbor_dists = [np.log(1 + frame.distances(ids_of_interest, peripheral_points).flatten()) for frame in frames]
-    
-    clusteredness = np.array([np.abs(ndists - np.mean(ndists)).mean() / np.max(ndists)
-                              for ndists in neighbor_dists])
-    distances = np.zeros((len(frames), len(frames)))
+    outer_jaccard_distances = np.zeros((len(frames), len(frames)))
+    inner_jaccard_distances = np.zeros((len(frames), len(frames)))
     for i in range(len(frames)):
+        frame_1_neighbors = frames[i].field(Field.NEIGHBORS, ids_of_interest)
         for j in range(len(frames)):
-            distances[i, j] = np.sqrt(np.mean((neighbor_dists[i] - neighbor_dists[j]) ** 2))
+            frame_2_neighbors = frames[j].field(Field.NEIGHBORS, ids_of_interest)
+            # If the id set is the entire frame, there will be no outer neighbors
+            # so we can just leave this at zero
+            if ids_of_interest is not None and len(ids_of_interest):
+                outer_jaccard_distances[i,j] = np.mean(inverse_intersection(frame_1_neighbors,
+                                                                            frame_2_neighbors,
+                                                                            List(ids_of_interest),
+                                                                            True))
+            inner_jaccard_distances[i,j] = np.mean(inverse_intersection(frame_1_neighbors,
+                                                                        frame_2_neighbors,
+                                                                        List(ids_of_interest or frames[j].ids.tolist()),
+                                                                        False))
+
+    if ids_of_interest is not None and len(ids_of_interest):
+        if len(ids_of_interest) == 1:
+            distances = outer_jaccard_distances
+        else:
+            distances = 0.5 * (outer_jaccard_distances + inner_jaccard_distances)
+    else:
+        distances = inner_jaccard_distances
+    
+    # Compute clusteredness in each frame (only used to determine offset of colors)
+    distance_sample = ids_of_interest
+    if distance_sample is None:
+        distance_sample = np.random.choice(frames[0].ids, size=1000, replace=False).tolist()
+    neighbor_dists = [np.log(1 + frame.distances(distance_sample, distance_sample).flatten()) for frame in frames]
+    clusteredness = np.array([np.abs(ndists - np.mean(ndists)).mean() / np.maximum(np.max(ndists), 1e-3)
+                            for ndists in neighbor_dists])
 
     # Compute an ordering using hierarchical clustering
     ordering_indexes = _clustered_ordering(distances)

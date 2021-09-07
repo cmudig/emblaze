@@ -25,6 +25,7 @@
   export let colorScale = null;
   export let xScale = null;
   export let yScale = null;
+  export let pointRadius = 1.0;
 
   export let hoveredID = null;
   export let selectedIDs = [];
@@ -50,6 +51,14 @@
 
   // Number of neighbors to display
   export let numNeighbors = 10;
+
+  // set this to false to save on animations and additional decorations when
+  // displaying lots of data
+  export let highlightFocusedPoints = true;
+
+  // set this to false to disable showing preview lines when displaying lots
+  // of data
+  export let showPreviewLines = true;
 
   // Constants
 
@@ -163,10 +172,14 @@
   }
 
   function _getPointAlpha(mark) {
-    if (filter.size > 0 && !filter.has(mark.id)) return 0.0;
+    // if (filter.size > 0 && !filter.has(mark.id)) return 0.0;
     let alpha = frame.get(mark.id, 'alpha') || 0.0;
 
-    if (highlightedPoints.size != 0 && !highlightedPoints.has(mark.id))
+    if (
+      highlightFocusedPoints &&
+      highlightedPoints.size != 0 &&
+      !highlightedPoints.has(mark.id)
+    )
       alpha *= 0.3;
 
     return alpha;
@@ -174,10 +187,12 @@
 
   function _getPointRadius(mark) {
     let r = frame.get(mark.id, 'r') || 0.0;
-    if (highlightedPoints.size != 0 && !highlightedPoints.has(mark.id))
-      r *= 0.7;
-    if (selectedIDs.includes(mark.id)) r *= 1.5;
-    return r;
+    if (highlightFocusedPoints) {
+      if (highlightedPoints.size != 0 && !highlightedPoints.has(mark.id))
+        r *= 0.7;
+      if (selectedIDs.includes(mark.id)) r *= 1.5;
+    }
+    return r * pointRadius;
   }
 
   function _getLineAlpha(mark) {
@@ -304,7 +319,7 @@
   function updatePreviewLines(info) {
     if (!marks || !previewLinePool) return;
 
-    if (!!info) {
+    if (!!info && showPreviewLines) {
       marks.forEach((mark) => {
         if (_getLineAlpha(mark) <= 0.01) {
           previewLinePool.hide(mark.id);
@@ -337,7 +352,17 @@
   let prevFilter = null;
   $: if (prevFilter !== filter) {
     if (prevFilter != null && !!marks) {
-      marks.animateComputed('alpha', interpolateTo, defaultDuration);
+      marks.setVisibleMarks(filter);
+      if (highlightFocusedPoints) {
+        marks.animateComputed('r', interpolateTo, defaultDuration);
+        marks.animateComputed('alpha', interpolateTo, defaultDuration);
+      } else {
+        marks.updateComputed('x');
+        marks.updateComputed('y');
+        marks.updateComputed('r');
+        marks.updateComputed('alpha');
+        marks.updateComputed('fillStyle');
+      }
     }
     if (previewInfo != null) {
       updatePreviewLines(previewInfo);
@@ -360,9 +385,9 @@
 
   $: if (
     !!marks &&
-    (prevHoverID != hoveredID ||
-      prevSelectedIDs != selectedIDs ||
-      prevAlignedIDs != alignedIDs)
+    (prevHoverID !== hoveredID ||
+      prevSelectedIDs !== selectedIDs ||
+      prevAlignedIDs !== alignedIDs)
   ) {
     updateSelectionState(
       prevHoverID,
@@ -374,6 +399,7 @@
     );
     prevHoverID = hoveredID;
     prevSelectedIDs = selectedIDs;
+    prevAlignedIDs = alignedIDs;
   }
 
   $: if (!!marks && prevTentativeSelectedIDs != tentativeSelectedIDs) {
@@ -398,7 +424,6 @@
     } else if (element.type == 'halo') {
       selectedIDs = element.ids;
     }
-    hoveredID = null;
   }
 
   // This function should make ALL the mutations that arise from selection/alignment
@@ -413,7 +438,6 @@
   ) {
     oldSelectedIDs.forEach((id) => selectionDecorationPool.hide(id));
     newSelectedIDs.forEach((id) => selectionDecorationPool.show(id));
-
     updateAlignmentDecorations();
     updateStarGraphVisibility();
     updateLabelVisibility();
@@ -430,9 +454,26 @@
         })
         .flat()
     );
-    marks.animateComputed('r', interpolateTo, defaultDuration);
-    marks.animateComputed('alpha', interpolateTo, defaultDuration);
+    if (highlightFocusedPoints) {
+      marks.animateComputed('r', interpolateTo, defaultDuration);
+      marks.animateComputed('alpha', interpolateTo, defaultDuration);
+    }
     updateLabelVisibility();
+  }
+
+  let oldHighlightFocusedPoints = true;
+  $: if (oldHighlightFocusedPoints != highlightFocusedPoints) {
+    if (!!marks) {
+      marks.updateComputed('r');
+      marks.updateComputed('alpha');
+    }
+    oldHighlightFocusedPoints = highlightFocusedPoints;
+  }
+
+  let oldShowPreviewLines = true;
+  $: if (oldShowPreviewLines != showPreviewLines && !!previewInfo) {
+    updatePreviewLines(previewInfo);
+    oldShowPreviewLines = showPreviewLines;
   }
 
   function setupDecorationPools() {
