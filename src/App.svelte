@@ -171,9 +171,12 @@
 
       $currentFrame = event.detail.currentFrame || $currentFrame;
       $alignedFrame = event.detail.alignedFrame || $currentFrame;
-      $selectedIDs = (event.detail.selectedIDs || []).filter(filterFn);
-      $alignedIDs = (event.detail.alignedIDs || []).filter(filterFn);
-      $filterIDs = (event.detail.filterIDs || []).filter(filterFn);
+      if (!!event.detail.selectedIDs)
+        $selectedIDs = event.detail.selectedIDs.filter(filterFn);
+      if (!!event.detail.alignedIDs)
+        $alignedIDs = event.detail.alignedIDs.filter(filterFn);
+      if (!!event.detail.filterIDs)
+        $filterIDs = event.detail.filterIDs.filter(filterFn);
 
       if (invalidSelected || invalidAligned || invalidFilter) {
         let messages = [];
@@ -190,6 +193,67 @@
 
     $visibleSidebarPane = SidebarPanes.CURRENT;
     setTimeout(() => canvas.showVicinityOfClickedPoint());
+  }
+
+  // Selection history
+
+  let selectionHistory = syncValue(model, 'selectionHistory', []);
+  const HistoryLength = 25;
+
+  let oldSelectedIDs = [];
+
+  $: if (oldSelectedIDs !== $selectedIDs) {
+    updateSelectionHistory(oldSelectedIDs, $selectedIDs);
+    oldSelectedIDs = $selectedIDs;
+  }
+
+  function _makeSelectionObjectFromList(selection) {
+    return {
+      selectionName: '',
+      selectionDescription: new Date().toLocaleTimeString(),
+      selectedIDs: selection,
+      currentFrame: $currentFrame,
+    };
+  }
+
+  function updateSelectionHistory(oldSelection, newSelection) {
+    if (newSelection.length == 0) return;
+
+    let selectionObj = _makeSelectionObjectFromList(newSelection);
+
+    // Remove identical selection if it exists
+    let idx = $selectionHistory.findIndex((sel) => {
+      return (
+        sel.selectedIDs.every((id) => newSelection.includes(id)) &&
+        newSelection.every((id) => sel.selectedIDs.includes(id))
+      );
+    });
+    if (idx >= 0)
+      $selectionHistory = [
+        ...$selectionHistory.slice(0, idx),
+        ...$selectionHistory.slice(idx + 1),
+      ];
+
+    // Update history - either update the most recent one or add a new one.
+    // If selectionHistory has a value in it, the first value should always be
+    // equal to oldSelection
+    if ($selectionHistory.length == 0 || oldSelection.length == 0) {
+      $selectionHistory = [selectionObj, ...$selectionHistory];
+    } else {
+      let numAdded = newSelection.filter((id) => !oldSelection.includes(id))
+        .length;
+      let numRemoved = oldSelection.filter((id) => !newSelection.includes(id))
+        .length;
+      if (numAdded + numRemoved <= 1) {
+        $selectionHistory = [selectionObj, ...$selectionHistory.slice(1)];
+      } else {
+        $selectionHistory = [selectionObj, ...$selectionHistory];
+      }
+    }
+
+    if ($selectionHistory.length > HistoryLength) {
+      $selectionHistory = $selectionHistory.slice(0, HistoryLength);
+    }
   }
 
   // Suggested selections
@@ -523,7 +587,7 @@
           />
         {:else if $visibleSidebarPane == SidebarPanes.RECENT}
           <SelectionBrowser
-            data={[]}
+            data={$selectionHistory}
             {thumbnailProvider}
             emptyMessage="No recent selections yet! Start selecting some points."
             on:loadSelection={handleLoadSelection}

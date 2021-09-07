@@ -73,6 +73,8 @@ class Viewer(DOMWidget):
     recomputeSuggestionsFlag = Bool(False).tag(sync=True)
     suggestedSelectionWindow = List([]).tag(sync=True)
     
+    selectionHistory = List([]).tag(sync=True)
+    
     # Contains three keys: centerID (int), frame (int), unit (string)
     selectionUnit = Unicode("").tag(sync=True)
     selectionOrderRequest = Dict({}).tag(sync=True)

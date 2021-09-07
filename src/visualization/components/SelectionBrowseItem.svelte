@@ -21,6 +21,17 @@
       .slice(0, isOpen ? 10 : 3);
   }
 
+  let selectionComponents = [];
+  $: {
+    selectionComponents = [];
+    if (!!entry.selectedIDs && entry.selectedIDs.length > 0)
+      selectionComponents.push(`${entry.selectedIDs.length} selected`);
+    if (!!entry.alignedIDs && entry.alignedIDs.length > 0)
+      selectionComponents.push(`${entry.alignedIDs.length} aligned`);
+    if (!!entry.filterIDs && entry.filterIDs.length > 0)
+      selectionComponents.push(`${entry.filterIDs.length} filtered`);
+  }
+
   let isOpen = false;
   const toggle = () => (isOpen = !isOpen);
   const dispatch = createEventDispatcher();
@@ -60,10 +71,7 @@
   {/if}
   {#if isOpen}
     <p class="detail summary-text">
-      Frame {entry.currentFrame}, {entry.selectedIDs.length} selected, {entry
-        .alignedIDs.length} aligned, {entry.filterIDs.length > 0
-        ? `${entry.filterIDs.length} filtered`
-        : 'no filter'}
+      Frame {entry.currentFrame}, {selectionComponents.join(', ')}
     </p>
     {#if !!entry.frameColors}
       <div class="frame-color-bar">
