@@ -359,6 +359,7 @@
     on:dataclick
     on:click
     on:viewportChanged
+    on:logEvent
   />
   {#if !thumbnail}
     <div id="button-panel">

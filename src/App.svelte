@@ -10,7 +10,7 @@
   // Creates a Svelte store (https://svelte.dev/tutorial/writable-stores) that syncs with the named Traitlet in widget.ts and example.py.
   import { syncValue } from './stores';
   import { Dataset, PreviewMode } from './visualization/models/dataset.js';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { writable } from 'svelte/store';
   import { fade } from 'svelte/transition';
   import DefaultThumbnailViewer from './visualization/components/DefaultThumbnailViewer.svelte';
@@ -81,9 +81,15 @@
     }
   }
 
-  $: onMount(() => {
+  onMount(() => {
     // This logs if the widget is initialized successfully
     console.log('Mounted DR widget successfully');
+
+    setupLogging();
+  });
+
+  onDestroy(() => {
+    destroyLogging();
   });
 
   let canvas;
@@ -148,6 +154,12 @@
   function saveSelection(event) {
     $saveSelectionFlag = true;
     isOpenDialogue = false;
+    logEvent({
+      type: 'saveSelection',
+      numSelected: $selectedIDs.length,
+      numAligned: $alignedIDs.length,
+      numFiltered: $filterIDs.length,
+    });
   }
 
   function handleLoadSelection(event) {
@@ -418,6 +430,43 @@
     );
     //if ($selectionOrder.length > 0) $selectionOrderRequest = {};
   }
+
+  // Interaction logging
+
+  let loggingEnabled = syncValue(model, 'loggingEnabled', false);
+  let interactionHistory = syncValue(model, 'interactionHistory', []);
+  let saveInteractionsFlag = syncValue(model, 'saveInteractionsFlag', false);
+
+  let loggingInterval = null;
+  const LoggingIntervalTime = 10000;
+
+  function setupLogging() {
+    if (!!loggingInterval) clearInterval(loggingInterval);
+    loggingInterval = setInterval(saveInteractionHistory, LoggingIntervalTime);
+  }
+
+  function destroyLogging() {
+    if (!!loggingInterval) clearInterval(loggingInterval);
+    loggingInterval = null;
+  }
+
+  function saveInteractionHistory() {
+    $saveInteractionsFlag = true;
+  }
+
+  function logEvent(event) {
+    event.timestamp = new Date().toString();
+    $interactionHistory = [...$interactionHistory, event];
+  }
+
+  $: logEvent({
+    type: 'frameChange',
+    current: $currentFrame,
+    preview: $previewFrame,
+  });
+
+  $: logEvent({ type: 'align', numPoints: $alignedIDs.length });
+  $: logEvent({ type: 'filter', numPoints: $filterIDs.length });
 </script>
 
 {#if $isLoading}
@@ -535,6 +584,7 @@
             ? ['pixels', $selectionUnit]
             : ['pixels']}
           on:viewportChanged={(e) => suggestInViewport(e.detail)}
+          on:logEvent={(e) => logEvent(e.detail)}
         />
         {#if showLegend}
           <div class="legend-container">
@@ -555,7 +605,10 @@
           options={pointSelectorOptions}
           maxOptions={10}
           fillWidth={true}
-          on:change={(e) => ($selectedIDs = [e.detail])}
+          on:change={(e) => {
+            $selectedIDs = [e.detail];
+            logEvent({ type: 'selection', source: 'autocomplete' });
+          }}
         />
       </div>
       <div class="action-toolbar">
@@ -577,20 +630,27 @@
             previewFrame={$previewFrame}
             {thumbnailIDs}
             numNeighbors={$numNeighbors}
+            on:logEvent={(e) => logEvent(e.detail)}
           />
         {:else if $visibleSidebarPane == SidebarPanes.SAVED}
           <SelectionBrowser
             data={$selectionList}
             {thumbnailProvider}
             emptyMessage="No saved selections yet! To create one, first select, align, or isolate some points, then click Save Selection."
-            on:loadSelection={handleLoadSelection}
+            on:loadSelection={(e) => {
+              handleLoadSelection(e);
+              logEvent({ type: 'loadSelection', source: 'saved' });
+            }}
           />
         {:else if $visibleSidebarPane == SidebarPanes.RECENT}
           <SelectionBrowser
             data={$selectionHistory}
             {thumbnailProvider}
             emptyMessage="No recent selections yet! Start selecting some points."
-            on:loadSelection={handleLoadSelection}
+            on:loadSelection={(e) => {
+              handleLoadSelection(e);
+              logEvent({ type: 'loadSelection', source: 'recents' });
+            }}
           />
         {:else if $visibleSidebarPane == SidebarPanes.SUGGESTED}
           <SelectionBrowser
@@ -603,7 +663,10 @@
                 : '') +
               '...'}
             emptyMessage="No suggested selections right now."
-            on:loadSelection={handleLoadSelection}
+            on:loadSelection={(e) => {
+              handleLoadSelection(e);
+              logEvent({ type: 'loadSelection', source: 'suggested' });
+            }}
           />
         {/if}
       </div>

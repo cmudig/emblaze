@@ -15,7 +15,7 @@ from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
-from .utils import Field, SidebarPane, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
+from .utils import Field, LoggingHelper, SidebarPane, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
 from .recommender import SelectionRecommender
 from datetime import datetime
 import json
@@ -87,6 +87,16 @@ class Viewer(DOMWidget):
     previewMode = Unicode("").tag(sync=True)
     previewParameters = Dict({}).tag(sync=True)
     
+    # List of past interactions with the widget. When saveInteractionsFlag is
+    # set to True by the widget, the backend will save the interaction history
+    # to file using the loggingHelper.
+    interactionHistory = List([]).tag(sync=True)
+    saveInteractionsFlag = Bool(False).tag(sync=True)
+    
+    # Whether to save interaction history/logs to file
+    loggingEnabled = Bool(False).tag(sync=True)
+    loggingHelper = None
+    
     def __init__(self, *args, **kwargs):
         """
         embeddings: An EmbeddingSet object.
@@ -98,6 +108,10 @@ class Viewer(DOMWidget):
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
+        if self.loggingEnabled:
+            self.loggingHelper = LoggingHelper('emblaze_logs_{}.json'.format(datetime.now().strftime("%Y%m%d_%H%M%S")),
+                                               {'numFrames': len(self.embeddings),
+                                                'numPoints': len(self.embeddings[0])})
         if not self.colorScheme:
             self.colorScheme = self.detect_color_scheme()
         if not self.previewMode:
@@ -381,3 +395,14 @@ class Viewer(DOMWidget):
         """Recomputes the suggested selections."""        
         thread = threading.Thread(target=self._update_suggested_selections_background)
         thread.start()
+
+    @observe("saveInteractionsFlag")
+    def _save_interactions(self, change):
+        """
+        The widget sets the flag to save interaction history periodically
+        because we can't use a timer in the backend.
+        """
+        if change.new:
+            self.loggingHelper.add_logs(self.interactionHistory)
+            self.interactionHistory = []
+            self.saveInteractionsFlag = False

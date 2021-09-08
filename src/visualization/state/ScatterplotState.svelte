@@ -424,6 +424,7 @@
     } else if (element.type == 'halo') {
       selectedIDs = element.ids;
     }
+    return selectedIDs;
   }
 
   // This function should make ALL the mutations that arise from selection/alignment

@@ -1,7 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { base64ToBlob, getOSName } from '../utils/helpers';
   import Thumbnail from './Thumbnail.svelte';
+
+  const dispatch = createEventDispatcher();
+
   export let width = null;
   export let height = null;
 
@@ -27,20 +30,6 @@
   let showingFullSelection = false;
 
   // Retrieving and displaying info
-
-  /*
-    if (!!diffInfo) {
-      if (!!diffInfo.count) {
-      d.rate = { count: diffInfo.count, total: diffInfo.total };
-    } else if (!!diffInfo.gained || !!diffInfo.lost) {
-      result.change = {
-        gained: diffInfo.gained,
-        lost: diffInfo.lost,
-        total: diffInfo,
-      };
-    }
-    }
-  */
 
   $: updateNeighborArrays(thumbnailIDs, frame, previewFrame);
 
@@ -287,7 +276,13 @@
       >
         {#each thumbnailIDs.slice(0, showingFullSelection ? thumbnailIDs.length : MaxSelectionVisible) as id}
           <Thumbnail
-            on:thumbnailClick
+            on:thumbnailClick={(e) => {
+              dispatch('thumbnailClick', e.detail);
+              dispatch('logEvent', {
+                type: 'selection',
+                source: 'selectionList',
+              });
+            }}
             on:thumbnailHover
             {thumbnailProvider}
             {id}
@@ -326,7 +321,13 @@
         {/if}
         {#each secondaryItems as item}
           <Thumbnail
-            on:thumbnailClick
+            on:thumbnailClick={(e) => {
+              dispatch('thumbnailClick', e.detail);
+              dispatch('logEvent', {
+                type: 'selection',
+                source: 'selectionNeighbors',
+              });
+            }}
             on:thumbnailHover
             mini={previewSecondaryItems.length > 0}
             {thumbnailProvider}
@@ -348,7 +349,13 @@
           <div class="subheader">{dataset.frame(previewFrame).title}</div>
           {#each previewSecondaryItems as item}
             <Thumbnail
-              on:thumbnailClick
+              on:thumbnailClick={(e) => {
+                dispatch('thumbnailClick', e.detail);
+                dispatch('logEvent', {
+                  type: 'selection',
+                  source: 'selectionPreviewNeighbors',
+                });
+              }}
               on:thumbnailHover
               mini
               {thumbnailProvider}
@@ -379,7 +386,13 @@
       <div class="thumbnail-column">
         {#each commonChangeItems as item}
           <Thumbnail
-            on:thumbnailClick
+            on:thumbnailClick={(e) => {
+              dispatch('thumbnailClick', e.detail);
+              dispatch('logEvent', {
+                type: 'selection',
+                source: 'commonChanges',
+              });
+            }}
             on:thumbnailHover
             mini
             {thumbnailProvider}
