@@ -9,9 +9,8 @@ from sklearn.cluster import AgglomerativeClustering
 from colormath.color_objects import LabColor, HSLColor
 from colormath.color_conversions import convert_color
 import itertools
-from numba import jit
 from numba.typed import List
-from .utils import Field
+from .utils import Field, inverse_intersection
 
 def _clustered_ordering(distances):
     """
@@ -85,32 +84,6 @@ def _arrange_around_circle(distances, offset, ordering):
         reduced[index] = [R * np.cos(theta), R * np.sin(theta)]
     
     return reduced
-
-@jit(nopython=True)
-def inverse_intersection(seqs1, seqs2, mask_ids, outer):
-    """
-    Computes the inverse intersection size of the two lists of sets.
-    
-    Args:
-        seqs1: A list of iterables
-        seqs2: Another list of iterables - must be the same length as seqs1
-        mask_ids: Iterable containing objects that should be EXCLUDED if outer
-            is True, and INCLUDED if outer is False
-        outer: Determines the behavior of mask_ids
-        
-    Returns:
-        A numpy array of inverse intersection sizes between each element in
-        seqs1 and seqs2.
-    """
-    distances = np.zeros(len(seqs1))
-    mask_ids = set(mask_ids)
-    for i in range(len(seqs1)):
-        set1 = set([n for n in seqs1[i] if (n in mask_ids) != outer])
-        set2 = set([n for n in seqs2[i] if (n in mask_ids) != outer])
-        num_intersection = len(set1 & set2)
-        if len(set1) or len(set2):
-            distances[i] = 1 / (1 + num_intersection)
-    return distances
 
 def compute_colors(frames, ids_of_interest=None, scale_factor=1.0):
     """

@@ -54,6 +54,9 @@
             detail={false}
           />
         {/each}
+        <p class="accordion-subtitle">
+          and {entry.selectedIDs.length - (isOpen ? 6 : 3)} others
+        </p>
       </div>
     {:else}
       <p class="accordion-subtitle">
@@ -69,20 +72,20 @@
   {#if !!entry.selectionDescription}
     <p class="detail">{@html entry.selectionDescription}</p>
   {/if}
+  {#if !!entry.frameColors}
+    <div class="frame-color-bar">
+      {#each entry.frameColors as color}
+        <div
+          class="frame-color-bar-item"
+          style={`background-color: hsla(${color[0]}, ${color[1]}%, ${color[2]}%, 1.0);`}
+        />
+      {/each}
+    </div>
+  {/if}
   {#if isOpen}
     <p class="detail summary-text">
       Frame {entry.currentFrame}, {selectionComponents.join(', ')}
     </p>
-    {#if !!entry.frameColors}
-      <div class="frame-color-bar">
-        {#each entry.frameColors as color}
-          <div
-            class="frame-color-bar-item"
-            style={`background-color: hsla(${color[0]}, ${color[1]}%, ${color[2]}%, 1.0);`}
-          />
-        {/each}
-      </div>
-    {/if}
     <button
       class="load-selection-btn btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
       on:click={() => dispatch('loadSelection', entry)}
@@ -125,6 +128,7 @@
 
   .accordion-subtitle {
     font-size: 13px;
+    flex: 0 0 auto;
   }
 
   .detail {
@@ -133,7 +137,7 @@
 
   .frame-color-bar {
     width: 100%;
-    height: 12px;
+    height: 6px;
     display: flex;
     justify-content: stretch;
     margin: 4px 0;
@@ -146,6 +150,7 @@
   .wrap-container {
     display: flex;
     flex-wrap: wrap;
-    width: 100%;
+    flex: 1;
+    align-items: center;
   }
 </style>

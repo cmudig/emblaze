@@ -232,6 +232,7 @@ class ImageThumbnails(Thumbnails):
         except:
             pass
         ids = sorted(ids)
+        return ids
         
     def make_spritesheets(self, images, ids, grid_dimensions=None, image_size=None):
         """

@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
-from .utils import Field
+from .utils import Field, inverse_intersection
+from numba.typed import List
 import collections
 
 NUM_NEIGHBORS_FOR_SEARCH = 10
@@ -65,6 +66,16 @@ class SelectionRecommender:
         """
         return (np.sum(1 - self._pairwise_jaccard_distances(frame.field(Field.NEIGHBORS, ids=ids))) - len(ids)) / (len(ids) * (len(ids) - 1))
         
+    def _inner_change_score(self, ids, frame_1, frame_2):
+        """
+        Computes the inverse intersection of the neighbor sets in the given
+        two frames.
+        """
+        return np.mean(inverse_intersection(frame_1.field(Field.NEIGHBORS, ids=ids),
+                                            frame_2.field(Field.NEIGHBORS, ids=ids),
+                                            List(ids),
+                                            False))
+        
     def _change_score(self, change_set, ids, num_neighbors=10):
         """
         Computes a score estimating the consistency in the changes for the given
@@ -98,6 +109,7 @@ class SelectionRecommender:
                     'frame': idx_1,
                     'previewFrame': idx_2,
                     'consistency': self._consistency_score(ids, self.embeddings[idx_1]), 
+                    'innerChange': self._inner_change_score(ids, self.embeddings[idx_1], self.embeddings[idx_2]),
                     'gain': self._change_score([gained_ids[i] for i in ids], ids), 
                     'loss': self._change_score([lost_ids[i] for i in ids], ids)
                 })
@@ -132,9 +144,7 @@ class SelectionRecommender:
             else:
                 frames_to_check = [(frame_idx, j) for j in range(len(self.embeddings)) if frame_idx != j]
         else:
-            frames_to_check = [(i, j) for i in range(len(self.embeddings)) for j in range(len(self.embeddings))]
-            
-        assert ids_of_interest is None or bounding_box is None, "Cannot query with both ids_of_interest and bounding_box"
+            frames_to_check = [(i, j) for i in range(len(self.embeddings)) for j in range(len(self.embeddings)) if i != j]
             
         candidates = []
         for frame_key in frames_to_check:
@@ -153,7 +163,7 @@ class SelectionRecommender:
 
             for cluster in self.clusters[frame_key]:
                 frame_labels = "{} &rarr; {}".format(self.embeddings[cluster['frame']].label, self.embeddings[cluster['previewFrame']].label)
-                base_score = (cluster['consistency'] + cluster['gain'] + cluster['loss']) * np.log(len(cluster['ids']))
+                base_score = (cluster['consistency'] + cluster['innerChange'] + cluster['gain'] + cluster['loss']) * np.log(len(cluster['ids']))
                 if ids_of_interest is not None and cluster['ids'] & ids_of_interest:
                     candidates.append((cluster, 
                                        base_score * len(cluster['ids'] & ids_of_interest) / len(cluster['ids']),
@@ -175,6 +185,8 @@ class SelectionRecommender:
                         reason = "matches frames "
                     elif preview_frame_idx is not None:
                         reason = "matches preview frame "
+                    else:
+                        reason = ""
                     candidates.append((cluster, base_score, "{}{}".format(reason, frame_labels)))
         
         # Sort candidates and make sure they don't include overlapping IDs
