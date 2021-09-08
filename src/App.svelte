@@ -275,6 +275,11 @@
     'recomputeSuggestionsFlag',
     false
   );
+  let performanceSuggestionsMode = syncValue(
+    model,
+    'performanceSuggestionsMode',
+    false
+  );
 
   function suggestInViewport(bbox) {
     if (!canvas) return;
@@ -602,7 +607,9 @@
                 ? ` (${($loadingSuggestionsProgress * 100.0).toFixed(0)}%)`
                 : '') +
               '...'}
-            emptyMessage="No suggested selections right now."
+            emptyMessage="No suggested selections right now.{performanceSuggestionsMode
+              ? ' Suggestions are in performance mode - will compute when less than 1,000 points are displayed.'
+              : ''}"
             on:loadSelection={handleLoadSelection}
           />
         {/if}

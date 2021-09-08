@@ -23,6 +23,8 @@ import glob
 import threading
 import numpy as np
 
+PERFORMANCE_SUGGESTIONS_RECOMPUTE = 1000
+PERFORMANCE_SUGGESTIONS_ENABLE = 10000
 
 class Viewer(DOMWidget):
     """TODO: Add docstring here
@@ -72,6 +74,8 @@ class Viewer(DOMWidget):
     loadingSuggestionsProgress = Float(0.0).tag(sync=True)
     recomputeSuggestionsFlag = Bool(False).tag(sync=True)
     suggestedSelectionWindow = List([]).tag(sync=True)
+    # if True, recompute suggestions fully but only when less than PERFORMANCE_SUGGESTIONS_RECOMPUTE points are visible
+    performanceSuggestionsMode = Bool(False).tag(sync=True)
     
     selectionHistory = List([]).tag(sync=True)
     
@@ -98,6 +102,7 @@ class Viewer(DOMWidget):
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
+        self.performanceSuggestionsMode = len(self.embeddings[0]) >= PERFORMANCE_SUGGESTIONS_ENABLE
         if not self.colorScheme:
             self.colorScheme = self.detect_color_scheme()
         if not self.previewMode:
@@ -224,6 +229,12 @@ class Viewer(DOMWidget):
         self.update_frame_colors()
         self._update_suggested_selections()
             
+    @observe("filterIDs")
+    def _observe_filter_ids(self, change):
+        """Update suggestions when the filter changes (in performance mode)."""
+        if self.performanceSuggestionsMode:
+            self._update_suggested_selections()
+            
     def reset_alignment(self):
         """Removes any transformations applied to the embedding frames."""
         self.frameTransformations = [
@@ -302,13 +313,13 @@ class Viewer(DOMWidget):
         elif change.new == SidebarPane.SAVED:
             self.refresh_saved_selections()
 
-    def _get_filter_points(self, selection):
+    def _get_filter_points(self, selection, in_frame=None):
         """Returns a list of points that should be visible if the given selection
         is highlighted."""
         filtered_points = set()
         for id_val in selection:
             filtered_points.add(id_val)
-        for frame in self.embeddings.embeddings:
+        for frame in self.embeddings.embeddings if in_frame is None else [in_frame]:
             filtered_points |= set(frame.field(Field.NEIGHBORS, ids=selection)[:,:self.numNeighbors].flatten().tolist())
         return list(filtered_points)
     
@@ -322,62 +333,83 @@ class Viewer(DOMWidget):
         """Function that runs in the background to recompute suggested selections."""
         self.recomputeSuggestionsFlag = False
         if self.loadingSuggestions: 
-            self.recomputeSuggestionsFlag = True
             return
+
+        filter_points = None
+        self.performanceSuggestionsMode = len(self.embeddings[0]) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        if self.performanceSuggestionsMode:
+            # Check if sufficiently few points are visible to show suggestions
+            if self.filterIDs and len(self.filterIDs) <= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
+                filter_points = self.filterIDs
+            elif self.suggestedSelectionWindow:
+                filter_points = self.embeddings[self.currentFrame].within_bbox(self.suggestedSelectionWindow)
+            if (self.visibleSidebarPane != SidebarPane.SUGGESTED or
+                not filter_points or
+                len(filter_points) > PERFORMANCE_SUGGESTIONS_RECOMPUTE):
+                print("Not computing suggestions,", filter_points)
+                self.suggestedSelections = []
+                return
+            # Add the vicinity around these points just to be safe
+            filter_points = self._get_filter_points(filter_points, in_frame=self.embeddings[self.currentFrame])
+            
         self.loadingSuggestions = True
         
         try:
-            if self.recommender is None:
+            if self.recommender is None or self.performanceSuggestionsMode:
                 self.loadingSuggestionsProgress = 0.0
                 def progress_fn(progress):
                     self.loadingSuggestionsProgress = progress
-                self.recommender = SelectionRecommender(self.embeddings, progress_fn=progress_fn)
+                self.recommender = SelectionRecommender(
+                    self.embeddings, 
+                    progress_fn=progress_fn,
+                    frame_idx=self.currentFrame if self.performanceSuggestionsMode else None,
+                    preview_frame_idx=self.previewFrame if self.performanceSuggestionsMode and self.previewFrame >= 0 and self.previewFrame != self.currentFrame else None,
+                    filter_points=filter_points)
 
-            if self.visibleSidebarPane == SidebarPane.SUGGESTED:
-                # Only compute suggestions when pane is open
-                if self.previewFrame >= 0 and self.previewFrame != self.currentFrame:
-                    preview_frame_idx = self.previewFrame
-                else:
-                    preview_frame_idx = None
-                    
-                if self.selectedIDs:
-                    ids_of_interest = self.selectedIDs
-                    id_type = "selection"
-                elif self.filterIDs:
-                    ids_of_interest = self.filterIDs
-                    id_type = "visible points"
-                else:
-                    ids_of_interest = None
-                    id_type = None
+        
+            # Only compute suggestions when pane is open
+            if self.previewFrame >= 0 and self.previewFrame != self.currentFrame:
+                preview_frame_idx = self.previewFrame
+            else:
+                preview_frame_idx = None
+                
+            if self.selectedIDs:
+                ids_of_interest = self.selectedIDs
+                id_type = "selection"
+            elif self.filterIDs:
+                ids_of_interest = self.filterIDs
+                id_type = "visible points"
+            else:
+                ids_of_interest = None
+                id_type = None
 
-                suggestions = []
-                results = self.recommender.query(ids_of_interest=ids_of_interest,
-                                                frame_idx=self.currentFrame,
-                                                preview_frame_idx=preview_frame_idx,
-                                                bounding_box=self.suggestedSelectionWindow or None,
-                                                num_results=25,
-                                                id_type=id_type)
-                for result, reason in results:
-                    ids = list(result["ids"])
-                    suggestions.append({
-                        "selectionName": "",
-                        "selectionDescription": reason,
-                        "currentFrame": result["frame"],
-                        "selectedIDs": ids,
-                        "alignedIDs": ids,
-                        "filterIDs": self._get_filter_points(ids),
-                        "frameColors": compute_colors(self.embeddings, ids)
-                    })
-                self.suggestedSelections = suggestions
+            suggestions = []
+            print("ids of interest:", ids_of_interest)
+            results = self.recommender.query(ids_of_interest=ids_of_interest,
+                                            frame_idx=self.currentFrame,
+                                            preview_frame_idx=preview_frame_idx,
+                                            bounding_box=self.suggestedSelectionWindow or None,
+                                            num_results=25,
+                                            id_type=id_type)
+            for result, reason in results:
+                ids = list(result["ids"])
+                suggestions.append({
+                    "selectionName": "",
+                    "selectionDescription": reason,
+                    "currentFrame": result["frame"],
+                    "selectedIDs": ids,
+                    "alignedIDs": ids,
+                    "filterIDs": self._get_filter_points(ids),
+                    "frameColors": compute_colors(self.embeddings, ids)
+                })
+            self.suggestedSelections = suggestions
                 
             self.loadingSuggestions = False
-            if self.recomputeSuggestionsFlag:
-                self._update_suggested_selections_background()
         except Exception as e:
             self.loadingSuggestions = False
             raise e
         
     def _update_suggested_selections(self):
-        """Recomputes the suggested selections."""        
+        """Recomputes the suggested selections."""
         thread = threading.Thread(target=self._update_suggested_selections_background)
         thread.start()

@@ -101,23 +101,27 @@ def compute_colors(frames, ids_of_interest=None, scale_factor=1.0):
         A list of HSV colors, expressed as tuples of (hue, saturation, value).
     """
 
+    distance_sample = ids_of_interest or frames[0].ids.tolist()
+    if len(distance_sample) > 1000:
+        distance_sample = np.random.choice(distance_sample, size=1000, replace=False).tolist()
+        
     # First compute a distance matrix for the IDs for each frame
     outer_jaccard_distances = np.zeros((len(frames), len(frames)))
     inner_jaccard_distances = np.zeros((len(frames), len(frames)))
     for i in range(len(frames)):
-        frame_1_neighbors = frames[i].field(Field.NEIGHBORS, ids_of_interest)
+        frame_1_neighbors = frames[i].field(Field.NEIGHBORS, distance_sample)
         for j in range(len(frames)):
-            frame_2_neighbors = frames[j].field(Field.NEIGHBORS, ids_of_interest)
+            frame_2_neighbors = frames[j].field(Field.NEIGHBORS, distance_sample)
             # If the id set is the entire frame, there will be no outer neighbors
             # so we can just leave this at zero
             if ids_of_interest is not None and len(ids_of_interest):
                 outer_jaccard_distances[i,j] = np.mean(inverse_intersection(frame_1_neighbors,
                                                                             frame_2_neighbors,
-                                                                            List(ids_of_interest),
+                                                                            List(distance_sample),
                                                                             True))
             inner_jaccard_distances[i,j] = np.mean(inverse_intersection(frame_1_neighbors,
                                                                         frame_2_neighbors,
-                                                                        List(ids_of_interest or frames[j].ids.tolist()),
+                                                                        List(distance_sample),
                                                                         False))
 
     if ids_of_interest is not None and len(ids_of_interest):
@@ -129,9 +133,6 @@ def compute_colors(frames, ids_of_interest=None, scale_factor=1.0):
         distances = inner_jaccard_distances
     
     # Compute clusteredness in each frame (only used to determine offset of colors)
-    distance_sample = ids_of_interest
-    if distance_sample is None:
-        distance_sample = np.random.choice(frames[0].ids, size=1000, replace=False).tolist()
     neighbor_dists = [np.log(1 + frame.distances(distance_sample, distance_sample).flatten()) for frame in frames]
     clusteredness = np.array([np.abs(ndists - np.mean(ndists)).mean() / np.maximum(np.max(ndists), 1e-3)
                             for ndists in neighbor_dists])

@@ -3,13 +3,13 @@
 <svelte:options accessors />
 
 <script>
-  import { createEventDispatcher, onDestroy, onMount } from "svelte";
-  import * as d3 from "d3";
-  import D3Canvas from "./D3Canvas.svelte";
-  import LabelCanvas from "./LabelCanvas.svelte";
-  import ScatterplotState from "../state/ScatterplotState.svelte";
-  import { ColorIDMap } from "../utils/helpers";
-  import ScatterplotViewportState from "../state/ScatterplotViewportState.svelte";
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import * as d3 from 'd3';
+  import D3Canvas from './D3Canvas.svelte';
+  import LabelCanvas from './LabelCanvas.svelte';
+  import ScatterplotState from '../state/ScatterplotState.svelte';
+  import { ColorIDMap } from '../utils/helpers';
+  import ScatterplotViewportState from '../state/ScatterplotViewportState.svelte';
 
   // Props
 
@@ -89,7 +89,7 @@
       });
     }
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
   });
 
   onDestroy(() => {
@@ -125,23 +125,23 @@
   // Interaction
 
   function onMouseover() {
-    dispatch("mouseover");
+    dispatch('mouseover');
   }
 
   function onMousedown() {
-    dispatch("mousedown");
+    dispatch('mousedown');
   }
 
   function onMouseup() {
-    dispatch("mouseup");
+    dispatch('mouseup');
   }
 
   function onMouseout() {
     if (thumbnail) {
-      dispatch("mouseout");
+      dispatch('mouseout');
     } else if (hoveredID != null) {
       hoveredID = null;
-      dispatch("datahover", hoveredID);
+      dispatch('datahover', hoveredID);
     }
   }
 
@@ -150,7 +150,7 @@
 
     var color = hiddenCanvas.getColorAtPoint(x, y);
 
-    var colKey = "rgb(" + color[0] + "," + color[1] + "," + color[2] + ")";
+    var colKey = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
     return colorMap.obj(colKey);
   }
 
@@ -158,7 +158,7 @@
     if (!stateManager) return;
 
     // This is currently redundant
-    stateManager.selectElement({ type: "mark", id: pointID }, multi);
+    stateManager.selectElement({ type: 'mark', id: pointID }, multi);
   }
 
   function onMousemove(info) {
@@ -173,14 +173,14 @@
     var mouseY = e.clientY - rect.top; //y position within the element.
     var hoveredElement = getElementAtPoint(mouseX, mouseY);
     let newHoveredID =
-      !!hoveredElement && hoveredElement.type == "mark"
+      !!hoveredElement && hoveredElement.type == 'mark'
         ? hoveredElement.id
         : null;
 
     if (newHoveredID != hoveredID) {
       hoveredID = newHoveredID;
 
-      dispatch("datahover", hoveredID);
+      dispatch('datahover', hoveredID);
     }
   }
 
@@ -209,13 +209,13 @@
     // Find points that are in the multiselect
     clickedIDs = marks
       .filter((mark) => {
-        if (mark.attr("alpha") < 0.01) return false;
-        let x = Math.round(mark.attr("x"));
-        let y = Math.round(mark.attr("y"));
+        if (mark.attr('alpha') < 0.01) return false;
+        let x = Math.round(mark.attr('x'));
+        let y = Math.round(mark.attr('y'));
         return hiddenCanvas.pointIsInMultiselect(x, y);
       })
       .map((mark) => mark.id);
-    dispatch("dataclick", clickedIDs);
+    dispatch('dataclick', clickedIDs);
 
     hiddenCanvas.isMultiselecting = false;
     hiddenCanvas.multiselectPath = [];
@@ -279,6 +279,7 @@
     yExtent={!!data ? data.getYExtent() : null}
     {padding}
     {followingMarks}
+    {thumbnail}
     on:update={rescale}
   />
   <D3Canvas

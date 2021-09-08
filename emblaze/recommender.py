@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from .utils import Field, inverse_intersection
 from numba.typed import List
+from scipy.sparse import csr_matrix
 import collections
 
 NUM_NEIGHBORS_FOR_SEARCH = 10
@@ -12,20 +13,23 @@ class SelectionRecommender:
     recommender works by pre-generating a list of clusters at various
     granularities, then sorting them by relevance to a given query.
     """
-    def __init__(self, embeddings, progress_fn=None):
+    def __init__(self, embeddings, progress_fn=None, frame_idx=None, preview_frame_idx=None, filter_points=None):
         super().__init__()
         self.embeddings = embeddings
         self.clusters = {}
-        for i in range(len(self.embeddings)):
-            for j in range(len(self.embeddings)):
+        embs_first = [frame_idx] if frame_idx is not None else range(len(self.embeddings))
+        embs_second = [preview_frame_idx] if preview_frame_idx is not None else range(len(self.embeddings))
+        total_num_embs = sum(1 for x in embs_first for y in embs_second if x != y)
+        for i in embs_first:
+            for j in embs_second:
                 if i == j: continue
-                self.clusters[(i, j)] = self._make_clusters(i, j, np.log10(len(self.embeddings[i])))
+                self.clusters[(i, j)] = self._make_clusters(i, j, np.log10(len(self.embeddings[i])), filter_points=filter_points)
                 if progress_fn is not None:
-                    progress_fn(len(self.clusters) / (len(self.embeddings) * (len(self.embeddings) - 1)))
+                    progress_fn(len(self.clusters) / total_num_embs)
         
     def _make_neighbor_mat(self, neighbors, num_columns):
         """Converts a list of neighbor indexes into a one-hot encoded matrix."""
-        neighbor_mat = np.zeros((len(neighbors), num_columns + 1))
+        neighbor_mat = np.zeros((len(neighbors), num_columns + 1), dtype=np.uint8)
         if isinstance(neighbors, list):
             max_len = max(len(n) for n in neighbors)
             neighbors_padded = -np.ones((len(neighbors), max_len), dtype=int)
@@ -35,27 +39,35 @@ class SelectionRecommender:
 
         for i in range(neighbors.shape[1]):
             neighbor_mat[np.arange(len(neighbors)), neighbors[:,i] + 1] = 1
-        return neighbor_mat[:,1:]
+        return csr_matrix(neighbor_mat[:,1:])
 
     def _pairwise_jaccard_distances(self, neighbors):
         """Computes the jaccard distance between each row of the given set of neighbors."""
         # Make a one-hot matrix of neighbors
         neighbor_mat = self._make_neighbor_mat(neighbors, max(np.max([n for x in neighbors for n in x]) + 1, len(neighbors)))
+        # Calculate intersection of sets using dot product
         intersection = np.dot(neighbor_mat, neighbor_mat.T)
-        negation = 1 - neighbor_mat
-        union = neighbor_mat.shape[1] - np.dot(negation, negation.T)
-        return 1.0 - intersection / np.maximum(union, 1)
+        del neighbor_mat
+        
+        # Use set trick: len(x | y) = len(x) + len(y) - len(x & y)
+        lengths = np.array([len(n) for n in neighbors], dtype=np.uint16)
+        length_sums = lengths[:,np.newaxis] + lengths[np.newaxis,:]
+        union = np.maximum(length_sums - intersection, np.array([1], dtype=np.uint16), casting='no')
+        del length_sums
+        result = np.zeros((len(neighbors), len(neighbors)), dtype=np.float16)
+        np.true_divide(intersection.todense(), union, out=result)
+        return np.array([1.0], dtype=np.float16) - result
 
-    def _make_neighbor_changes(self, idx_1, idx_2):
+    def _make_neighbor_changes(self, idx_1, idx_2, filter_points=None):
         """
         Computes the sets of gained IDs and lost IDs for the given pair of frames.
         """
         frame_1 = self.embeddings[idx_1]
         frame_2 = self.embeddings[idx_2]
-        frame_1_neighbors = frame_1.field(Field.NEIGHBORS)
-        frame_2_neighbors = frame_2.field(Field.NEIGHBORS)
-        gained_ids = [set(frame_2_neighbors[i]) - set(frame_1_neighbors[i]) for i in range(len(frame_1))]
-        lost_ids = [set(frame_1_neighbors[i]) - set(frame_2_neighbors[i]) for i in range(len(frame_1))]
+        frame_1_neighbors = frame_1.field(Field.NEIGHBORS, ids=filter_points or None)
+        frame_2_neighbors = frame_2.field(Field.NEIGHBORS, ids=filter_points or None)
+        gained_ids = [set(frame_2_neighbors[i]) - set(frame_1_neighbors[i]) for i in range(len(filter_points or frame_1))]
+        lost_ids = [set(frame_1_neighbors[i]) - set(frame_2_neighbors[i]) for i in range(len(filter_points or frame_1))]
 
         return gained_ids, lost_ids
         
@@ -84,11 +96,15 @@ class SelectionRecommender:
         counter = collections.Counter([x for s in change_set for x in s if x not in ids])
         return np.mean([x[1] / len(ids) for x in sorted(counter.items(), key=lambda x: x[1], reverse=True)[:num_neighbors]])
         
-    def _make_clusters(self, idx_1, idx_2, min_cluster_size=1):
+    def _make_clusters(self, idx_1, idx_2, min_cluster_size=1, filter_points=None):
         """
         Produces clusters based on the pairwise distances between the given pair of frames.
         """
-        gained_ids, lost_ids = self._make_neighbor_changes(idx_1, idx_2)
+        filter_points = list(filter_points) if filter_points is not None else None
+        all_ids = np.array(filter_points) if filter_points is not None else self.embeddings[idx_1].ids
+        
+        gained_ids, lost_ids = self._make_neighbor_changes(idx_1, idx_2, filter_points=filter_points)
+        print(len(gained_ids), len(lost_ids))
         distances = (self._pairwise_jaccard_distances(gained_ids) + self._pairwise_jaccard_distances(lost_ids)) / 2
         clusters = []
         
@@ -102,16 +118,17 @@ class SelectionRecommender:
             
             for label, count in zip(*np.unique(cluster_labels, return_counts=True)):
                 if count < min_cluster_size: continue
-                ids = np.arange(len(cluster_labels))[cluster_labels == label].tolist()
+                indexes = np.arange(len(cluster_labels))[cluster_labels == label]
+                ids = all_ids[cluster_labels == label].tolist()
 
                 clusters.append({
-                    'ids': set(self.embeddings[idx_1].ids[ids]),
+                    'ids': set(ids),
                     'frame': idx_1,
                     'previewFrame': idx_2,
                     'consistency': self._consistency_score(ids, self.embeddings[idx_1]), 
                     'innerChange': self._inner_change_score(ids, self.embeddings[idx_1], self.embeddings[idx_2]),
-                    'gain': self._change_score([gained_ids[i] for i in ids], ids), 
-                    'loss': self._change_score([lost_ids[i] for i in ids], ids)
+                    'gain': self._change_score([gained_ids[i] for i in indexes], ids), 
+                    'loss': self._change_score([lost_ids[i] for i in indexes], ids)
                 })
         return clusters
     

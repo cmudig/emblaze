@@ -14,6 +14,7 @@
   export let padding = 0.3;
   export let xExtent = null;
   export let yExtent = null;
+  export let thumbnail = false;
 
   // Point display attributes
   export let pointRadius = 3.0; // this component reads this information
@@ -34,7 +35,7 @@
     scales = new Scales(xExtent, yExtent, [0, width], [0, height], padding);
   }
 
-  $: if (!!scales && !!data) {
+  $: if (!!scales && !!data && !thumbnail) {
     updateScaleBounds();
   }
 
@@ -45,20 +46,15 @@
     // set the max scale such that the closest distance can scale to a certain
     // number of pixels
 
-    let pixelDistance = 100;
+    let pixelDistance = 50;
     let collectedDistances = [];
     data.frames.forEach((frame) => {
       let ids = frame.getIDs();
       ids.forEach((id) => {
         if (Math.random() < 100 / ids.length) {
           let point = frame.byID(id);
-          if (!point.highlightIndexes) return;
           let randomNeighbor = frame.byID(
-            point.highlightIndexes[
-              Math.floor(
-                Math.random() * Math.min(point.highlightIndexes.length, 10)
-              )
-            ]
+            frame.neighbors(id, 25)[Math.floor(Math.random() * 25.0)]
           );
           collectedDistances.push(euclideanDistance(point, randomNeighbor));
         }
@@ -95,11 +91,11 @@
       let scale =
         scales.getDataToUniformScaleFactor() * scales.scaleFactor.get();
       rFactor = Math.max(
-        Math.min((minPointDistance * scale) / (2 * pointRadius), 1.0),
+        Math.min((minPointDistance * 1.5 * scale) / (2 * pointRadius), 1.0),
         0.2
       );
 
-      showPointBorders = minPointDistance * scale >= 20;
+      showPointBorders = minPointDistance * scale >= 10;
     } else {
       let scale = scales.scaleFactor.get();
       rFactor = Math.min(scale / 5.0, 1.0);

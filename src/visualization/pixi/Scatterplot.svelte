@@ -662,6 +662,7 @@
     xExtent={!!data ? data.getXExtent() : null}
     yExtent={!!data ? data.getYExtent() : null}
     {padding}
+    {thumbnail}
     {followingMarks}
     {pointRadius}
     bind:rFactor
