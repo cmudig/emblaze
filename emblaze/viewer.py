@@ -341,12 +341,15 @@ class Viewer(DOMWidget):
             # Check if sufficiently few points are visible to show suggestions
             if self.filterIDs and len(self.filterIDs) <= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
                 filter_points = self.filterIDs
-            elif self.suggestedSelectionWindow:
-                filter_points = self.embeddings[self.currentFrame].within_bbox(self.suggestedSelectionWindow)
+            if self.suggestedSelectionWindow:
+                bbox_points = self.embeddings[self.currentFrame].within_bbox(self.suggestedSelectionWindow)
+                if filter_points:
+                    filter_points = list(set(filter_points) & set(bbox_points))
+                else:
+                    filter_points = bbox_points
             if (self.visibleSidebarPane != SidebarPane.SUGGESTED or
                 not filter_points or
                 len(filter_points) > PERFORMANCE_SUGGESTIONS_RECOMPUTE):
-                print("Not computing suggestions,", filter_points)
                 self.suggestedSelections = []
                 return
             # Add the vicinity around these points just to be safe
@@ -376,15 +379,14 @@ class Viewer(DOMWidget):
             if self.selectedIDs:
                 ids_of_interest = self.selectedIDs
                 id_type = "selection"
-            elif self.filterIDs:
+            elif self.filterIDs and not self.performanceSuggestionsMode:
                 ids_of_interest = self.filterIDs
                 id_type = "visible points"
             else:
                 ids_of_interest = None
-                id_type = None
+                id_type = "visible points" if self.performanceSuggestionsMode else None
 
             suggestions = []
-            print("ids of interest:", ids_of_interest)
             results = self.recommender.query(ids_of_interest=ids_of_interest,
                                             frame_idx=self.currentFrame,
                                             preview_frame_idx=preview_frame_idx,
