@@ -1,5 +1,6 @@
 import numpy as np
 from affine import Affine
+from numba import jit
 
 class Field:
     """Standardized field names for embeddings and projections. These data can
@@ -30,6 +31,13 @@ class PreviewMode:
     """Ways of calculating preview lines."""
     PROJECTION_SIMILARITY = "projectionNeighborSimilarity"
     NEIGHBOR_SIMILARITY = "neighborSimilarity"
+    
+class SidebarPane:
+    """Indexes of sidebar panes in the widget."""
+    CURRENT = 0
+    SAVED = 1
+    RECENT = 2
+    SUGGESTED = 3
 
 FLIP_FACTORS = [
     np.array([1, 1, 1]),
@@ -76,3 +84,29 @@ def standardize_json(o, round_digits=4):
     if isinstance(o, dict): return {standardize_json(k, round_digits): standardize_json(v, round_digits) for k, v in o.items()}
     if isinstance(o, (list, tuple)): return [standardize_json(x, round_digits) for x in o]
     return o
+
+@jit(nopython=True)
+def inverse_intersection(seqs1, seqs2, mask_ids, outer):
+    """
+    Computes the inverse intersection size of the two lists of sets.
+    
+    Args:
+        seqs1: A list of iterables
+        seqs2: Another list of iterables - must be the same length as seqs1
+        mask_ids: Iterable containing objects that should be EXCLUDED if outer
+            is True, and INCLUDED if outer is False
+        outer: Determines the behavior of mask_ids
+        
+    Returns:
+        A numpy array of inverse intersection sizes between each element in
+        seqs1 and seqs2.
+    """
+    distances = np.zeros(len(seqs1))
+    mask_ids = set(mask_ids)
+    for i in range(len(seqs1)):
+        set1 = set([n for n in seqs1[i] if (n in mask_ids) != outer])
+        set2 = set([n for n in seqs2[i] if (n in mask_ids) != outer])
+        num_intersection = len(set1 & set2)
+        if len(set1) or len(set2):
+            distances[i] = 1 / (1 + num_intersection)
+    return distances

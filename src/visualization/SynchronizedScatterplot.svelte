@@ -80,6 +80,11 @@
       data.frame(0).length > performanceModeThreshold;
   }
 
+  // Returns the current viewport as [min x, max x, min y, max y] in data space
+  export function getViewport() {
+    return scatterplot.getViewport();
+  }
+
   // Selection
 
   var prevClickedIDs = null;
@@ -170,7 +175,8 @@
   // Align button
   export let allowAlignment = true;
   let showAlignmentButton = false;
-  $: showAlignmentButton = allowAlignment && clickedIDs.length > 0;
+  $: showAlignmentButton =
+    allowAlignment && (clickedIDs.length > 0 || alignedIDs.length > 0);
 
   let alignedToSelection = false;
   $: alignedToSelection =
@@ -290,6 +296,7 @@
 
   export function showVicinityOfClickedPoint() {
     followingIDs = getVicinityOfPoints(clickedIDs);
+    console.log('showing vicinity:', clickedIDs, followingIDs);
   }
 </script>
 
@@ -351,6 +358,7 @@
     on:datahover
     on:dataclick
     on:click
+    on:viewportChanged
   />
   {#if !thumbnail}
     <div id="button-panel">
@@ -415,19 +423,28 @@
         </button>
       {/if}
       {#if showAlignmentButton && !inRadiusselect}
-        <button
-          disabled={alignedToSelection}
-          type="button"
-          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
-          on:click|preventDefault={clickedIDs.length >= minSelection
-            ? () => (alignedIDs = getVicinityOfPoints(clickedIDs))
-            : () =>
-                alert(
-                  `You must select at least ${minSelection} points to align.`
-                )}
-        >
-          Align</button
-        >
+        {#if clickedIDs.length == 0 || alignedToSelection}
+          <button
+            type="button"
+            class="btn btn-primary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
+            on:click|preventDefault={() => (alignedIDs = [])}
+          >
+            Unalign</button
+          >
+        {:else}
+          <button
+            type="button"
+            class="btn btn-primary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
+            on:click|preventDefault={clickedIDs.length >= minSelection
+              ? () => (alignedIDs = getVicinityOfPoints(clickedIDs))
+              : () =>
+                  alert(
+                    `You must select at least ${minSelection} points to align.`
+                  )}
+          >
+            Align</button
+          >
+        {/if}
       {/if}
       {#if showResetButton && !inRadiusselect}
         <button

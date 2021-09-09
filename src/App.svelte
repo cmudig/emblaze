@@ -21,6 +21,7 @@
   import SaveSelectionPane from './visualization/components/SaveSelectionPane.svelte';
   import SegmentedControl from './visualization/components/SegmentedControl.svelte';
   import SettingsPane from './visualization/components/SettingsPane.svelte';
+  import { ThumbnailProvider } from './visualization/models/thumbnails';
 
   let data = syncValue(model, 'data', {});
   let isLoading = syncValue(model, 'isLoading', true);
@@ -38,7 +39,6 @@
   let colorSchemeObject = ColorSchemes.getColorScheme($colorScheme);
   $: {
     let newScheme = ColorSchemes.getColorScheme($colorScheme);
-    console.log('New color scheme:', newScheme, colorSchemeObject);
     if (!!newScheme) colorSchemeObject = newScheme;
   }
   let previewMode = syncValue(
@@ -56,7 +56,6 @@
     $frameTransformations.length > 0 &&
     !!dataset
   ) {
-    console.log('Transforming', $frameTransformations);
     updateTransformations();
   }
 
@@ -75,7 +74,6 @@
   function updateTransformations(animate = true) {
     dataset.transform($frameTransformations);
     if (!!canvas && animate) {
-      console.log('Updating frame', $currentFrame);
       canvas.animateDatasetUpdate();
     }
   }
@@ -87,6 +85,8 @@
 
   let canvas;
   let thumbnailViewer;
+
+  let thumbnailProvider;
 
   //let thumbnailHoveredID = null;
   let scatterplotHoveredID = null;
@@ -107,7 +107,7 @@
   let previewThumbnailNeighbors = [];
 
   let currentFrame = syncValue(model, 'currentFrame', 0);
-  let previewFrame = -1;
+  let previewFrame = syncValue(model, 'previewFrame', 0);
 
   let saveSelectionFlag = syncValue(model, 'saveSelectionFlag', false);
   let selectionName = syncValue(model, 'selectionName', '');
@@ -121,16 +121,20 @@
   const SidebarPanes = {
     CURRENT: 0,
     SAVED: 1,
+    RECENT: 2,
+    SUGGESTED: 3,
   };
-  let visibleSidebarPane = SidebarPanes.CURRENT; // 0 = current, 1 = saved
-  let loadSelectionFlag = syncValue(model, 'loadSelectionFlag', false);
-  $: $loadSelectionFlag = visibleSidebarPane == SidebarPanes.SAVED;
-  let selectionList = syncValue(model, 'selectionList', []);
-  //$: console.log("selectionList: ", $selectionList);
+  let visibleSidebarPane = syncValue(
+    model,
+    'visibleSidebarPane',
+    SidebarPanes.CURRENT
+  );
 
   let filterIDs = syncValue(model, 'filterIDs', []);
 
   // Saving and loading selections
+
+  let selectionList = syncValue(model, 'selectionList', []);
 
   function openSaveSelectionDialog() {
     $selectionName = '';
@@ -158,15 +162,18 @@
         'This saved selection has an invalid frame number and cannot be loaded.'
       );
     } else {
-      let invalidSelected = !event.detail.selectedIDs.every(filterFn);
-      let invalidAligned = !event.detail.alignedIDs.every(filterFn);
-      let invalidFilter = !event.detail.filterIDs.every(filterFn);
+      let invalidSelected = !(event.detail.selectedIDs || []).every(filterFn);
+      let invalidAligned = !(event.detail.alignedIDs || []).every(filterFn);
+      let invalidFilter = !(event.detail.filterIDs || []).every(filterFn);
 
-      $currentFrame = event.detail.currentFrame;
-      $alignedFrame = event.detail.alignedFrame;
-      $selectedIDs = event.detail.selectedIDs.filter(filterFn);
-      $alignedIDs = event.detail.alignedIDs.filter(filterFn);
-      $filterIDs = event.detail.filterIDs.filter(filterFn);
+      $currentFrame = event.detail.currentFrame || $currentFrame;
+      $alignedFrame = event.detail.alignedFrame || $currentFrame;
+      if (!!event.detail.selectedIDs)
+        $selectedIDs = event.detail.selectedIDs.filter(filterFn);
+      if (!!event.detail.alignedIDs)
+        $alignedIDs = event.detail.alignedIDs.filter(filterFn);
+      if (!!event.detail.filterIDs)
+        $filterIDs = event.detail.filterIDs.filter(filterFn);
 
       if (invalidSelected || invalidAligned || invalidFilter) {
         let messages = [];
@@ -180,7 +187,104 @@
         );
       }
     }
+
+    $visibleSidebarPane = SidebarPanes.CURRENT;
+    setTimeout(() => canvas.showVicinityOfClickedPoint());
   }
+
+  // Selection history
+
+  let selectionHistory = syncValue(model, 'selectionHistory', []);
+  const HistoryLength = 25;
+
+  let oldSelectedIDs = [];
+
+  $: if (oldSelectedIDs !== $selectedIDs) {
+    updateSelectionHistory(oldSelectedIDs, $selectedIDs);
+    oldSelectedIDs = $selectedIDs;
+  }
+
+  function _makeSelectionObjectFromList(selection) {
+    return {
+      selectionName: '',
+      selectionDescription: new Date().toLocaleTimeString(),
+      selectedIDs: selection,
+      currentFrame: $currentFrame,
+    };
+  }
+
+  function updateSelectionHistory(oldSelection, newSelection) {
+    if (newSelection.length == 0) return;
+
+    let selectionObj = _makeSelectionObjectFromList(newSelection);
+
+    // Remove identical selection if it exists
+    let idx = $selectionHistory.findIndex((sel) => {
+      return (
+        sel.selectedIDs.every((id) => newSelection.includes(id)) &&
+        newSelection.every((id) => sel.selectedIDs.includes(id))
+      );
+    });
+    if (idx >= 0)
+      $selectionHistory = [
+        ...$selectionHistory.slice(0, idx),
+        ...$selectionHistory.slice(idx + 1),
+      ];
+
+    // Update history - either update the most recent one or add a new one.
+    // If selectionHistory has a value in it, the first value should always be
+    // equal to oldSelection
+    if ($selectionHistory.length == 0 || oldSelection.length == 0) {
+      $selectionHistory = [selectionObj, ...$selectionHistory];
+    } else {
+      let numAdded = newSelection.filter((id) => !oldSelection.includes(id))
+        .length;
+      let numRemoved = oldSelection.filter((id) => !newSelection.includes(id))
+        .length;
+      if (numAdded + numRemoved <= 1) {
+        $selectionHistory = [selectionObj, ...$selectionHistory.slice(1)];
+      } else {
+        $selectionHistory = [selectionObj, ...$selectionHistory];
+      }
+    }
+
+    if ($selectionHistory.length > HistoryLength) {
+      $selectionHistory = $selectionHistory.slice(0, HistoryLength);
+    }
+  }
+
+  // Suggested selections
+
+  let suggestedSelections = syncValue(model, 'suggestedSelections', []);
+  let suggestedSelectionWindow = syncValue(
+    model,
+    'suggestedSelectionWindow',
+    []
+  );
+  let loadingSuggestions = syncValue(model, 'loadingSuggestions', false);
+  let loadingSuggestionsProgress = syncValue(
+    model,
+    'loadingSuggestionsProgress',
+    0.0
+  );
+  let recomputeSuggestionsFlag = syncValue(
+    model,
+    'recomputeSuggestionsFlag',
+    false
+  );
+  let performanceSuggestionsMode = syncValue(
+    model,
+    'performanceSuggestionsMode',
+    false
+  );
+
+  function suggestInViewport(bbox) {
+    if (!canvas) return;
+    $suggestedSelectionWindow = bbox;
+    $recomputeSuggestionsFlag = true;
+  }
+
+  // Thumbnails
 
   function handleThumbnailClick(event) {
     if (event.detail.keyPressed) {
@@ -205,8 +309,6 @@
 
   let showLegend = true;
 
-  // Thumbnails
-
   $: {
     thumbnailIDs = $selectedIDs;
     thumbnailHover = false;
@@ -230,7 +332,8 @@
     if (!!td && !!td.format) dataset.addThumbnails(td);
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
-    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
+    if (!!thumbnailProvider) thumbnailProvider.destroy();
+    thumbnailProvider = new ThumbnailProvider(dataset);
     updatePointSelectorOptions();
   }
 
@@ -284,7 +387,6 @@
   const SelectionOrderTimeout = 100;
 
   async function selectionOrderFn(pointID, metric) {
-    console.log('requesting selection order!');
     $selectionOrderRequest = {
       centerID: pointID,
       frame: $currentFrame,
@@ -381,14 +483,15 @@
           <div class="frame-thumbnail-item">
             <ScatterplotThumbnail
               on:click={() => {
-                if (previewFrame == i) {
+                if ($previewFrame == i) {
                   $currentFrame = i;
-                  previewFrame = -1;
-                } else if ($currentFrame != i) previewFrame = i;
-                else if ($currentFrame == i) previewFrame = -1;
+                  $previewFrame = -1;
+                } else if ($currentFrame != i) $previewFrame = i;
+                else if ($currentFrame == i) $previewFrame = -1;
               }}
               isSelected={$currentFrame == i}
-              isPreviewing={previewFrame == i && previewFrame != $currentFrame}
+              isPreviewing={$previewFrame == i &&
+                $previewFrame != $currentFrame}
               colorScale={!!dataset
                 ? dataset.colorScale(colorSchemeObject)
                 : null}
@@ -413,12 +516,12 @@
           data={dataset}
           padding={$plotPadding}
           frame={$currentFrame}
-          {previewFrame}
+          previewFrame={$previewFrame}
           numNeighbors={$numNeighbors}
           hoverable
           showPreviewControls
           animateTransitions
-          backgroundColor={previewFrame != $currentFrame && previewFrame != -1
+          backgroundColor={$previewFrame != $currentFrame && $previewFrame != -1
             ? '#f8f8ff'
             : 'white'}
           bind:hoveredID={scatterplotHoveredID}
@@ -431,6 +534,7 @@
           selectionUnits={!!$selectionUnit
             ? ['pixels', $selectionUnit]
             : ['pixels']}
+          on:viewportChanged={(e) => suggestInViewport(e.detail)}
         />
         {#if showLegend}
           <div class="legend-container">
@@ -456,27 +560,52 @@
       </div>
       <div class="action-toolbar">
         <SegmentedControl
-          bind:selected={visibleSidebarPane}
-          options={['Current', 'Saved']}
+          bind:selected={$visibleSidebarPane}
+          options={['Current', 'Saved', 'Recent', 'Suggested']}
         />
       </div>
       <div class="sidebar-content">
-        {#if visibleSidebarPane == SidebarPanes.SAVED}
-          <SelectionBrowser
-            bind:data={$selectionList}
-            on:loadSelection={handleLoadSelection}
-          />
-        {:else if visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
+        {#if $visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
           <DefaultThumbnailViewer
             on:thumbnailClick={handleThumbnailClick}
             on:thumbnailHover={handleThumbnailHover}
             bind:this={thumbnailViewer}
             {dataset}
+            {thumbnailProvider}
             primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
             frame={$currentFrame}
-            {previewFrame}
+            previewFrame={$previewFrame}
             {thumbnailIDs}
             numNeighbors={$numNeighbors}
+          />
+        {:else if $visibleSidebarPane == SidebarPanes.SAVED}
+          <SelectionBrowser
+            data={$selectionList}
+            {thumbnailProvider}
+            emptyMessage="No saved selections yet! To create one, first select, align, or isolate some points, then click Save Selection."
+            on:loadSelection={handleLoadSelection}
+          />
+        {:else if $visibleSidebarPane == SidebarPanes.RECENT}
+          <SelectionBrowser
+            data={$selectionHistory}
+            {thumbnailProvider}
+            emptyMessage="No recent selections yet! Start selecting some points."
+            on:loadSelection={handleLoadSelection}
+          />
+        {:else if $visibleSidebarPane == SidebarPanes.SUGGESTED}
+          <SelectionBrowser
+            data={$suggestedSelections}
+            {thumbnailProvider}
+            loading={$loadingSuggestions}
+            loadingMessage={'Loading suggestions' +
+              ($loadingSuggestionsProgress > 0.0
+                ? ` (${($loadingSuggestionsProgress * 100.0).toFixed(0)}%)`
+                : '') +
+              '...'}
+            emptyMessage="No suggested selections right now.{performanceSuggestionsMode
+              ? ' Suggestions are in performance mode - will compute when less than 1,000 points are displayed.'
+              : ''}"
+            on:loadSelection={handleLoadSelection}
           />
         {/if}
       </div>
@@ -577,6 +706,7 @@
     overflow-y: scroll;
     box-sizing: border-box;
   }
+
   .search-bar {
     display: flex;
     align-items: center;

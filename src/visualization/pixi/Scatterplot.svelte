@@ -184,6 +184,18 @@
   $: if (!!scatterplot) scatterplot.showPointBorders = showPointBorders;
   $: if (!!scatterplot) scatterplot.rFactor = rFactor;
 
+  // Returns the current viewport as [min x, max x, min y, max y] in data space
+  export function getViewport() {
+    let transformInfo = viewportManager.getTransformInfo();
+    // Invert this transform info to get the locations of the screen corners
+    return [
+      -transformInfo.x.b / transformInfo.x.a,
+      (actualWidth - transformInfo.x.b) / transformInfo.x.a,
+      -transformInfo.y.b / transformInfo.y.a,
+      (actualHeight - transformInfo.y.b) / transformInfo.y.a,
+    ];
+  }
+
   // Texture loading (for image labels)
 
   export function updateThumbnails() {
@@ -588,9 +600,17 @@
     prevFilterIDs = filterIDs;
   }
 
+  let viewportUpdateTimeout = null;
+  const ViewportUpdateInterval = 500;
+
   function rescale() {
     scalesNeutral = viewportManager.scalesNeutral;
     if (inRadiusselect && !!scatterplot.radiusselect) autosizeRadiusSelect();
+    if (!!viewportUpdateTimeout) clearTimeout(viewportUpdateTimeout);
+    viewportUpdateTimeout = setTimeout(() => {
+      dispatch('viewportChanged', getViewport());
+      viewportUpdateTimeout = null;
+    }, ViewportUpdateInterval);
   }
 
   export function reset() {
@@ -642,7 +662,9 @@
     xExtent={!!data ? data.getXExtent() : null}
     yExtent={!!data ? data.getYExtent() : null}
     {padding}
+    {thumbnail}
     {followingMarks}
+    visibleIDs={filterIDs}
     {pointRadius}
     bind:rFactor
     bind:showPointBorders

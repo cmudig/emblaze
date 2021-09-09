@@ -4,8 +4,8 @@ import {
   easeInOut,
   interpolateTo,
   interpolateToFunction,
-} from "./data_items";
-import { boundingBox, padExtent } from "../utils/helpers";
+} from './data_items';
+import { boundingBox, padExtent } from '../utils/helpers';
 
 const ZoomAnimationDuration = 1000; // milliseconds
 const ZoomBoxPadding = 50; // pixels
@@ -45,7 +45,7 @@ export function Scales(
   this.scaleFactor = new Attribute(1.0);
   this.translateX = new Attribute(0.0);
   this.translateY = new Attribute(0.0);
-  this.translateX.label = "scaleFactor";
+  this.translateX.label = 'scaleFactor';
 
   this.minScale = 0.1;
   this.maxScale = 14.0;
@@ -123,8 +123,11 @@ export function Scales(
   // Returns a factor k such that <screen distance> = <data distance> * k when
   // the scales' scaleFactor is 1
   this.getDataToUniformScaleFactor = function () {
-    return Math.min(this.xRExtent / this.xDExtent, this.yRExtent / this.yDExtent);
-  }
+    return Math.min(
+      this.xRExtent / this.xDExtent,
+      this.yRExtent / this.yDExtent
+    );
+  };
 
   // Returns the scale factor that would be needed to make two points at the
   // given data distance be pixelDistance apart
@@ -132,7 +135,7 @@ export function Scales(
     let baseScaleX = this.xRExtent / this.xDExtent;
     let baseScaleY = this.yRExtent / this.yDExtent;
     return pixelDistance / (Math.min(baseScaleX, baseScaleY) * dataDistance);
-  }
+  };
 
   // These parameters tell the scales how to transform the coordinates after
   // they have been converted into pixel space.
@@ -140,7 +143,7 @@ export function Scales(
     this.unfollow();
 
     if (animated) {
-      if (scaleInfo.hasOwnProperty("scale"))
+      if (scaleInfo.hasOwnProperty('scale'))
         this.scaleFactor.animate(
           new Animator(
             interpolateTo(scaleInfo.scale),
@@ -148,7 +151,7 @@ export function Scales(
             easeInOut
           )
         );
-      if (scaleInfo.hasOwnProperty("translateX"))
+      if (scaleInfo.hasOwnProperty('translateX'))
         this.translateX.animate(
           new Animator(
             interpolateTo(scaleInfo.translateX),
@@ -156,7 +159,7 @@ export function Scales(
             easeInOut
           )
         );
-      if (scaleInfo.hasOwnProperty("translateY"))
+      if (scaleInfo.hasOwnProperty('translateY'))
         this.translateY.animate(
           new Animator(
             interpolateTo(scaleInfo.translateY),
@@ -165,11 +168,11 @@ export function Scales(
           )
         );
     } else {
-      if (scaleInfo.hasOwnProperty("scale"))
+      if (scaleInfo.hasOwnProperty('scale'))
         this.scaleFactor.set(scaleInfo.scale);
-      if (scaleInfo.hasOwnProperty("translateX"))
+      if (scaleInfo.hasOwnProperty('translateX'))
         this.translateX.set(scaleInfo.translateX);
-      if (scaleInfo.hasOwnProperty("translateY"))
+      if (scaleInfo.hasOwnProperty('translateY'))
         this.translateY.set(scaleInfo.translateY);
     }
   };
@@ -193,7 +196,8 @@ export function Scales(
     }
 
     var newScaleFactor = s + ds;
-    if (newScaleFactor > this.maxScale || newScaleFactor < this.minScale) return;
+    if (newScaleFactor > this.maxScale || newScaleFactor < this.minScale)
+      return;
 
     this.scaleFactor.set(newScaleFactor);
     this.translateX.set(tx + ds * centerPoint[0]);
@@ -249,8 +253,14 @@ export function Scales(
         (this.yRExtent / this.yDExtent);
 
       // pad by roughly ZoomBoxPadding (this isn't exact)
-      xExtent = padExtent(xExtent, ZoomBoxPadding / (this.xRExtent / this.xDExtent * xScale));
-      yExtent = padExtent(yExtent, ZoomBoxPadding / (this.yRExtent / this.yDExtent * yScale));
+      xExtent = padExtent(
+        xExtent,
+        ZoomBoxPadding / ((this.xRExtent / this.xDExtent) * xScale)
+      );
+      yExtent = padExtent(
+        yExtent,
+        ZoomBoxPadding / ((this.yRExtent / this.yDExtent) * yScale)
+      );
 
       xScale =
         this.xRExtent /
@@ -287,7 +297,7 @@ export function Scales(
 
   // Animates the scale and translate factors to show the given points.
   // points should be an array of objects with x and y properties.
-  this.zoomTo = function (marks, animated = true, xAttr = "x", yAttr = "y") {
+  this.zoomTo = function (marks, animated = true, xAttr = 'x', yAttr = 'y') {
     let points = marks.map((mark) => ({
       x: mark.attr(xAttr, false),
       y: mark.attr(yAttr, false),
@@ -325,7 +335,7 @@ export function Scales(
   };
 
   // Sets the scales to follow the locations of the given marks
-  this.follow = function (marks, animated = true, xAttr = "x", yAttr = "y") {
+  this.follow = function (marks, animated = true, xAttr = 'x', yAttr = 'y') {
     this.followingMarks = marks;
     this.centerMark = null;
     this._markPointFn = (m) =>
@@ -368,8 +378,8 @@ export function Scales(
     mark,
     peripheralMarks,
     animated = true,
-    xAttr = "x",
-    yAttr = "y"
+    xAttr = 'x',
+    yAttr = 'y'
   ) {
     this.followingMarks = [mark, ...peripheralMarks];
     this.centerMark = mark;

@@ -1,8 +1,7 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
-  import App from '../../App.svelte';
+  import { onMount } from 'svelte';
   import { base64ToBlob, getOSName } from '../utils/helpers';
-  import ThumbnailRow from './ThumbnailRow.svelte';
+  import Thumbnail from './Thumbnail.svelte';
   export let width = null;
   export let height = null;
 
@@ -16,6 +15,8 @@
 
   export let numNeighbors = 10;
 
+  export let thumbnailProvider = null;
+
   // each value in these arrays is an object with required id field and optional
   // count field
   let secondaryItems = [];
@@ -25,88 +26,21 @@
   const MaxSelectionVisible = 6;
   let showingFullSelection = false;
 
-  // For image thumbnails
-
-  let blobURLs = new Map();
-
-  export function updateImageThumbnails() {
-    if (blobURLs.size > 0) destroyImageThumbnails();
-    if (!!dataset.spritesheets) {
-      Object.keys(dataset.spritesheets).forEach((sheet) => {
-        // Make a blob containing this spritesheet image
-        let sheetInfo = dataset.spritesheets[sheet];
-        let blob = base64ToBlob(sheetInfo.image, sheetInfo.imageFormat);
-        blobURLs.set(sheet, URL.createObjectURL(blob));
-      });
-    }
-  }
-
-  export function destroyImageThumbnails() {
-    // Remove all blobs used for this thumbnail viewer
-    for (var sheet of blobURLs.keys()) {
-      URL.revokeObjectURL(blobURLs.get(sheet));
-    }
-    blobURLs.clear();
-  }
-
   // Retrieving and displaying info
 
-  function getThumbnailInfo(item, inFrame = -1) {
-    inFrame = inFrame >= 0 ? inFrame : frame;
-    let id = item.id;
-    if (!dataset || id === null || inFrame < 0) return null;
-
-    let info = dataset.frame(inFrame).get(id, 'label');
-    if (!info)
-      return {
-        id,
-        text: id.toString(),
-      };
-
-    let result = {
-      id, // pass along from input
-      text: info.text,
-      description: info.description,
-    };
-    if (!!item.count) {
-      result.rate = { count: item.count, total: thumbnailIDs.length };
-    } else if (!!item.gained || !!item.lost) {
+  /*
+    if (!!diffInfo) {
+      if (!!diffInfo.count) {
+      d.rate = { count: diffInfo.count, total: diffInfo.total };
+    } else if (!!diffInfo.gained || !!diffInfo.lost) {
       result.change = {
-        gained: item.gained,
-        lost: item.lost,
-        total: thumbnailIDs.length,
+        gained: diffInfo.gained,
+        lost: diffInfo.lost,
+        total: diffInfo,
       };
     }
-    if (
-      !!info.sheet &&
-      !!dataset.spritesheets &&
-      !!dataset.spritesheets[info.sheet]
-    ) {
-      // Add properties to indicate where to retrieve the image thumbnail from
-      // the spritesheet
-      result.sheet = info.sheet;
-      result.spec = dataset.spritesheets[info.sheet].spec.frames[info.texture];
-      result.macroSize = dataset.spritesheets[info.sheet].spec.meta.size;
     }
-    return result;
-  }
-
-  function makeThumbnailText(item, secondary, diff, diffColor) {
-    if (!item || (!item.text && !item.description)) return '';
-
-    let color = 'black';
-    if (secondary && diff.size > 0 && !diff.has(item.id)) {
-      color = diffColor;
-    }
-    let infoText = `<p style="color: ${color}">` + (item.text || '') + '</p>';
-    if (!secondary && !!item.description) {
-      infoText +=
-        '<p style="color: grey;">' +
-        item.description.replace('\n', '</p><p style="color: grey;">') +
-        '</p>';
-    }
-    return infoText;
-  }
+  */
 
   $: updateNeighborArrays(thumbnailIDs, frame, previewFrame);
 
@@ -313,14 +247,8 @@
 
   onMount(() => {
     if (!!dataset.spritesheets) {
-      updateImageThumbnails();
       thumbnailIDs = thumbnailIDs; // force re-layout
     }
-  });
-
-  onDestroy(() => {
-    // Destroy blob URLs
-    destroyImageThumbnails();
   });
 </script>
 
@@ -352,17 +280,21 @@
       {#if !!message}
         <p>{message}</p>
       {/if}
-      <div class:wrap-container={blobURLs.size > 0 && thumbnailIDs.length > 1}>
-        {#each thumbnailIDs
-          .map((id) => getThumbnailInfo({ id }))
-          .filter((d) => !!d)
-          .slice(0, showingFullSelection ? thumbnailIDs.length : MaxSelectionVisible) as d}
-          <ThumbnailRow
+      <div
+        class:wrap-container={!!thumbnailProvider &&
+          thumbnailProvider.hasImages &&
+          thumbnailIDs.length > 1}
+      >
+        {#each thumbnailIDs.slice(0, showingFullSelection ? thumbnailIDs.length : MaxSelectionVisible) as id}
+          <Thumbnail
             on:thumbnailClick
             on:thumbnailHover
-            {blobURLs}
-            {d}
-            mini={blobURLs.size > 0 && thumbnailIDs.length > 1}
+            {thumbnailProvider}
+            {id}
+            {frame}
+            mini={!!thumbnailProvider &&
+              thumbnailProvider.hasImages &&
+              thumbnailIDs.length > 1}
             detail={thumbnailIDs.length == 1}
           />
         {/each}
@@ -392,17 +324,19 @@
         {#if previewSecondaryItems.length > 0}
           <div class="subheader">{dataset.frame(frame).title}</div>
         {/if}
-        {#each secondaryItems
-          .map((item) => getThumbnailInfo(item))
-          .filter((d) => !!d) as d}
-          <ThumbnailRow
+        {#each secondaryItems as item}
+          <Thumbnail
             on:thumbnailClick
             on:thumbnailHover
             mini={previewSecondaryItems.length > 0}
-            {blobURLs}
-            {d}
+            {thumbnailProvider}
+            id={item.id}
+            {frame}
+            rate={!!item.count
+              ? { count: item.count, total: thumbnailIDs.length }
+              : null}
             color={previewSecondaryItems.length > 0 &&
-            !previewSecondaryItems.find((item) => item.id == d.id)
+            !previewSecondaryItems.find((d) => d.id == item.id)
               ? 'red'
               : 'black'}
           />
@@ -412,17 +346,19 @@
       {#if previewSecondaryItems.length > 0}
         <div class="thumbnail-column">
           <div class="subheader">{dataset.frame(previewFrame).title}</div>
-          {#each previewSecondaryItems
-            .map((item) => getThumbnailInfo(item))
-            .filter((d) => !!d) as d}
-            <ThumbnailRow
+          {#each previewSecondaryItems as item}
+            <Thumbnail
               on:thumbnailClick
               on:thumbnailHover
               mini
-              {blobURLs}
-              {d}
+              {thumbnailProvider}
+              id={item.id}
+              {frame}
+              rate={!!item.count
+                ? { count: item.count, total: thumbnailIDs.length }
+                : null}
               color={secondaryItems.length > 0 &&
-              !secondaryItems.find((item) => item.id == d.id)
+              !secondaryItems.find((d) => d.id == item.id)
                 ? 'green'
                 : 'black'}
             />
@@ -441,15 +377,19 @@
     <div class="header-bar">Common Changes</div>
     <div class="thumbnails-container column-container">
       <div class="thumbnail-column">
-        {#each commonChangeItems
-          .map((item) => getThumbnailInfo(item))
-          .filter((d) => !!d) as d}
-          <ThumbnailRow
+        {#each commonChangeItems as item}
+          <Thumbnail
             on:thumbnailClick
             on:thumbnailHover
             mini
-            {blobURLs}
-            {d}
+            {thumbnailProvider}
+            id={item.id}
+            {frame}
+            change={{
+              gained: item.gained,
+              lost: item.lost,
+              total: thumbnailIDs.length,
+            }}
             color="black"
           />
         {/each}
