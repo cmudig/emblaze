@@ -263,6 +263,18 @@ class Embedding(ColumnarData):
         
             return self._distances[metric][indexes,:][:,comparison_indexes]
 
+    def within_bbox(self, bbox):
+        """
+        Returns the list of IDs whose points are within the given bounding box,
+        where bbox is specified as (xmin, xmax, ymin, ymax). Only supports
+        2D embeddings.
+        """
+        assert self.dimension() == 2, "Non-2D embeddings are not supported by within_bbox()"
+        positions = self.field(Field.POSITION)
+        return [id_val for id_val, pos in zip(self.ids, positions)
+                if (pos[0] >= bbox[0] and pos[0] <= bbox[1] and
+                    pos[1] >= bbox[2] and pos[1] <= bbox[3])]
+
     def to_json(self):
         """
         Converts this embedding into a JSON object. Requires that the embedding

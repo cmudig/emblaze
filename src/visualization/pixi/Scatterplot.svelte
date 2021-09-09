@@ -671,7 +671,9 @@
     xExtent={!!data ? data.getXExtent() : null}
     yExtent={!!data ? data.getYExtent() : null}
     {padding}
+    {thumbnail}
     {followingMarks}
+    visibleIDs={filterIDs}
     {pointRadius}
     bind:rFactor
     bind:showPointBorders

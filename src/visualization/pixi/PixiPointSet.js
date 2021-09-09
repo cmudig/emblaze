@@ -71,7 +71,6 @@ class PointSetGeometry extends PIXI.Geometry {
   }
 
   update(currentTime) {
-    console.log('Updating point set,', this.marks.getVisibleMarks().length);
     this.getBuffer('x').update(this.makeArray('x', currentTime));
     this.getBuffer('y').update(this.makeArray('y', currentTime));
     this.getBuffer('r').update(this.makeArray('r', currentTime));
