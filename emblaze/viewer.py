@@ -231,10 +231,9 @@ class Viewer(DOMWidget):
             
     @observe("filterIDs")
     def _observe_filter_ids(self, change):
-        """Update suggestions when the filter changes (in performance mode)."""
-        if self.performanceSuggestionsMode:
-            self._update_suggested_selections()
-            
+        """Update suggestions when the filter changes."""
+        self._update_suggested_selections()
+
     def reset_alignment(self):
         """Removes any transformations applied to the embedding frames."""
         self.frameTransformations = [
@@ -375,10 +374,10 @@ class Viewer(DOMWidget):
                 preview_frame_idx = self.previewFrame
             else:
                 preview_frame_idx = None
-                
+              
             if self.selectedIDs:
                 ids_of_interest = self.selectedIDs
-                id_type = "selection"
+                id_type = "selection"  
             elif self.filterIDs and not self.performanceSuggestionsMode:
                 ids_of_interest = self.filterIDs
                 id_type = "visible points"
@@ -388,11 +387,12 @@ class Viewer(DOMWidget):
 
             suggestions = []
             results = self.recommender.query(ids_of_interest=ids_of_interest,
-                                            frame_idx=self.currentFrame,
-                                            preview_frame_idx=preview_frame_idx,
-                                            bounding_box=self.suggestedSelectionWindow or None,
-                                            num_results=25,
-                                            id_type=id_type)
+                                             filter_ids=self.filterIDs or None,
+                                             frame_idx=self.currentFrame,
+                                             preview_frame_idx=preview_frame_idx,
+                                             bounding_box=self.suggestedSelectionWindow or None,
+                                             num_results=25,
+                                             id_type=id_type)
             for result, reason in results:
                 ids = list(result["ids"])
                 suggestions.append({

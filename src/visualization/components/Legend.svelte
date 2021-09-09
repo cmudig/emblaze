@@ -34,13 +34,6 @@
     let totalWidth;
     let totalHeight;
     if (type == 'categorical') {
-      console.log(
-        colorScale.domain(),
-        getTextWidth(
-          colorScale.range()[0],
-          `${fontWeight} ${fontSize}pt ${fontFamily}`
-        )
-      );
       totalWidth =
         Math.max(
           ...colorScale

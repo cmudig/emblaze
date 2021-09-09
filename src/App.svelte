@@ -39,7 +39,6 @@
   let colorSchemeObject = ColorSchemes.getColorScheme($colorScheme);
   $: {
     let newScheme = ColorSchemes.getColorScheme($colorScheme);
-    console.log('New color scheme:', newScheme, colorSchemeObject);
     if (!!newScheme) colorSchemeObject = newScheme;
   }
   let previewMode = syncValue(
@@ -57,7 +56,6 @@
     $frameTransformations.length > 0 &&
     !!dataset
   ) {
-    console.log('Transforming', $frameTransformations);
     updateTransformations();
   }
 
@@ -76,7 +74,6 @@
   function updateTransformations(animate = true) {
     dataset.transform($frameTransformations);
     if (!!canvas && animate) {
-      console.log('Updating frame', $currentFrame);
       canvas.animateDatasetUpdate();
     }
   }
@@ -336,7 +333,6 @@
     else dataset.removeThumbnails();
     canvas.updateThumbnails();
     if (!!thumbnailProvider) thumbnailProvider.destroy();
-    console.log('setting thumbnail provider');
     thumbnailProvider = new ThumbnailProvider(dataset);
     updatePointSelectorOptions();
   }
@@ -391,7 +387,6 @@
   const SelectionOrderTimeout = 100;
 
   async function selectionOrderFn(pointID, metric) {
-    console.log('requesting selection order!');
     $selectionOrderRequest = {
       centerID: pointID,
       frame: $currentFrame,

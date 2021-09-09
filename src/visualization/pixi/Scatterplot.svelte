@@ -664,6 +664,7 @@
     {padding}
     {thumbnail}
     {followingMarks}
+    visibleIDs={filterIDs}
     {pointRadius}
     bind:rFactor
     bind:showPointBorders

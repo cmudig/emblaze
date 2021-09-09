@@ -21,6 +21,11 @@
   export let rFactor = 1.0; // this component writes the rFactor
   export let showPointBorders = true; // this component decides whether to show point borders
 
+  // If this is non-empty, rFactor will be based on the point distances in the
+  // visibleIDs list. Otherwise, it will use a random sample of points in the
+  // dataset.
+  export let visibleIDs = [];
+
   // Data is used to determine how much the viewport should be allowed to scale by
   export let data = null;
 
@@ -36,42 +41,70 @@
   }
 
   $: if (!!scales && !!data && !thumbnail) {
-    updateScaleBounds();
+    console.log('updating scale bounds from original');
+    updateScaleBounds(true);
+  }
+
+  let oldVisibleIDs = [];
+  $: if (oldVisibleIDs !== visibleIDs) {
+    if (!!scales && !!data) {
+      console.log('updating from filter', visibleIDs);
+      updateScaleBounds();
+      // updatePointDisplay();
+    }
+    oldVisibleIDs = visibleIDs;
   }
 
   let minPointDistance = null;
+  let _defaultMinPointDistance = null;
+  const MinPointPixelDistance = 50;
 
-  function updateScaleBounds() {
+  function updateScaleBounds(reset = false) {
     // Look at the distance between each point and its nearest neighbor, and
     // set the max scale such that the closest distance can scale to a certain
     // number of pixels
 
-    let pixelDistance = 50;
+    if (visibleIDs.length > 0) {
+      minPointDistance =
+        computeMinPointDistance(visibleIDs) || _defaultMinPointDistance;
+    } else {
+      if (_defaultMinPointDistance == null || reset) {
+        _defaultMinPointDistance = computeMinPointDistance() || 1.0;
+        scales.maxScale = scales.scaleFactorForDistance(
+          minPointDistance,
+          MinPointPixelDistance
+        );
+      }
+      minPointDistance = _defaultMinPointDistance;
+    }
+  }
+
+  function computeMinPointDistance(ids = null) {
     let collectedDistances = [];
+    let neighborMembershipSet = ids != null ? new Set(ids) : null;
     data.frames.forEach((frame) => {
-      let ids = frame.getIDs();
-      ids.forEach((id) => {
-        if (Math.random() < 100 / ids.length) {
+      let idsToTest = ids != null ? ids : frame.getIDs();
+      idsToTest.forEach((id) => {
+        if (Math.random() < 100 / idsToTest.length) {
           let point = frame.byID(id);
-          let randomNeighbor = frame.byID(
-            frame.neighbors(id, 25)[Math.floor(Math.random() * 25.0)]
+          let neighbors = frame.neighbors(id, 25);
+          if (neighborMembershipSet != null) {
+            neighbors = neighbors.filter((n) => neighborMembershipSet.has(n));
+          }
+          if (neighbors.length == 0) return;
+          let idx = Math.floor(Math.random() * neighbors.length);
+          collectedDistances.push(
+            euclideanDistance(point, frame.byID(neighbors[idx]))
           );
-          collectedDistances.push(euclideanDistance(point, randomNeighbor));
         }
       });
     });
 
-    console.log('collected distances:', collectedDistances);
     if (collectedDistances.length > 0) {
       collectedDistances.sort((a, b) => a - b);
-      minPointDistance =
-        collectedDistances[Math.round(collectedDistances.length * 0.1)];
-      scales.maxScale = scales.scaleFactorForDistance(
-        minPointDistance,
-        pixelDistance
-      );
-      console.log('max scale', minPointDistance, scales.maxScale);
+      return collectedDistances[Math.round(collectedDistances.length * 0.1)];
     }
+    return null;
   }
 
   $: if (!!scales) {
