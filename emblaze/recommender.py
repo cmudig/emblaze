@@ -43,6 +43,10 @@ class SelectionRecommender:
 
     def _pairwise_jaccard_distances(self, neighbors):
         """Computes the jaccard distance between each row of the given set of neighbors."""
+        lengths = np.array([len(n) for n in neighbors], dtype=np.uint16)
+        if np.sum(lengths) == 0:
+            return np.zeros((len(neighbors), len(neighbors)))
+
         # Make a one-hot matrix of neighbors
         neighbor_mat = self._make_neighbor_mat(neighbors, max(np.max([n for x in neighbors for n in x]) + 1, len(neighbors)))
         # Calculate intersection of sets using dot product
@@ -50,7 +54,6 @@ class SelectionRecommender:
         del neighbor_mat
         
         # Use set trick: len(x | y) = len(x) + len(y) - len(x & y)
-        lengths = np.array([len(n) for n in neighbors], dtype=np.uint16)
         length_sums = lengths[:,np.newaxis] + lengths[np.newaxis,:]
         union = np.maximum(length_sums - intersection, np.array([1], dtype=np.uint16), casting='no')
         del length_sums
@@ -182,7 +185,8 @@ class SelectionRecommender:
                 neighbor_ids = None    
 
             for cluster in self.clusters[frame_key]:
-                frame_labels = "{} &rarr; {}".format(self.embeddings[cluster['frame']].label, self.embeddings[cluster['previewFrame']].label)
+                frame_labels = "{} &rarr; {}".format(self.embeddings[cluster['frame']].label or "Frame " + str(cluster['frame']),
+                                                     self.embeddings[cluster['previewFrame']].label or "Frame " + str(cluster['previewFrame']))
                 base_score = (cluster['consistency'] + cluster['innerChange'] + cluster['gain'] + cluster['loss']) * np.log(len(cluster['ids']))
                 if filter_set is not None:
                     if not cluster['ids'] & filter_set:

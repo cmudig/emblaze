@@ -117,7 +117,7 @@ class Viewer(DOMWidget):
                                                {'numFrames': len(self.embeddings),
                                                 'numPoints': len(self.embeddings[0])})
 
-        self.performanceSuggestionsMode = len(self.embeddings[0]) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        self._update_performance_suggestions_mode()
         if not self.colorScheme:
             self.colorScheme = self.detect_color_scheme()
         if not self.previewMode:
@@ -343,6 +343,10 @@ class Viewer(DOMWidget):
         if change.new and not self.loadingSuggestions:
             self._update_suggested_selections()
     
+    def _update_performance_suggestions_mode(self):
+        """Determines whether to use the performance mode for computing suggestions."""
+        self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        
     def _update_suggested_selections_background(self):
         """Function that runs in the background to recompute suggested selections."""
         self.recomputeSuggestionsFlag = False
@@ -350,7 +354,7 @@ class Viewer(DOMWidget):
             return
 
         filter_points = None
-        self.performanceSuggestionsMode = len(self.embeddings[0]) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        self._update_performance_suggestions_mode()
         if self.performanceSuggestionsMode:
             # Check if sufficiently few points are visible to show suggestions
             if self.filterIDs and len(self.filterIDs) <= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
