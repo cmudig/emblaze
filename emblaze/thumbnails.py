@@ -44,6 +44,20 @@ class TextThumbnails(Thumbnails):
         if descriptions is not None:
             self.data.set_field(Field.DESCRIPTION, descriptions)
 
+    def name(self, ids=None):
+        """
+        Returns the name(s) for the given set of IDs, or all points if
+        ids is not provided.
+        """
+        return self.data.field(Field.NAME, ids=ids)
+    
+    def description(self, ids=None):
+        """
+        Returns the description(s) for the given set of IDs, or all points if
+        ids is not provided. Returns None if descriptions are not present.
+        """
+        return self.data.field(Field.DESCRIPTION, ids=ids)
+        
     def to_json(self):
         result = super().to_json()
         names = self.data.field(Field.NAME)
@@ -78,26 +92,6 @@ class TextThumbnails(Thumbnails):
         descriptions = [items[id_val].get("description", "") for id_val in ids]
         return TextThumbnails(names, descriptions, ids)
    
-    @staticmethod
-    def from_json(data, ids=None):
-        """
-        Builds a TextThumbnails object from a JSON object. The provided object should
-        have an "items" key with a dictionary mapping ID values to text thumbnail
-        objects, each of which must have a 'name' and optionally 'description' keys.
-        """
-        assert "items" in data, "JSON object must contain an 'items' field"
-        items = data["items"]
-        if ids is None:
-            try:
-                ids = [int(id_val) for id_val in list(items.keys())]
-                items = {int(k): v for k, v in items.items()}
-            except:
-                ids = list(items.keys())
-            ids = sorted(ids)
-        names = [items[id_val]["name"] for id_val in ids]
-        descriptions = [items[id_val].get("description", "") for id_val in ids]
-        return TextThumbnails(names, descriptions, ids)
-    
     def __getitem__(self, ids):
         """
         Returns text thumbnail information for the given IDs.
@@ -143,9 +137,9 @@ class ImageThumbnails(Thumbnails):
         """
         super().__init__("spritesheet")
         if spritesheets is not None:
-            self.images = None
             self.ids = ImageThumbnails._get_spritesheet_ids(spritesheets)
             self.spritesheets = spritesheets
+            self.images = None
         else:
             self.images = images
             self.ids = ids or np.arange(len(images))
@@ -173,14 +167,44 @@ class ImageThumbnails(Thumbnails):
             return [self[id_val] for id_val in ids]
         else:
             result = {}
-            if self.images is not None:
-                result["image"] = self.images[self._id_index[ids]]
+            result["image"] = self.image(ids)
             if self.text_data is not None:
                 result["name"] = self.text_data.field(Field.NAME, ids)
                 if self.text_data.has_field(Field.DESCRIPTION):
                     result["description"] = self.text_data.field(Field.DESCRIPTION, ids)
             return result
 
+    def image(self, ids=None):
+        """
+        Returns the image(s) for the given ID or set of IDs, or all points if ids
+        is not provided.
+        """
+        if self.images is None:
+            self.images = self._make_raw_images()
+            
+        if isinstance(ids, (list, np.ndarray, set)):
+            index = [self._id_index[int(id_val)] for id_val in ids]
+        else:
+            index = self._id_index[int(ids)]
+
+        return self.images[index]     
+        
+    def name(self, ids=None):
+        """
+        Returns the name(s) for the given set of IDs, or all points if
+        ids is not provided. Returns None if names are not available.
+        """
+        if self.text_data is None: return None
+        return self.text_data.field(Field.NAME, ids=ids)
+    
+    def description(self, ids=None):
+        """
+        Returns the description(s) for the given set of IDs, or all points if
+        ids is not provided. Returns None if descriptions are not present.
+        """
+        if self.text_data is None: return None
+        return self.text_data.field(Field.DESCRIPTION, ids=ids)
+        
     def to_json(self):
         result = super().to_json()
         result["spritesheets"] = self.spritesheets
@@ -232,7 +256,33 @@ class ImageThumbnails(Thumbnails):
         except:
             pass
         ids = sorted(ids)
-        return ids
+        return np.array(ids)
+        
+    def _make_raw_images(self):
+        """
+        Regenerates and returns the original images matrix based on self.spritesheets
+        and self.ids.
+        """
+        assert len(self.spritesheets), "spritesheets is empty"
+        random_spec = self.spritesheets[list(self.spritesheets.keys())[0]]["spec"]["frames"]
+        random_frame = random_spec[list(random_spec.keys())[0]]["frame"]
+        cols = random_frame["w"]
+        rows = random_frame["h"]
+        
+        result = np.zeros((len(self.ids), rows, cols, 4), dtype=np.uint8)
+        seen_ids = set()
+        for key, spritesheet in self.spritesheets.items():
+            buffer = BytesIO(base64.b64decode(spritesheet["image"].encode('ascii')))
+            img = np.array(Image.open(buffer, formats=('PNG',)))
+            
+            for id_val, image_spec in spritesheet["spec"]["frames"].items():
+                frame = image_spec["frame"]
+                result[self._id_index[int(id_val)]] = img[frame["y"]:frame["y"] + frame["h"],
+                                                          frame["x"]:frame["x"] + frame["w"]]
+                seen_ids.add(int(id_val))
+        if len(seen_ids & set(self.ids.tolist())) != len(self.ids):
+            print("missing ids when loading images from spritesheets:", set(self.ids.tolist()) - seen_ids)
+        return result
         
     def make_spritesheets(self, images, ids, grid_dimensions=None, image_size=None):
         """
