@@ -41,14 +41,12 @@
   }
 
   $: if (!!scales && !!data && !thumbnail) {
-    console.log('updating scale bounds from original');
     updateScaleBounds(true);
   }
 
   let oldVisibleIDs = [];
   $: if (oldVisibleIDs !== visibleIDs) {
     if (!!scales && !!data) {
-      console.log('updating from filter', visibleIDs);
       updateScaleBounds();
       // updatePointDisplay();
     }

@@ -653,7 +653,6 @@
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}
     yScale={!!viewportManager ? (y) => viewportManager.scaleY(y) : null}
     highlightFocusedPoints={!performanceMode}
-    showPreviewLines={!performanceMode}
     bind:marks
     bind:filterIDs
     bind:hoveredID

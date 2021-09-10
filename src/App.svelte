@@ -455,6 +455,7 @@
   }
 
   function logEvent(event) {
+    if (!event) return;
     event.timestamp = new Date().toString();
     $interactionHistory = [...$interactionHistory, event];
   }
