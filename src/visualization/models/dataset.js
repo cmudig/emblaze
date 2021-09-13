@@ -55,24 +55,17 @@ export class Dataset {
     if (rawData.length == 0) return;
 
     this.frames = rawData.map((frame, f) => {
-      return new ColumnarFrame(frame, this.frameLabels[f], (el) => {
-        let point = [el.x, el.y];
-        if (
-          !!this.frameTransformations &&
-          this.frameTransformations.length > f
-        ) {
-          point = transformPoint(this.frameTransformations[f], point);
-        }
-        return {
-          x: point[0],
-          y: point[1],
-          color: this.colorKey == 'constant' ? 0.0 : el[this.colorKey] || 0.0,
-          alpha: el.alpha != undefined ? el.alpha : 1.0,
-          highlight: el.highlight.map((h) => parseInt(h)),
-          r: 1.0,
-          visible: true,
-        };
+      let ret = new ColumnarFrame(frame, this.frameLabels[f], {
+        color: (el) =>
+          this.colorKey == 'constant' ? 0.0 : el[this.colorKey] || 0.0,
+        alpha: (el) => (el.alpha != undefined ? el.alpha : 1.0),
+        r: (el) => (el.r != undefined ? el.r : 1.0),
+        visible: () => true,
       });
+      if (!!this.frameTransformations && this.frameTransformations.length > f) {
+        ret.transform(this.frameTransformations[f]);
+      }
+      return ret;
     });
 
     let allIDs = new Set();
