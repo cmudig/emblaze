@@ -177,7 +177,8 @@ def choose_integer_type(values):
 def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None):
     """
     Encodes the given numpy array into a base64 representation for fast transfer
-    to the widget frontend. astype will likely be np.float32 or np.int32.
+    to the widget frontend. The array will be encoded as a sequence of numbers
+    with type 'astype'.
     
     If positions is not None, it should be a numpy array of positions at which the
     array for each ID *ends*. For example, if there are ten IDs and ten numbers
@@ -207,7 +208,8 @@ def decode_numerical_array(obj, astype=np.float32):
     Decodes the given compressed dict into an array of the given dtype. The 
     dict should contain a 'values' key (base64 string) and optionally a
     'positions' key (base64 string to be turned into an int32 array, defining
-    the shape of a 2d matrix).
+    the shape of a 2d matrix) or an 'interval' key (integer defining the number
+    of columns in the 2d matrix).
     """
     values = np.frombuffer(base64.decodebytes(obj["values"].encode('ascii')), dtype=astype)
     if "positions" in obj:

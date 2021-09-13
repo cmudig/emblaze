@@ -122,6 +122,10 @@
     border-radius: 4px;
   }
 
+  .thumbnail-row p {
+    margin-bottom: 0;
+  }
+
   .thumbnail-text-section {
     width: 100%;
   }
