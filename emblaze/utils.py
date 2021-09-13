@@ -179,9 +179,9 @@ def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None
     Encodes the given numpy array into a base64 representation for fast transfer
     to the widget frontend. astype will likely be np.float32 or np.int32.
     
-    If positions is not None, it should be a numpy array of positions at which to
-    read the array for each ID. For example, if there are ten IDs and ten numbers
-    in the array for each ID, the positions array would be [0, 10, 20, ..., 90].
+    If positions is not None, it should be a numpy array of positions at which the
+    array for each ID *ends*. For example, if there are ten IDs and ten numbers
+    in the array for each ID, the positions array would be [10, 20, ..., 90, 100].
     
     If interval is not None, it is passed into the result object directly (and
     signifies the same as positions, but with a regularly spaced interval).

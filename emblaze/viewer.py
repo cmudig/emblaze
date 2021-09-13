@@ -51,6 +51,7 @@ class Viewer(DOMWidget):
     filterIDs = List([]).tag(sync=True)
     
     numNeighbors = Integer(10).tag(sync=True)
+    storedNumNeighbors = Integer(0).tag(sync=True)
 
     # List of lists of 3 elements each, containing HSV colors for each frame
     frameColors = List([]).tag(sync=True)
@@ -187,12 +188,35 @@ class Viewer(DOMWidget):
                     return PreviewMode.NEIGHBOR_SIMILARITY
         return PreviewMode.PROJECTION_SIMILARITY
         
+    def _select_stored_num_neighbors(self, embeddings):
+        """
+        Optionally reduces the number of stored neighbors in the JSON to save
+        space. Prints a warning if it does so.
+        """
+        num_points = len(embeddings) * len(embeddings[0])
+        new_val = None
+        if num_points > 500000:
+            new_val = 25
+        elif num_points > 200000:
+            new_val = 50
+        elif num_points > 100000:
+            new_val = 75
+        if new_val is not None and any(new_val < len(emb.field(Field.NEIGHBORS, ids=emb.ids[0]).flatten()) for emb in embeddings.embeddings):
+            print(("WARNING: Reducing the number of nearest neighbors passed to the "
+                   "widget to {} to save space. You can control this by setting the "
+                   "storedNumNeighbors property of the widget when initializing.").format(new_val))
+        return new_val                        
+        
     @observe("embeddings")
     def _observe_embeddings(self, change):
         embeddings = change.new
         assert len(embeddings) > 0, "Must have at least one embedding"
         if embeddings is not None:
-            self.data = embeddings.to_json()
+            if self.storedNumNeighbors > 0:
+                n_neighbors = self.storedNumNeighbors 
+            else:
+                n_neighbors = self._select_stored_num_neighbors(embeddings)
+            self.data = embeddings.to_json(num_neighbors=n_neighbors)
         else:
             self.data = {}
         self.selectedIDs = []

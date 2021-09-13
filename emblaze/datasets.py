@@ -275,10 +275,15 @@ class Embedding(ColumnarData):
                 if (pos[0] >= bbox[0] and pos[0] <= bbox[1] and
                     pos[1] >= bbox[2] and pos[1] <= bbox[3])]
 
-    def to_json(self, compressed=True):
+    def to_json(self, compressed=True, num_neighbors=None):
         """
         Converts this embedding into a JSON object. Requires that the embedding
         have an n x 2 array at the Field.POSITION key.
+        
+        compressed: whether to format JSON objects using base64 strings
+            instead of as human-readable float arrays
+        num_neighbors: number of neighbors to write for each point (can considerably
+            save memory)
         """
         assert self.dimension() == 2, "Non-2D embeddings are not supported by to_json()"
         result = {}
@@ -291,6 +296,8 @@ class Embedding(ColumnarData):
         neighbors = self.field(Field.NEIGHBORS)
         if neighbors is None:
             print("Warning: The embedding has no computed nearest neighbors, so none will be displayed. You may want to call compute_neighbors() to generate them.")
+        elif num_neighbors is not None:
+            neighbors = neighbors[:,:min(num_neighbors, neighbors.shape[1])]
         
         if compressed:
             result["_format"] = "compressed"
@@ -511,12 +518,17 @@ class EmbeddingSet:
         for emb in self.embeddings:
             emb.compute_neighbors(n_neighbors=n_neighbors, metric=metric)
 
-    def to_json(self, compressed=True):
+    def to_json(self, compressed=True, num_neighbors=None):
         """
         Converts this set of embeddings into a JSON object.
+        
+        compressed: whether to format Embedding JSON objects using base64 strings
+            instead of as human-readable float arrays
+        num_neighbors: number of neighbors to write for each point (can considerably
+            save memory)
         """
         return {
-            "data": [emb.to_json(compressed=compressed) for emb in self.embeddings],
+            "data": [emb.to_json(compressed=compressed, num_neighbors=num_neighbors) for emb in self.embeddings],
             "frameLabels": [emb.label or "Frame {}".format(i) for i, emb in enumerate(self.embeddings)]
         }
 

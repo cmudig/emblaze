@@ -136,7 +136,8 @@ export class ColumnarData {
           } else if (!!val.interval) {
             this.nestPositionColumns[col] = new Int32Array(this.length);
             for (let k = 0; k < this.length; k++) {
-              this.nestPositionColumns[col][k] = k * val.interval;
+              // the nest positions list the position of the END of each row's values
+              this.nestPositionColumns[col][k] = (k + 1) * val.interval;
             }
           }
         }
