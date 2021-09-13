@@ -6,6 +6,7 @@ import json
 import datetime
 import platform
 import os
+import base64
 
 class Field:
     """Standardized field names for embeddings and projections. These data can
@@ -85,7 +86,7 @@ def standardize_json(o, round_digits=4):
     and rounding floats to save space.
     """
     if isinstance(o, (float, np.float32, np.float64)): return round(float(o), round_digits)
-    if isinstance(o, (np.int64, np.int32)): return int(o)
+    if isinstance(o, (np.int64, np.int32, np.uint8)): return int(o)
     if isinstance(o, dict): return {standardize_json(k, round_digits): standardize_json(v, round_digits) for k, v in o.items()}
     if isinstance(o, (list, tuple)): return [standardize_json(x, round_digits) for x in o]
     return o
@@ -148,3 +149,82 @@ class LoggingHelper:
         
         with open(self.filepath, "w") as file:
             json.dump(current_data, file)
+            
+def choose_integer_type(values):
+    """
+    Chooses the best integer type (i.e. np.(u)int(8|16|32)) for the given set
+    of values. Returns the dtype and its name.
+    """
+    min_val = values.min()
+    max_val = values.max()
+    rng = max_val - min_val
+    if min_val < 0:
+        if rng > 2 ** 32 - 1:
+            return np.int64, "i8"
+        elif rng > 2 ** 16 - 1:
+            return np.int32, "i4"
+        elif rng > 2 ** 8 - 1:
+            return np.int16, "i2"
+        return np.int8, "i1"
+    elif rng > 2 ** 32 - 1:
+        return np.uint64, "u8"
+    elif rng > 2 ** 16 - 1:
+        return np.uint32, "u4"
+    elif rng > 2 ** 8 - 1:
+        return np.uint16, "u2"
+    return np.uint8, "u1"
+    
+def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None):
+    """
+    Encodes the given numpy array into a base64 representation for fast transfer
+    to the widget frontend. The array will be encoded as a sequence of numbers
+    with type 'astype'.
+    
+    If positions is not None, it should be a numpy array of positions at which the
+    array for each ID *ends*. For example, if there are ten IDs and ten numbers
+    in the array for each ID, the positions array would be [10, 20, ..., 90, 100].
+    
+    If interval is not None, it is passed into the result object directly (and
+    signifies the same as positions, but with a regularly spaced interval).
+    """
+    result = { "values": base64.b64encode(arr.astype(astype)).decode('ascii') }
+    if positions is not None:
+        result["positions"] = base64.b64encode(positions.astype(np.int32)).decode('ascii')
+    if interval is not None:
+        result["interval"] = interval
+    return result
+
+def encode_object_array(arr):
+    """
+    Encodes the given array as a base64 string of a JSON string.
+    """
+    if isinstance(arr, np.ndarray):
+        arr = arr.tolist()
+        
+    return { "values": base64.b64encode(json.dumps(standardize_json(arr)).encode("utf-8")).decode('ascii') }
+
+def decode_numerical_array(obj, astype=np.float32):
+    """
+    Decodes the given compressed dict into an array of the given dtype. The 
+    dict should contain a 'values' key (base64 string) and optionally a
+    'positions' key (base64 string to be turned into an int32 array, defining
+    the shape of a 2d matrix) or an 'interval' key (integer defining the number
+    of columns in the 2d matrix).
+    """
+    values = np.frombuffer(base64.decodebytes(obj["values"].encode('ascii')), dtype=astype)
+    if "positions" in obj:
+        positions = np.frombuffer(base64.decodebytes(obj["positions"].encode('ascii')), dtype=np.int32)
+        deltas = positions[1:] - positions[:-1]
+        assert np.allclose(deltas, deltas[0]), "cannot currently decode numerical arrays with non-standard positions array"
+        values = values.reshape(-1, deltas[0])
+    elif "interval" in obj:
+        values = values.reshape(-1, obj["interval"])
+    return values
+
+def decode_object_array(obj):
+    """
+    Decodes the given object's 'values' key into a JSON object.
+    """
+    return json.loads(base64.b64decode(obj["values"].encode('ascii')))
+
+

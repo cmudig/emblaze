@@ -5,6 +5,7 @@
   import TemporalVisualization from './visualization/TemporalVisualization.svelte';
   import SpatialVisualization from './visualization/SpatialVisualization.svelte';
   import ColorSchemes from './colorschemes';
+  import { ThumbnailProvider } from './visualization/models/thumbnails';
 
   let datasetOptions = ['mnist-tsne'];
   let datasetName = 'mnist-tsne';
@@ -16,8 +17,8 @@
 
   let useHalos = false;
 
-  let thumbnailsURL = '';
   let thumbnailData;
+  let thumbnailProvider;
 
   var data = null;
   let previewMode = PreviewMode.PROJECTION_SIMILARITY;
@@ -32,12 +33,17 @@
 
   // Simple method to get a list of quantitative channels in the data
   function getQuantitativeChannels(frame) {
-    let ids = Object.keys(frame);
-    let testItem = frame[ids[0]];
-    let fields = Object.keys(testItem);
-    return fields.filter(
-      (f) => typeof testItem[f] == 'number' || typeof testItem[f] == 'string'
-    );
+    if (frame['_format'] == 'compressed') {
+      // compressed format doesn't support other color channels
+      return ['color'];
+    } else {
+      let ids = Object.keys(frame);
+      let testItem = frame[ids[0]];
+      let fields = Object.keys(testItem);
+      return fields.filter(
+        (f) => typeof testItem[f] == 'number' || typeof testItem[f] == 'string'
+      );
+    }
   }
 
   function getChannelType(channelName) {
@@ -71,10 +77,8 @@
         if (!!thumbnailJSON) {
           thumbnailData = thumbnailJSON;
           data.addThumbnails(thumbnailData);
-          setTimeout(() => {
-            if (!!visualization) visualization.updateThumbnails();
-          }, 0);
-          thumbnailsURL = '/datasets/' + datasetName + '/supplementary';
+          if (!!thumbnailProvider) thumbnailProvider.destroy();
+          thumbnailProvider = new ThumbnailProvider(data);
         }
       }
     } catch (error) {
@@ -175,8 +179,7 @@
     <TemporalVisualization
       bind:this={visualization}
       {data}
-      {thumbnailsURL}
-      {thumbnailData}
+      {thumbnailProvider}
       {colorScheme}
       {useHalos}
       on:align={alignVisualization}

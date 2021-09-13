@@ -275,10 +275,15 @@ class Embedding(ColumnarData):
                 if (pos[0] >= bbox[0] and pos[0] <= bbox[1] and
                     pos[1] >= bbox[2] and pos[1] <= bbox[3])]
 
-    def to_json(self):
+    def to_json(self, compressed=True, num_neighbors=None):
         """
         Converts this embedding into a JSON object. Requires that the embedding
         have an n x 2 array at the Field.POSITION key.
+        
+        compressed: whether to format JSON objects using base64 strings
+            instead of as human-readable float arrays
+        num_neighbors: number of neighbors to write for each point (can considerably
+            save memory)
         """
         assert self.dimension() == 2, "Non-2D embeddings are not supported by to_json()"
         result = {}
@@ -291,22 +296,46 @@ class Embedding(ColumnarData):
         neighbors = self.field(Field.NEIGHBORS)
         if neighbors is None:
             print("Warning: The embedding has no computed nearest neighbors, so none will be displayed. You may want to call compute_neighbors() to generate them.")
+        elif num_neighbors is not None:
+            neighbors = neighbors[:,:min(num_neighbors, neighbors.shape[1])]
         
-        for id_val, index in zip(self.ids, indexes):
-            obj = {
-                "x": positions[index, 0],
-                "y": positions[index, 1],
-                "color": colors[index]
-            }
+        if compressed:
+            result["_format"] = "compressed"
+            # Specify the type name that will be used to encode the point IDs.
+            # This is important because the highlight array takes up the bulk
+            # of the space when transferring to file/widget.
+            dtype, type_name = choose_integer_type(self.ids)
+            result["_idtype"] = type_name
+            result["_length"] = len(self)
+            result["ids"] = encode_numerical_array(self.ids, dtype)
+            
+            result["x"] = encode_numerical_array(positions[:,0])
+            result["y"] = encode_numerical_array(positions[:,1])
+            result["color"] = encode_object_array(colors)
             if alphas is not None:
-                obj["alpha"] = alphas[index]
+                result["alpha"] = encode_numerical_array(alphas)
             if sizes is not None:
-                obj["r"] = sizes[index]
+                result["r"] = encode_numerical_array(sizes)
             if neighbors is not None:
-                obj["highlight"] = neighbors[index].tolist()
-            else:
-                obj["highlight"] = []
-            result[id_val] = obj
+                result["highlight"] = encode_numerical_array(neighbors.flatten(),
+                                                             astype=dtype,
+                                                             interval=neighbors.shape[1])
+        else:
+            for id_val, index in zip(self.ids, indexes):
+                obj = {
+                    "x": positions[index, 0],
+                    "y": positions[index, 1],
+                    "color": colors[index]
+                }
+                if alphas is not None:
+                    obj["alpha"] = alphas[index]
+                if sizes is not None:
+                    obj["r"] = sizes[index]
+                if neighbors is not None:
+                    obj["highlight"] = neighbors[index].tolist()
+                else:
+                    obj["highlight"] = []
+                result[id_val] = obj
         
         return standardize_json(result)
     
@@ -315,45 +344,40 @@ class Embedding(ColumnarData):
         """
         Builds a 2-dimensional Embedding object from the given JSON object.
         """
-        try:
-            ids = [int(id_val) for id_val in list(data.keys())]
-            data = {int(k): v for k, v in data.items()}
-        except:
-            ids = list(data.keys())
-        ids = sorted(ids)
         mats = {}
-        mats[Field.POSITION] = np.array([[data[id_val]["x"], data[id_val]["y"]] for id_val in ids])
-        mats[Field.COLOR] = np.array([data[id_val]["color"] for id_val in ids])
-        if "alpha" in data[ids[0]]:
-            mats[Field.ALPHA] = np.array([data[id_val]["alpha"] for id_val in ids])
-        if "r" in data[ids[0]]:
-            mats[Field.RADIUS] = np.array([data[id_val]["r"] for id_val in ids])
-        if "highlight" in data[ids[0]]:
-            mats[Field.NEIGHBORS] = np.array([data[id_val]["highlight"] for id_val in ids])
+        if data.get("_format", "expanded") == "compressed":
+            dtype = np.dtype(data["_idtype"])
+            ids = decode_numerical_array(data["ids"], dtype)
+            mats[Field.POSITION] = np.hstack([
+                decode_numerical_array(data["x"]).reshape(-1, 1),
+                decode_numerical_array(data["y"]).reshape(-1, 1),
+            ])
+            mats[Field.COLOR] = np.array(decode_object_array(data["color"]))
+            if "alpha" in data:
+                mats[Field.ALPHA] = decode_numerical_array(data["alpha"])
+            if "r" in data:
+                mats[Field.RADIUS] = decode_numerical_array(data["r"])
+            if "highlight" in data:
+                mats[Field.NEIGHBORS] = decode_numerical_array(data["highlight"], dtype)
+        else:
+            try:
+                ids = [int(id_val) for id_val in list(data.keys())]
+                data = {int(k): v for k, v in data.items()}
+            except:
+                ids = list(data.keys())
+            ids = sorted(ids)
+            
+            mats[Field.POSITION] = np.array([[data[id_val]["x"], data[id_val]["y"]] for id_val in ids])
+            mats[Field.COLOR] = np.array([data[id_val]["color"] for id_val in ids])
+            if "alpha" in data[ids[0]]:
+                mats[Field.ALPHA] = np.array([data[id_val]["alpha"] for id_val in ids])
+            if "r" in data[ids[0]]:
+                mats[Field.RADIUS] = np.array([data[id_val]["r"] for id_val in ids])
+            if "highlight" in data[ids[0]]:
+                mats[Field.NEIGHBORS] = np.array([data[id_val]["highlight"] for id_val in ids])
+                
         return Embedding(mats, ids=ids, label=label, metric=metric, parent=parent)
     
-    @staticmethod
-    def from_json(data, label=None, metric='euclidean', parent=None):
-        """
-        Builds a 2-dimensional Embedding object from the given JSON object.
-        """
-        try:
-            ids = [int(id_val) for id_val in list(data.keys())]
-            data = {int(k): v for k, v in data.items()}
-        except:
-            ids = list(data.keys())
-        ids = sorted(ids)
-        mats = {}
-        mats[Field.POSITION] = np.array([[data[id_val]["x"], data[id_val]["y"]] for id_val in ids])
-        mats[Field.COLOR] = np.array([data[id_val]["color"] for id_val in ids])
-        if "alpha" in data[ids[0]]:
-            mats[Field.ALPHA] = np.array([data[id_val]["alpha"] for id_val in ids])
-        if "r" in data[ids[0]]:
-            mats[Field.RADIUS] = np.array([data[id_val]["r"] for id_val in ids])
-        if "highlight" in data[ids[0]]:
-            mats[Field.NEIGHBORS] = np.array([data[id_val]["highlight"] for id_val in ids])
-        return Embedding(mats, ids=ids, label=label, metric=metric, parent=parent)
-            
     def align_to(self, base_frame, ids=None, return_transform=False, base_transform=None, allow_flips=True):
         """
         Aligns this embedding to the base frame. The frames are aligned based
@@ -494,12 +518,17 @@ class EmbeddingSet:
         for emb in self.embeddings:
             emb.compute_neighbors(n_neighbors=n_neighbors, metric=metric)
 
-    def to_json(self):
+    def to_json(self, compressed=True, num_neighbors=None):
         """
         Converts this set of embeddings into a JSON object.
+        
+        compressed: whether to format Embedding JSON objects using base64 strings
+            instead of as human-readable float arrays
+        num_neighbors: number of neighbors to write for each point (can considerably
+            save memory)
         """
         return {
-            "data": [emb.to_json() for emb in self.embeddings],
+            "data": [emb.to_json(compressed=compressed, num_neighbors=num_neighbors) for emb in self.embeddings],
             "frameLabels": [emb.label or "Frame {}".format(i) for i, emb in enumerate(self.embeddings)]
         }
 

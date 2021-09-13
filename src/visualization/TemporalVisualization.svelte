@@ -15,8 +15,7 @@
 
   export let useHalos = false;
 
-  export let thumbnailsURL = null;
-  export let thumbnailData = null;
+  export let thumbnailProvider;
   let thumbnailViewer;
 
   export let data = null;
@@ -70,10 +69,6 @@
       thumbnailIDs = selectedIDs;
       thumbnailHover = false;
     }
-  }
-
-  export function updateThumbnails() {
-    if (!!thumbnailViewer) thumbnailViewer.updateImageThumbnails();
   }
 
   // Autocomplete
@@ -176,6 +171,7 @@
         <DefaultThumbnailViewer
           bind:this={thumbnailViewer}
           dataset={data}
+          {thumbnailProvider}
           primaryTitle={thumbnailHover ? 'Hovered Point' : 'Selection'}
           frame={currentFrame}
           {previewFrame}

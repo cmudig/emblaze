@@ -2,6 +2,86 @@ import { transformPoint, distance2, shuffle } from '../utils/helpers.js';
 import { kdTree } from '../utils/kdTree.js';
 
 /**
+ * Handles interpreting the standard input formats for the widget. If arrayType
+ * is:
+ *  - Array: compressed base-64 string should be a JSON string
+ *  - Float32Array/Int32Array: string should be a compressed string representing
+ *    an array of floats/ints
+ *
+ * Courtesy of https://gist.github.com/sketchpunk/f5fa58a56dcfe6168a9328e7c32a4fd4
+ */
+function decodeBase64String(base64String, arrayType) {
+  if (arrayType === Array) {
+    return JSON.parse(window.atob(base64String));
+  } else {
+    var blob = window.atob(base64String), // Base64 string converted to a char array
+      bytesPerElement = arrayType.BYTES_PER_ELEMENT,
+      fLen = blob.length / bytesPerElement, // How many floats can be made, but be even
+      dView = makeTypedReader(arrayType),
+      result = new arrayType(fLen), // Final Output at the correct size
+      p = 0; // Position
+
+    for (var j = 0; j < fLen; j++) {
+      p = j * bytesPerElement;
+      for (var k = 0; k < bytesPerElement; k++)
+        dView.set(k, blob.charCodeAt(p + k));
+      result[j] = dView.get();
+    }
+    return result;
+  }
+}
+
+function makeTypedReader(arrayType) {
+  let base = new DataView(new ArrayBuffer(arrayType.BYTES_PER_ELEMENT));
+  let result = {
+    set(offset, value) {
+      base.setUint8(offset, value);
+    },
+  };
+  if (arrayType === Float32Array) result.get = () => base.getFloat32(0, true);
+  else if (arrayType === Float64Array)
+    result.get = () => base.getFloat64(0, true);
+  else if (arrayType === Int32Array) result.get = () => base.getInt32(0, true);
+  else if (arrayType === Uint32Array)
+    result.get = () => base.getUint32(0, true);
+  else if (arrayType === Int16Array) result.get = () => base.getInt16(0, true);
+  else if (arrayType === Uint16Array)
+    result.get = () => base.getUint16(0, true);
+  else if (arrayType === Int8Array) result.get = () => base.getInt8(0, true);
+  else if (arrayType === Uint8Array) result.get = () => base.getUint8(0, true);
+  else
+    console.error(
+      "unsupported array type - note that int64 arrays aren't fully supported yet"
+    );
+  return result;
+}
+
+/**
+ * Converts the given format string (e.g. 'i8', 'u1') into a TypedArray type.
+ *
+ */
+function selectArrayType(format) {
+  switch (format) {
+    case 'i8':
+      return BigInt64Array;
+    case 'i4':
+      return Int32Array;
+    case 'i2':
+      return Int16Array;
+    case 'i1':
+      return Int8Array;
+    case 'u8':
+      return BigUint64Array;
+    case 'u4':
+      return Uint32Array;
+    case 'u2':
+      return Uint16Array;
+    case 'u1':
+      return Uint8Array;
+  }
+}
+
+/**
  * A class for representing a fixed number of objects using arrays. The
  * constructor accepts a schema, which is an object whose keys will be the
  * field names that the object stores, and whose values are objects containing
@@ -10,6 +90,11 @@ import { kdTree } from '../utils/kdTree.js';
  *     For arbitrary object types, Array may be used.
  * - field: The name of the field in the provided data from which to obtain the
  *     values to store. If this is not provided, the key name is used.
+ *
+ * If the input to ColumnarData is compressed, the data object must contain a
+ * length property indicating the number of objects in each field. The remaining
+ * keys of the object should be the fields defined in the schema, encoded as
+ * base 64 strings according to the correct types.
  */
 export class ColumnarData {
   columns = {};
@@ -19,45 +104,126 @@ export class ColumnarData {
   length = 0;
   computedData = {};
 
-  constructor(schema, data, objTransform = null) {
+  constructor(schema, data, additionalFields = null) {
     this.schema = schema;
-    this.length = Object.keys(data).length;
-    Object.keys(this.schema).forEach((col) => {
-      let len = this.length;
-      if (this.schema[col].nested) {
-        // This column will contain the flattened contents of arrays of
-        // integers. We need to compute the exact length of the column and store
-        // an additional column for "nest position", indicating where to jump to
-        // for each index.
-        this.nestPositionColumns[col] = new Int32Array(this.length);
-        len = Object.keys(data)
-          .map((id) => (!!objTransform ? objTransform(data[id], id) : data[id]))
-          .reduce(
-            (total, pt) => total + pt[this.schema[col].field || col].length,
-            0
-          );
+
+    if (data['_format'] == 'compressed') {
+      this.length = data['_length'];
+
+      // Get the ids list as an Int32Array
+      if (!data.ids) {
+        console.error('compressed data object has no ids field');
+        return;
       }
-      this.columns[col] = new this.schema[col].array(len);
-    });
-    Object.keys(data).forEach((id, i) => {
-      id = parseInt(id);
-      this.idMapping.set(id, i);
-      let pt = data[id];
-      if (!!objTransform) {
-        pt = objTransform(pt, id);
-      }
+      let idType = selectArrayType(data['_idtype']);
+      let ids = decodeBase64String(data.ids.values, idType);
+      ids.forEach((id, i) => this.idMapping.set(id, i));
+
+      // first read all compressed arrays from the input
       Object.keys(this.schema).forEach((col) => {
-        let fieldVal = pt[this.schema[col].field || col];
+        let fieldName = this.schema[col].field || col;
+
+        let val = data[fieldName]; // this is a JSON object
+        if (!val) return;
+
         if (this.schema[col].nested) {
-          // Set the flattened array and the current position
-          let currentPos = i == 0 ? 0 : this.nestPositionColumns[col][i - 1];
-          fieldVal.forEach(
-            (val, j) => (this.columns[col][currentPos + j] = val)
+          // The value should contain an additional 'positions' key or an 'interval' key
+          if (!!val.positions) {
+            this.nestPositionColumns[col] = decodeBase64String(
+              val.positions,
+              Int32Array
+            );
+          } else if (!!val.interval) {
+            this.nestPositionColumns[col] = new Int32Array(this.length);
+            for (let k = 0; k < this.length; k++) {
+              // the nest positions list the position of the END of each row's values
+              this.nestPositionColumns[col][k] = (k + 1) * val.interval;
+            }
+          }
+        }
+        this.columns[col] = decodeBase64String(
+          val.values,
+          this.schema[col].array == 'id' ? idType : this.schema[col].array
+        );
+        if (!this.schema[col].nested && this.columns[col].length != this.length)
+          console.warn(
+            `field '${fieldName}' has incorrect length: expected ${this.length}, got ${this.columns[col].length}`
           );
-          this.nestPositionColumns[col][i] = currentPos + fieldVal.length;
-        } else this.columns[col][i] = fieldVal;
       });
-    });
+
+      // Now go back and add additional fields from the input argument
+      if (!!additionalFields) {
+        let newCols = {};
+        Object.keys(additionalFields).forEach((f) => {
+          let colSchema = this.schema[f];
+          if (!colSchema) {
+            console.warn("can't add additional fields without a schema column");
+            return;
+          }
+          if (colSchema.nested) {
+            console.warn(
+              "can't currently add nested columns using additional fields"
+            );
+            return;
+          }
+          let arrayType =
+            colSchema.array == 'id' ? Int32Array : colSchema.array;
+          let newCol = new arrayType(this.length);
+          newCols[f] = newCol;
+        });
+        ids.forEach((id, i) => {
+          let pt = this.byID(id);
+          Object.keys(additionalFields).forEach((f) => {
+            newCols[f][i] = additionalFields[f](pt);
+          });
+        });
+        Object.keys(newCols).forEach(
+          (col) => (this.columns[col] = newCols[col])
+        );
+      }
+    } else {
+      this.length = Object.keys(data).length;
+      Object.keys(this.schema).forEach((col) => {
+        let len = this.length;
+        if (this.schema[col].nested) {
+          // This column will contain the flattened contents of arrays of
+          // integers. We need to compute the exact length of the column and store
+          // an additional column for "nest position", indicating where to jump to
+          // for each index.
+          this.nestPositionColumns[col] = new Int32Array(this.length);
+          len = Object.keys(data)
+            .map((id) => data[id])
+            .reduce(
+              (total, pt) => total + pt[this.schema[col].field || col].length,
+              0
+            );
+        }
+        let arrayType =
+          this.schema[col].array == 'id' ? Int32Array : this.schema[col].array;
+        this.columns[col] = new arrayType(len);
+      });
+      Object.keys(data).forEach((id, i) => {
+        id = parseInt(id);
+        this.idMapping.set(id, i);
+        let pt = data[id];
+        if (!!additionalFields) {
+          Object.keys(additionalFields).forEach((f) => {
+            pt[f] = additionalFields[f](pt, id);
+          });
+        }
+        Object.keys(this.schema).forEach((col) => {
+          let fieldVal = pt[this.schema[col].field || col];
+          if (this.schema[col].nested) {
+            // Set the flattened array and the current position
+            let currentPos = i == 0 ? 0 : this.nestPositionColumns[col][i - 1];
+            fieldVal.forEach(
+              (val, j) => (this.columns[col][currentPos + j] = val)
+            );
+            this.nestPositionColumns[col][i] = currentPos + fieldVal.length;
+          } else this.columns[col][i] = fieldVal;
+        });
+      });
+    }
   }
 
   byID(id) {
@@ -145,7 +311,7 @@ const FRAME_SCHEMA = {
   alpha: { array: Float32Array },
   r: { array: Float32Array },
   color: { array: Array },
-  highlightIndexes: { array: Int32Array, field: 'highlight', nested: true },
+  highlightIndexes: { array: 'id', field: 'highlight', nested: true },
   visible: { array: Array },
 };
 
@@ -153,8 +319,8 @@ export class ColumnarFrame extends ColumnarData {
   _kdTree;
   title;
 
-  constructor(frame, title, objTransform = null) {
-    super(FRAME_SCHEMA, frame, objTransform);
+  constructor(frame, title, additionalFields = null) {
+    super(FRAME_SCHEMA, frame, additionalFields);
     this.title = title;
   }
 
