@@ -59,6 +59,7 @@
   // set this to false to disable showing preview lines when displaying lots
   // of data
   export let showPreviewLines = true;
+  export let numPreviewPoints = 100;
 
   // Constants
 
@@ -130,7 +131,7 @@
   let highlightedPoints = new Set();
 
   let previewLinePoints = new Set();
-  $: previewLinePoints = new Set(idsOfInterest);
+  let strongestPreviewPoints = [];
 
   function _getX(mark) {
     let id = mark.id;
@@ -232,7 +233,7 @@
   let previousFrame = null;
   $: if (!!marks && previousFrame !== frame) {
     setFrame(previousFrame, frame, !thumbnail && previousFrame != null);
-    if (!thumbnail) updatePreviewLines();
+    if (!thumbnail) updatePreviewLines(filter, idsOfInterest, previewInfo);
     previousFrame = frame;
   }
 
@@ -313,11 +314,30 @@
     oldPreviewFrame = previewFrame;
   }
 
-  $: if (!!data && !!marks && !!previewLinePool)
-    updatePreviewLines(previewInfo);
+  $: if (!!data && !!marks && !!previewLinePool) {
+    updatePreviewLines(filter, idsOfInterest, previewInfo);
+  }
 
-  function updatePreviewLines(info) {
+  function updateStrongestPreviewPoints(filterSet, prevInfo) {
+    if (!prevInfo) {
+      strongestPreviewPoints = [];
+      return;
+    }
+
+    strongestPreviewPoints = prevInfo.getTopK(
+      numPreviewPoints,
+      filterSet.size > 0 ? filterSet : null
+    );
+  }
+
+  function updatePreviewLines(filterSet, interestIDs, info) {
     if (!marks || !previewLinePool) return;
+
+    if (interestIDs.size > 0) previewLinePoints = new Set(interestIDs);
+    else {
+      updateStrongestPreviewPoints(filterSet, info);
+      previewLinePoints = new Set(strongestPreviewPoints);
+    }
 
     if (!!info && showPreviewLines) {
       marks.forEach((mark) => {
@@ -365,7 +385,7 @@
       }
     }
     if (previewInfo != null) {
-      updatePreviewLines(previewInfo);
+      updatePreviewLines(filter, idsOfInterest, previewInfo);
     }
     prevFilter = filter;
   }
@@ -424,6 +444,7 @@
     } else if (element.type == 'halo') {
       selectedIDs = element.ids;
     }
+    return selectedIDs;
   }
 
   // This function should make ALL the mutations that arise from selection/alignment
@@ -472,7 +493,7 @@
 
   let oldShowPreviewLines = true;
   $: if (oldShowPreviewLines != showPreviewLines && !!previewInfo) {
-    updatePreviewLines(previewInfo);
+    updatePreviewLines(filter, idsOfInterest, previewInfo);
     oldShowPreviewLines = showPreviewLines;
   }
 

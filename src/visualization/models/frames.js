@@ -1,4 +1,4 @@
-import { transformPoint, distance2 } from '../utils/helpers.js';
+import { transformPoint, distance2, shuffle } from '../utils/helpers.js';
 import { kdTree } from '../utils/kdTree.js';
 
 /**
@@ -210,14 +210,38 @@ export class FramePreview {
   frame;
   previewFrame;
   lineData;
+  _sortedByAlpha;
 
   constructor(frame, previewFrame, dataFn = null) {
     this.frame = frame;
     this.previewFrame = previewFrame;
     this.lineData = new ColumnarData(
       PREVIEW_LINE_SCHEMA,
-      !!dataFn ? this.frame.getIDs().map(dataFn) : {}
+      !!dataFn
+        ? Object.fromEntries(this.frame.getIDs().map((id) => [id, dataFn(id)]))
+        : {}
     );
+  }
+
+  /**
+   * Returns the top k IDs with the highest alpha values, optionally filtering
+   * to the given set of IDs.
+   */
+  getTopK(k, inSet = null) {
+    if (this._sortedByAlpha == null) {
+      let ids = this.frame.getIDs();
+      this._sortedByAlpha = shuffle([...Array(ids.length).keys()]);
+      let alphas = this.lineData.getField('lineAlpha');
+      this._sortedByAlpha.sort((a, b) => alphas[b] - alphas[a]);
+    }
+
+    let result = [];
+    this._sortedByAlpha.some((id) => {
+      if (inSet != null && !inSet.has(id)) return false;
+      result.push(id);
+      return result.length >= k;
+    });
+    return result;
   }
 
   get(id) {

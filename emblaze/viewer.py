@@ -15,7 +15,7 @@ from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet
 from .thumbnails import Thumbnails
-from .utils import Field, SidebarPane, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
+from .utils import Field, LoggingHelper, SidebarPane, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
 from .recommender import SelectionRecommender
 from datetime import datetime
 import json
@@ -91,6 +91,16 @@ class Viewer(DOMWidget):
     previewMode = Unicode("").tag(sync=True)
     previewParameters = Dict({}).tag(sync=True)
     
+    # List of past interactions with the widget. When saveInteractionsFlag is
+    # set to True by the widget, the backend will save the interaction history
+    # to file using the loggingHelper.
+    interactionHistory = List([]).tag(sync=True)
+    saveInteractionsFlag = Bool(False).tag(sync=True)
+    
+    # Whether to save interaction history/logs to file
+    loggingEnabled = Bool(False).tag(sync=True)
+    loggingHelper = None
+    
     def __init__(self, *args, **kwargs):
         """
         embeddings: An EmbeddingSet object.
@@ -102,7 +112,12 @@ class Viewer(DOMWidget):
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
-        self.performanceSuggestionsMode = len(self.embeddings[0]) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        if self.loggingEnabled:
+            self.loggingHelper = LoggingHelper('emblaze_logs_{}.json'.format(datetime.now().strftime("%Y%m%d_%H%M%S")),
+                                               {'numFrames': len(self.embeddings),
+                                                'numPoints': len(self.embeddings[0])})
+
+        self._update_performance_suggestions_mode()
         if not self.colorScheme:
             self.colorScheme = self.detect_color_scheme()
         if not self.previewMode:
@@ -328,6 +343,10 @@ class Viewer(DOMWidget):
         if change.new and not self.loadingSuggestions:
             self._update_suggested_selections()
     
+    def _update_performance_suggestions_mode(self):
+        """Determines whether to use the performance mode for computing suggestions."""
+        self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        
     def _update_suggested_selections_background(self):
         """Function that runs in the background to recompute suggested selections."""
         self.recomputeSuggestionsFlag = False
@@ -335,7 +354,7 @@ class Viewer(DOMWidget):
             return
 
         filter_points = None
-        self.performanceSuggestionsMode = len(self.embeddings[0]) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        self._update_performance_suggestions_mode()
         if self.performanceSuggestionsMode:
             # Check if sufficiently few points are visible to show suggestions
             if self.filterIDs and len(self.filterIDs) <= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
@@ -415,3 +434,14 @@ class Viewer(DOMWidget):
         """Recomputes the suggested selections."""
         thread = threading.Thread(target=self._update_suggested_selections_background)
         thread.start()
+
+    @observe("saveInteractionsFlag")
+    def _save_interactions(self, change):
+        """
+        The widget sets the flag to save interaction history periodically
+        because we can't use a timer in the backend.
+        """
+        if change.new:
+            self.loggingHelper.add_logs(self.interactionHistory)
+            self.interactionHistory = []
+            self.saveInteractionsFlag = False

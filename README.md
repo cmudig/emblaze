@@ -16,7 +16,7 @@ pip install emblaze
 
 The widget should work out of the box when you run `jupyter lab` (see example code below).
 
-*Jupyter Notebook note:* If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
+_Jupyter Notebook note:_ If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
 the nbextension:
 
 ```bash
@@ -25,7 +25,7 @@ jupyter nbextension enable --py --sys-prefix emblaze
 
 ## Standalone Demo
 
-Although the full application is designed to work as a Jupyter widget, you can run a standalone version with most of the available features directly in your browser. To do so, simply run the following command after pip-installing the package (note: you do *not* need to clone the repository to run the standalone app):
+Although the full application is designed to work as a Jupyter widget, you can run a standalone version with most of the available features directly in your browser. To do so, simply run the following command after pip-installing the package (note: you do _not_ need to clone the repository to run the standalone app):
 
 ```bash
 python -m emblaze.server
@@ -166,6 +166,32 @@ with open(os.path.join(data_dir, dataset_name, "data.json"), "w") as file:
     json.dump(embeddings.to_json(), file)
 with open(os.path.join(data_dir, dataset_name, "thumbnails.json"), "w") as file:
     json.dump(thumbnails.to_json(), file)
+```
+
+### Deployment
+
+First clean all npm build intermediates:
+
+```
+npm run clean
+```
+
+Bump the widget version in `emblaze/_version.py` and `package.json` if applicable. Then build the notebook widgets and standalone app:
+
+```
+npm run build:all
+```
+
+Run the packaging script to generate the wheel for distribution:
+
+```
+python -m build
+```
+
+Upload to PyPI (replace `<VERSION>` with the version number):
+
+```
+twine upload dist/emblaze-<VERSION>*
 ```
 
 ### Development Notes

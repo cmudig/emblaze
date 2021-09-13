@@ -390,7 +390,13 @@
     var mouseY = event.clientY - rect.top; //y position within the element.
 
     var el = getElementAtPoint(mouseX, mouseY);
-    stateManager.selectElement(el, event.metaKey || event.ctrlKey);
+    let newSelection = stateManager.selectElement(
+      el,
+      event.metaKey || event.ctrlKey
+    );
+    if (newSelection.length > 0)
+      dispatch('logEvent', { type: 'selection', source: 'click' });
+    else dispatch('logEvent', { type: 'deselection', source: 'click' });
   }
 
   // Selection
@@ -430,6 +436,7 @@
       })
       .map((mark) => mark.id);
     dispatch('dataclick', clickedIDs);
+    dispatch('logEvent', { type: 'selection', source: 'lasso' });
 
     scatterplot.endMultiselect();
   }
@@ -545,6 +552,7 @@
   function endRadiusSelect() {
     clickedIDs = idsWithinSelectionRadius(selectionUnit);
     dispatch('dataclick', clickedIDs);
+    dispatch('logEvent', { type: 'selection', source: 'radiusselect' });
     scatterplot.endRadiusSelect();
     tentativeSelectedIDs = [];
   }
@@ -645,7 +653,6 @@
     xScale={!!viewportManager ? (x) => viewportManager.scaleX(x) : null}
     yScale={!!viewportManager ? (y) => viewportManager.scaleY(y) : null}
     highlightFocusedPoints={!performanceMode}
-    showPreviewLines={!performanceMode}
     bind:marks
     bind:filterIDs
     bind:hoveredID
@@ -653,6 +660,7 @@
     bind:tentativeSelectedIDs
     bind:alignedIDs
     bind:previewProgress
+    on:logEvent
   />
   <ScatterplotViewportState
     bind:this={viewportManager}

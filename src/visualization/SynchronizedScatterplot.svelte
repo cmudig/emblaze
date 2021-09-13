@@ -327,7 +327,11 @@
     previewInfo={!!data && previewFrame >= 0 && previewFrame != frame
       ? data.previewInfo(frame, previewFrame)
       : null}
-    idsOfInterest={alignedIDs.length > 0 ? getFilterPoints(alignedIDs) : []}
+    idsOfInterest={alignedIDs.length > 0
+      ? getFilterPoints(alignedIDs)
+      : clickedIDs.length > 0
+      ? getFilterPoints(clickedIDs)
+      : []}
     bind:previewProgress
     bind:clickedIDs
     bind:hoveredID
@@ -359,6 +363,7 @@
     on:dataclick
     on:click
     on:viewportChanged
+    on:logEvent
   />
   {#if !thumbnail}
     <div id="button-panel">

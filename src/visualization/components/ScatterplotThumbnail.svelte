@@ -66,10 +66,10 @@
   on:mousedown={onMousedown}
   on:mouseup={onMouseup}
   on:mouseout={onMouseout}
+  on:click
 >
   <Scatterplot
     thumbnail
-    on:click
     {colorScale}
     {data}
     width={54}

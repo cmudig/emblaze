@@ -1,6 +1,11 @@
+import sys
 import numpy as np
 from affine import Affine
 from numba import jit
+import json
+import datetime
+import platform
+import os
 
 class Field:
     """Standardized field names for embeddings and projections. These data can
@@ -110,3 +115,36 @@ def inverse_intersection(seqs1, seqs2, mask_ids, outer):
         if len(set1) or len(set2):
             distances[i] = 1 / (1 + num_intersection)
     return distances
+
+class LoggingHelper:
+    """
+    Writes and/or updates a JSON file with interaction information.
+    """
+    def __init__(self, filepath, addl_info=None):
+        super().__init__()
+        self.filepath = filepath
+        
+        if not os.path.exists(self.filepath):
+            current_data = {
+                "timestamp": str(datetime.datetime.now()),
+                "platform": platform.platform(),
+                "version": sys.version,
+                "logs": []
+            }
+            if addl_info is not None:
+                current_data.update(addl_info)
+            with open(self.filepath, "w") as file:
+                json.dump(current_data, file)
+
+        
+    def add_logs(self, entries):
+        """
+        Adds a list of logging entries to the log file.
+        """
+        with open(self.filepath, "r") as file:
+            current_data = json.load(file)
+                
+        current_data["logs"] += entries
+        
+        with open(self.filepath, "w") as file:
+            json.dump(current_data, file)
