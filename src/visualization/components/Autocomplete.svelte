@@ -48,7 +48,7 @@
     data-toggle="dropdown"
     on:focus={() => (autocompleteDropdownVisible = true)}
     on:blur={() => {
-      setTimeout(() => (autocompleteDropdownVisible = false), 100);
+      setTimeout(() => (autocompleteDropdownVisible = false), 500);
     }}
     style={fillWidth ? 'width: 100%;' : ''}
   />
