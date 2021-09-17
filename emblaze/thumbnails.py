@@ -1,9 +1,11 @@
 import json
+from typing import Text
 import numpy as np
 import pandas as pd
 from io import BytesIO
 from PIL import Image
 import base64
+import copy
 from .datasets import ColumnarData
 from .utils import Field, standardize_json
 
@@ -22,6 +24,10 @@ class Thumbnails:
         return {
             "format": self.format
         }
+        
+    def get_ids(self):
+        """Return a numpy array of the IDs used in this thumbnails object."""
+        raise NotImplementedError
         
 class TextThumbnails(Thumbnails):
     """
@@ -44,6 +50,9 @@ class TextThumbnails(Thumbnails):
         if descriptions is not None:
             self.data.set_field(Field.DESCRIPTION, descriptions)
 
+    def get_ids(self):
+        return self.data.ids
+    
     def name(self, ids=None):
         """
         Returns the name(s) for the given set of IDs, or all points if
@@ -68,7 +77,7 @@ class TextThumbnails(Thumbnails):
                 "name": str(names[i]),
                 "description": str(descriptions[i]) if descriptions is not None else "",
                 "frames": {} # Not implemented
-            } for i, id_val in enumerate(self.data.ids)
+            } for i, id_val in enumerate(self.data.ids) if names[i] or descriptions[i]
         }
         return standardize_json(result)
     
@@ -142,7 +151,7 @@ class ImageThumbnails(Thumbnails):
             self.images = None
         else:
             self.images = images
-            self.ids = ids or np.arange(len(images))
+            self.ids = ids if ids is not None else np.arange(len(images))
             self.make_spritesheets(images, self.ids, grid_dimensions, image_size)
         self._id_index = {id: i for i, id in enumerate(self.ids)}
         
@@ -158,6 +167,9 @@ class ImageThumbnails(Thumbnails):
             }, ids)
         else:
             self.text_data = None
+        
+    def get_ids(self):
+        return self.ids
         
     def __getitem__(self, ids):
         """
@@ -183,11 +195,13 @@ class ImageThumbnails(Thumbnails):
             self.images = self._make_raw_images()
             
         if isinstance(ids, (list, np.ndarray, set)):
-            index = [self._id_index[int(id_val)] for id_val in ids]
+            index = [self._id_index.get(int(id_val), None) for id_val in ids]
+            return [self.images[i] if i is not None else None for i in index]
         else:
-            index = self._id_index[int(ids)]
-
-        return self.images[index]     
+            index = self._id_index.get(int(ids), None)
+            if index is not None:
+                return self.images[index] 
+            return None
         
     def name(self, ids=None):
         """
@@ -205,6 +219,9 @@ class ImageThumbnails(Thumbnails):
         if self.text_data is None: return None
         return self.text_data.field(Field.DESCRIPTION, ids=ids)
         
+    def get_spritesheets(self):
+        return self.spritesheets
+    
     def to_json(self):
         result = super().to_json()
         result["spritesheets"] = self.spritesheets
@@ -217,7 +234,7 @@ class ImageThumbnails(Thumbnails):
                     "name": str(names[i]) if names is not None else "",
                     "description": str(descriptions[i]) if descriptions is not None else "",
                     "frames": {} # Not implemented
-                } for i, id_val in enumerate(self.text_data.ids)
+                } for i, id_val in enumerate(self.text_data.ids) if names[i] or descriptions[i]
             }
 
         return standardize_json(result)
@@ -289,7 +306,8 @@ class ImageThumbnails(Thumbnails):
         Generates a set of spritesheets from the given image data.
         
         Args:
-            data: A ColumnarData object that contains a single field _images.
+            images: A matrix or list of images in RGBA format (e.g. shape = rows x cols x 4).
+            ids: The point IDs to associate with each image.
             grid_dimensions: Number of images per spritesheet, defined as
                 (images per row, images per column)
             image_size: Number of pixels per image, defined as (rows, cols)
@@ -304,7 +322,8 @@ class ImageThumbnails(Thumbnails):
         current_image = None
         image_index = 0
         image_encoding_warning = False
-        for i in range(len(images)):
+        assert len(ids) == len(images), "Number of IDs provided must be equal to number of images"
+        for i, id_val in enumerate(ids):
             if i % (grid_dimensions[0] * grid_dimensions[1]) == 0:
                 if current_image is not None and current_spritesheet is not None:
                     img = Image.fromarray(current_image, 'RGBA')
@@ -351,7 +370,7 @@ class ImageThumbnails(Thumbnails):
             # Place the image
             current_image[pos[0]:pos[0] + image_size[0], pos[1]:pos[1] + image_size[1],:] = image
             
-            current_spritesheet["spec"]["frames"][str(i)] = {
+            current_spritesheet["spec"]["frames"][str(id_val)] = {
                 "frame": {
                     "x": pos[1],
                     "y": pos[0],
@@ -424,3 +443,102 @@ class ImageThumbnails(Thumbnails):
         Computes a reasonable number of images per side of the spritesheet.
         """
         return (MAX_SPRITESHEET_DIM // image_size[0], MAX_SPRITESHEET_DIM // image_size[1])
+    
+    
+class CombinedThumbnails(Thumbnails):
+    """
+    A class representing a combination of images and/or text thumbnails. The
+    thumbnail objects that are merged may have overlapping IDs, but they may not
+    have overlapping IDs for the same thumbnail type. For example, two
+    ImageThumbnails objects cannot both have images for the same point ID.
+    """
+    def __init__(self, thumbnail_objects):
+        has_images = any(t.format == "spritesheet" for t in thumbnail_objects)
+        super().__init__("spritesheet" if has_images else "text_descriptions")
+        
+        # Merge the list of representations together
+        self.ids = np.array(sorted(set.union(*(set(t.get_ids().tolist()) for t in thumbnail_objects))))
+        self._id_index = {id_val: i for i, id_val in enumerate(self.ids)}
+        
+        names = None
+        descriptions = None
+        spritesheets = {}
+        seen_images = set()
+        seen_texts = set()
+        for t, thumbnails in enumerate(thumbnail_objects):
+            indexes = [self._id_index[id_val] for id_val in thumbnails.get_ids()]
+            
+            if thumbnails.format == "spritesheet":
+                assert not set(thumbnails.get_ids().tolist()) & seen_images, "Overlapping image thumbnails"
+                for spritesheet_name, value in thumbnails.get_spritesheets().items():
+                    new_spritesheet_name = str(t) + "_" + spritesheet_name
+                    spritesheet = copy.deepcopy(value)
+                    spritesheet["spec"]["meta"]["image"] = str(t) + "_" + spritesheet["spec"]["meta"]["image"]
+                    spritesheets[new_spritesheet_name] = spritesheet
+                seen_images |= set(thumbnails.get_ids().tolist())
+            
+            if thumbnails.format == "text_descriptions" or (thumbnails.format == "spritesheet" and thumbnails.name() is not None):
+                assert not set(thumbnails.get_ids().tolist()) & seen_texts, "Overlapping text thumbnails"
+                seen_texts |= set(thumbnails.get_ids().tolist())
+            
+            nm = thumbnails.name()
+            if nm is not None:
+                if names is None: names = np.empty(len(self.ids), dtype='O')
+                names[indexes] = thumbnails.name()
+            desc = thumbnails.description()
+            if desc is not None:
+                if descriptions is None: descriptions = np.empty(len(self.ids), dtype='O')
+                descriptions[indexes] = desc
+            
+        # Store an internal ImageThumbnails and a TextThumbnails object
+        self.image_thumbnails = ImageThumbnails(None, spritesheets=spritesheets) if spritesheets else None
+        self.text_thumbnails = TextThumbnails(names, descriptions, ids=self.ids) if names is not None else None
+        
+    def get_ids(self):
+        return self.ids
+
+    def get_spritesheets(self):
+        return self.image_thumbnails.spritesheets if self.image_thumbnails else None
+    
+    def to_json(self):
+        result = super().to_json()
+        
+        if self.image_thumbnails is not None:
+            result["spritesheets"] = self.image_thumbnails.to_json()["spritesheets"]
+        if self.text_thumbnails is not None:
+            result["items"] = self.text_thumbnails.to_json()["items"]
+            
+        return result
+    
+    @staticmethod
+    def from_json(data):
+        thumbnails = []
+        if "spritesheets" in data:
+            thumbnails.append(ImageThumbnails.from_json({"spritesheets": data["spritesheets"]}))
+            
+        if "items" in data:
+            thumbnails.append(TextThumbnails.from_json({"items": data["items"]}))
+            
+        return CombinedThumbnails(thumbnails)
+    
+    def image(self, ids=None):
+        """
+        Returns the image(s) for the given ID or set of IDs, or all points if ids
+        is not provided.
+        """
+        return self.image_thumbnails.image(ids=ids) if self.image_thumbnails else None
+        
+    def name(self, ids=None):
+        """
+        Returns the name(s) for the given set of IDs, or all points if
+        ids is not provided. Returns None if names are not available.
+        """
+        return self.text_thumbnails.name(ids=ids) if self.text_thumbnails else None
+    
+    def description(self, ids=None):
+        """
+        Returns the description(s) for the given set of IDs, or all points if
+        ids is not provided. Returns None if descriptions are not present.
+        """
+        return self.text_thumbnails.description(ids=ids) if self.text_thumbnails else None
+        

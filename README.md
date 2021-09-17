@@ -95,6 +95,8 @@ w = emblaze.Viewer(embeddings=embeddings, thumbnails=thumbnails)
 w
 ```
 
+You can also visualize embeddings with multimodal labels (i.e. where some points have text labels and others have image labels) by initializing an `emblaze.CombinedThumbnails` instance with a list of other `Thumbnails` objects to combine.
+
 ### Interactive Analysis
 
 Once you have loaded a `Viewer` instance in the notebook, you can read and write its properties to dynamically work with the visualization. The following properties are reactive:
