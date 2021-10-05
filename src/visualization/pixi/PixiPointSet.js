@@ -81,17 +81,17 @@ class PointSetGeometry extends PIXI.Geometry {
   }
 }
 
-const VertexShader = `
+const VertexShader = `#version 300 es
     precision mediump float;
 
-    attribute vec4 x;
-    attribute vec4 y;
-    attribute vec4 r;
-    attribute vec3 fillStyle;
-    attribute vec4 alpha;
+    in vec4 x;
+    in vec4 y;
+    in vec4 r;
+    in vec3 fillStyle;
+    in vec4 alpha;
 
-    varying vec3 vFillStyle;
-    varying float vAlpha;
+    out vec3 vFillStyle;
+    out float vAlpha;
 
     uniform mat3 translationMatrix;
     uniform mat3 projectionMatrix;
@@ -126,27 +126,28 @@ const VertexShader = `
     }
 `;
 
-const FragmentShader = `
+const FragmentShader = `#version 300 es
     #ifdef GL_OES_standard_derivatives
     #extension GL_OES_standard_derivatives : enable
     #endif
 
     precision mediump float;
 
-    uniform bool showBorders;
+    uniform float showBorders;
 
     const float fillAlpha = 0.5; // for some reason this isn't perceptually consistent with other alphas
     const float strokeWidth = 0.3;
     const float inset = 0.6;
 
-    varying vec3 vFillStyle;
-    varying float vAlpha;
+    in vec3 vFillStyle;
+    in float vAlpha;
+    out vec4 fragmentColor;
 
     void main () {
       float r = 0.0, delta = 0.0, alpha = vAlpha;
       vec2 cxy = 2.0 * gl_PointCoord - 1.0;
       r = dot(cxy, cxy);
-      if (showBorders) {
+      if (showBorders > 0.5) {
         #ifdef GL_OES_standard_derivatives
           delta = fwidth(r);
           float strokeMinInner = inset - strokeWidth - delta;
@@ -179,16 +180,18 @@ const FragmentShader = `
         #endif
       }
 
-      gl_FragColor = vec4(vFillStyle * alpha, alpha);
+      fragmentColor = vec4(vFillStyle * alpha, alpha);
     }
 `;
 
 // Uses just rectangles instead of circles
-const HiddenFragmentShader = `
+const HiddenFragmentShader = `#version 300 es
     precision mediump float;
 
-    varying vec3 vFillStyle;
-    varying float vAlpha;
+    in vec3 vFillStyle;
+    in float vAlpha;
+
+    out vec4 fragmentColor;
 
     void main () {
       float r = 0.0, delta = 0.0;
@@ -201,7 +204,7 @@ const HiddenFragmentShader = `
         discard;
       }
 
-      gl_FragColor = vec4(vFillStyle, 1.0);
+      fragmentColor = vec4(vFillStyle, 1.0);
     }
 `;
 
@@ -227,7 +230,7 @@ export default class PixiPointSet extends PIXI.Mesh {
       currentTime: 0.0,
       rFactor,
     };
-    if (!hidden) uniforms.showBorders = true;
+    if (!hidden) uniforms.showBorders = 1.0;
     let shader = new PIXI.Shader.from(
       VertexShader,
       hidden ? HiddenFragmentShader : FragmentShader,
@@ -252,7 +255,8 @@ export default class PixiPointSet extends PIXI.Mesh {
   update(currentTime, needsGeometryUpdate = false) {
     this.shader.uniforms.rFactor = this.rFactor;
     this.shader.uniforms.currentTime = currentTime;
-    if (!this.hidden) this.shader.uniforms.showBorders = this.showBorders;
+    if (!this.hidden)
+      this.shader.uniforms.showBorders = this.showBorders ? 1.0 : 0.0;
     if (needsGeometryUpdate) this.geometry.update(currentTime);
   }
 }

@@ -256,8 +256,8 @@ class ImageThumbnails(Thumbnails):
         descriptions = None
         if "items" in data:
             items = data["items"]
-            names = [items[id_val]["name"] for id_val in ids]
-            descriptions = [items[id_val].get("description", "") for id_val in ids]
+            names = [items[str(id_val)]["name"] for id_val in ids]
+            descriptions = [items[str(id_val)].get("description", "") for id_val in ids]
 
         return ImageThumbnails(None,
                                spritesheets=spritesheets,
