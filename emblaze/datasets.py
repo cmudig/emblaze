@@ -532,8 +532,8 @@ class EmbeddingSet:
             "frameLabels": [emb.label or "Frame {}".format(i) for i, emb in enumerate(self.embeddings)]
         }
 
-    @staticmethod
-    def from_json(data, metric='euclidean'):
+    @classmethod
+    def from_json(cls, data, metric='euclidean'):
         """
         Builds an EmbeddingSet from a JSON object. The provided object should
         contain a "data" field containing frames, and optionally a "frameLabels"
@@ -542,4 +542,32 @@ class EmbeddingSet:
         assert "data" in data, "JSON object must contain a 'data' field"
         labels = data.get("frameLabels", [None for _ in range(len(data["data"]))])
         embs = [Embedding.from_json(frame, label=label, metric=metric) for frame, label in zip(data["data"], labels)]
-        return EmbeddingSet(embs, align=False)
+        return cls(embs, align=False)
+    
+    def save(self, file_path_or_buffer):
+        """
+        Save this EmbeddingSet object to the given file path or file-like object
+        (in JSON format).
+        """
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, 'w') as file:
+                json.dump(self.to_json(), file)
+        else:
+            # File object
+            json.dump(self.to_json(), file_path_or_buffer)
+            
+    @classmethod
+    def load(cls, file_path_or_buffer, metric='euclidean'):
+        """
+        Load the EmbeddingSet from the given file path or file-like object
+        containing JSON data.
+        """
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, 'r') as file:
+                return cls.from_json(json.load(file), metric=metric)
+        else:
+            # File object
+            return cls.from_json(json.load(file_path_or_buffer), metric=metric)
+        
