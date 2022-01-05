@@ -362,13 +362,13 @@ export class ColumnarFrame extends ColumnarData {
   }
 }
 
-const NEIGHBOR_SET_SCHEMA = {
+const NEIGHBORS_SCHEMA = {
   neighbors: { array: 'id', nested: true },
 };
 
-export class NeighborSet extends ColumnarData {
+export class Neighbors extends ColumnarData {
   constructor(data) {
-    super(NEIGHBOR_SET_SCHEMA, data);
+    super(NEIGHBORS_SCHEMA, data);
   }
 }
 

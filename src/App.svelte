@@ -73,6 +73,7 @@
   }
 
   function updateTransformations(animate = true) {
+    if (dataset.frameCount != $frameTransformations.length) return;
     dataset.transform($frameTransformations);
     if (!!canvas && animate) {
       canvas.animateDatasetUpdate();

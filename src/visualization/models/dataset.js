@@ -6,7 +6,7 @@ import {
   ColumnarFrame,
   FramePreview,
   NeighborPreview,
-  NeighborSet,
+  Neighbors,
   PrecomputedPreview,
   ProjectionPreview,
 } from './frames';
@@ -296,7 +296,7 @@ export class Dataset {
   setNeighbors(neighborData) {
     if (neighborData.length != this.frames.length)
       console.warn('Neighbor data has different length than frames');
-    this.neighborSets = neighborData.map((n) => new NeighborSet(n));
+    this.neighborSets = neighborData.map((n) => new Neighbors(n));
     this.frames.forEach((f, i) => {
       f.linkField('highlightIndexes', this.neighborSets[i], 'neighbors');
     });

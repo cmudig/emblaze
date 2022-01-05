@@ -7,6 +7,7 @@ from sklearn.decomposition import PCA
 from scipy.spatial.transform import Rotation
 from affine import Affine
 from .utils import *
+from .neighbors import Neighbors, NeighborSet
     
 class ColumnarData:
     """
@@ -116,132 +117,6 @@ class ColumnarData:
             return DataType.CONTINUOUS
         return DataType.CATEGORICAL
     
-class NeighborSet:
-    """
-    An object representing a serializable set of nearest neighbors within an
-    embedding. The NeighborSet simply stores a matrix of integer IDs, where rows
-    correspond to points in the embedding and columns are IDs of neighbors in
-    order of proximity to each point.
-    """
-    def __init__(self, values, ids=None, metric='euclidean', n_neighbors=100, clf=None):
-        """
-        pos: Matrix of n x D vectors indicating high-dimensional positions
-        ids: If supplied, a list of IDs for the points in the matrix
-        """
-        super().__init__()
-        self.values = values
-        self.ids = ids
-        self._id_index = {id: i for i, id in enumerate(self.ids)}
-        self.metric = metric
-        self.n_neighbors = n_neighbors
-        self.clf = clf
-    
-    @classmethod
-    def compute(cls, pos, ids=None, metric='euclidean', n_neighbors=100):
-        ids = ids if ids is not None else np.arange(len(pos))
-        neighbor_clf = NearestNeighbors(metric=metric,
-                                        n_neighbors=n_neighbors + 1).fit(pos)
-        _, neigh_indexes = neighbor_clf.kneighbors(pos)
-        
-        return cls(ids[neigh_indexes[:,1:]], ids=ids, metric=metric, n_neighbors=n_neighbors, clf=neighbor_clf)
-        
-    def index(self, id_vals):
-        """
-        Returns the index(es) of the given IDs.
-        """
-        if isinstance(id_vals, (list, np.ndarray, set)):
-            return [self._id_index[int(id_val)] for id_val in id_vals]
-        else:
-            return self._id_index[int(id_vals)]
-
-    def __getitem__(self, ids):
-        """ids can be a single ID or a sequence of IDs"""
-        if ids is None: return self.values
-        return self.values[self.index(ids)]
-    
-    def __eq__(self, other):
-        if not isinstance(other, NeighborSet): return False
-        return np.allclose(self.ids, other.ids) and np.allclose(self.values, other.values)
-    
-    def __ne__(self, other):
-        return not (self == other)
-        
-    def __len__(self):
-        return len(self.values)
-    
-    def calculate_neighbors(self, pos, return_distance=True, n_neighbors=None):
-        if self.clf is None:
-            raise ValueError(
-                ("Cannot compute neighbors because the NeighborSet was not "
-                 "initialized with a neighbor classifier - was it deserialized "
-                 "from JSON without saving the original coordinates or "
-                 "concatenated to another NeighborSet?"))
-        neigh_dists, neigh_indexes = self.clf.kneighbors(pos, n_neighbors=n_neighbors or self.n_neighbors)
-        if return_distance:
-            return neigh_dists, neigh_indexes
-        return neigh_indexes
-    
-    def concat(self, other):
-        """Concatenates the two NeighborSets together, discarding the original 
-        classifier."""
-        assert not (set(self.ids.tolist()) & set(other.ids.tolist())), "Cannot concatenate NeighborSet objects with overlapping ID values"
-        assert self.metric == other.metric, "Cannot concatenate NeighborSet objects with different metrics"
-        return NeighborSet(
-            np.concatenate(self.values, other.values),
-            ids=np.concatenate(self.ids, other.ids),
-            metric=self.metric,
-            n_neighbors = max(self.n_neighbors, other.n_neighbors)
-        )
-    
-    def to_json(self, compressed=True, num_neighbors=None):
-        """Serializes the neighbors to a JSON object."""
-        result = {}
-        result["metric"] = self.metric
-        result["n_neighbors"] = self.n_neighbors
-        
-        neighbors = self.values
-        if num_neighbors is not None:
-            neighbors = neighbors[:,:min(num_neighbors, neighbors.shape[1])]
-            
-        if compressed:
-            result["_format"] = "compressed"
-            # Specify the type name that will be used to encode the point IDs.
-            # This is important because the highlight array takes up the bulk
-            # of the space when transferring to file/widget.
-            dtype, type_name = choose_integer_type(self.ids)
-            result["_idtype"] = type_name
-            result["_length"] = len(self)
-            result["ids"] = encode_numerical_array(self.ids, dtype)
-            
-            result["neighbors"] = encode_numerical_array(neighbors.flatten(),
-                                                            astype=dtype,
-                                                            interval=neighbors.shape[1])
-        else:
-            result["_format"] = "expanded"
-            result["neighbors"] = {}
-            indexes = self.index(self.ids)
-            for id_val, index in zip(self.ids, indexes):
-                result["neighbors"][id_val] = neighbors[index].tolist()
-        return result
-    
-    @classmethod
-    def from_json(cls, data):
-        if data.get("_format", "expanded") == "compressed":
-            dtype = np.dtype(data["_idtype"])
-            ids = decode_numerical_array(data["ids"], dtype)
-            neighbors = decode_numerical_array(data["neighbors"], dtype)
-        else:
-            neighbor_dict = data["neighbors"]
-            try:
-                ids = [int(id_val) for id_val in list(neighbor_dict.keys())]
-                neighbor_dict = {int(k): v for k, v in neighbor_dict.items()}
-            except:
-                ids = list(neighbor_dict.keys())
-            ids = sorted(ids)
-            neighbors = np.array([neighbor_dict[id_val] for id_val in ids])
-                
-        return cls(neighbors, ids=ids, metric=data["metric"], n_neighbors=data["n_neighbors"])
-    
 class Embedding(ColumnarData):
     """
     A single set of high-dimensional embeddings, which can be represented as an
@@ -275,7 +150,7 @@ class Embedding(ColumnarData):
         """
         assert set(self.data.keys()) == set(other.data.keys()), "Cannot concatenate Embedding objects with different sets of fields"
         assert not (set(self.ids.tolist()) & set(other.ids.tolist())), "Cannot concatenate Embedding objects with overlapping ID values"
-        assert self.has_neighbors() == other.has_neighbors(), "Either both or neither Embedding object must have a NeighborSet"
+        assert self.has_neighbors() == other.has_neighbors(), "Either both or neither Embedding object must have a Neighbors"
         
         return Embedding({k: np.concatenate([self.field(k), other.field(k)])
                           for k in self.data.keys()},
@@ -368,18 +243,22 @@ class Embedding(ColumnarData):
         object is used.
         
         If this Embedding is copied or projected, it will inherit the same
-        NeighborSet.
+        Neighbors.
         """
         pos = self.field(Field.POSITION)
-        self.neighbors = NeighborSet.compute(pos,
+        # Save the metric and n_neighbors here so that they can be used to
+        # re-generate the Neighbors later if needed
+        self.metric = metric or self.metric
+        self.n_neighbors = n_neighbors or self.n_neighbors
+        self.neighbors = Neighbors.compute(pos,
                                              ids=self.ids,
                                              metric=metric or self.metric,
-                                             n_neighbors=n_neighbors or self.n_neighbors)
+                                             n_neighbors=self.n_neighbors)
         
     def clear_neighbors(self):
         """
-        Removes the saved NeighborSet associated with this Embedding. This can
-        be used to determine which NeighborSet is returned by get_ancestor_neighbors().
+        Removes the saved Neighbors associated with this Embedding. This can
+        be used to determine which Neighbors is returned by get_ancestor_neighbors().
         """
         self.neighbors = None
         
@@ -396,7 +275,7 @@ class Embedding(ColumnarData):
     def neighbor_distances(self, ids=None, n_neighbors=100, metric=None):
         """
         Returns the list of nearest neighbors for each of the given IDs and the
-        distances to each of those points. This does NOT use the NeighborSet
+        distances to each of those points. This does NOT use the Neighbors
         object, and is therefore based only on the locations of the points in 
         this Embedding (not potentially on its parents).
         """
@@ -464,8 +343,9 @@ class Embedding(ColumnarData):
 
     def to_json(self, compressed=True, save_neighbors=True, num_neighbors=None):
         """
-        Converts this embedding into a JSON object. Requires that the embedding
-        have an n x 2 array at the Field.POSITION key.
+        Converts this embedding into a JSON object. If the embedding is 2D, saves
+        coordinates as separate x and y fields; otherwise, saves coordinates as
+        n x d arrays.
         
         compressed: whether to format JSON objects using base64 strings
             instead of as human-readable float arrays
@@ -522,10 +402,10 @@ class Embedding(ColumnarData):
         result["n_neighbors"] = self.n_neighbors
         return standardize_json(result)
     
-    @staticmethod
-    def from_json(data, label=None, parent=None):
+    @classmethod
+    def from_json(cls, data, label=None, parent=None):
         """
-        Builds a 2-dimensional Embedding object from the given JSON object.
+        Builds an Embedding object from the given JSON object.
         """
         mats = {}
         if data.get("_format", "expanded") == "compressed":
@@ -566,12 +446,14 @@ class Embedding(ColumnarData):
                 mats[Field.RADIUS] = np.array([point_data[id_val]["r"] for id_val in ids])
 
         if "neighbors" in data:
-            neighbors = NeighborSet.from_json(data["neighbors"])
+            neighbors = Neighbors.from_json(data["neighbors"])
+        elif parent is not None and parent.has_neighbors():
+            neighbors = parent.get_neighbors()
         else:
             neighbors = None
         metric = data.get("metric", "euclidean")
         n_neighbors = data.get("n_neighbors", 100)
-        return Embedding(mats, ids=ids, label=label, metric=metric, n_neighbors=n_neighbors, neighbors=neighbors, parent=parent)
+        return cls(mats, ids=ids, label=label, metric=metric, n_neighbors=n_neighbors, neighbors=neighbors, parent=parent)
     
     def save(self, file_path_or_buffer, **kwargs):
         """
@@ -664,6 +546,93 @@ class Embedding(ColumnarData):
             return best_variant
         return self.copy_with_fields({Field.POSITION: best_variant})
 
+class NeighborOnlyEmbedding(Embedding):
+    """
+    An Embedding object that contains no point locations, just neighbor IDs.
+    """
+    def __init__(self, neighbors, label=None, metric='euclidean', n_neighbors=100, parent=None):
+        super().__init__({Field.POSITION: np.zeros((len(neighbors), 1)),
+                          Field.COLOR: np.zeros((len(neighbors), 1))},
+                          neighbors.ids,
+                          label=label,
+                          metric=metric,
+                          n_neighbors=n_neighbors,
+                          neighbors=neighbors,
+                          parent=parent)
+
+    def copy(self):
+        return NeighborOnlyEmbedding(self.neighbors,
+                                    label=self.label,
+                                    metric=self.metric,
+                                    n_neighbors=self.n_neighbors,
+                                    parent=self)
+    
+    def concat(self, other):
+        """
+        Returns a new Embedding with this Embedding and the given one
+        stacked together. Must have the same set of fields, and a disjoint set of
+        IDs.
+        """
+        assert isinstance(other, NeighborOnlyEmbedding), "Cannot concatenate non-neighbor-only to neighbor-only Embedding"
+        assert not (set(self.ids.tolist()) & set(other.ids.tolist())), "Cannot concatenate Embedding objects with overlapping ID values"
+        assert self.has_neighbors() and other.has_neighbors(), "Both NeighborOnlyEmbedding objects must have a Neighbors"
+        
+        return NeighborOnlyEmbedding(self.get_neighbors().concat(other.get_neighbors()),
+                                     n_neighbors=max(self.n_neighbors, other.n_neighbors),
+                                     label=self.label, metric=self.metric)
+    
+    def project(self, method=ProjectionTechnique.UMAP, **params):
+        raise NotImplementedError
+    
+    def compute_neighbors(self, n_neighbors=None, metric=None):
+        raise NotImplementedError
+        
+    def clear_neighbors(self):
+        self.neighbors = None
+         
+    def neighbor_distances(self, ids=None, n_neighbors=100, metric=None):
+        raise NotImplementedError
+        
+    def distances(self, ids=None, comparison_ids=None, metric=None):
+        raise NotImplementedError
+
+    def within_bbox(self, bbox):
+        raise NotImplementedError
+
+    def to_json(self, compressed=True, save_neighbors=True, num_neighbors=None):
+        """
+        Converts this embedding into a (neighbor-only) JSON object.
+        
+        compressed: whether to format JSON objects using base64 strings
+            instead of as human-readable float arrays
+        """
+        result = {}
+        result["_format"] = "neighbor_only"
+        
+        if save_neighbors and self.has_neighbors():
+            result["neighbors"] = self.get_neighbors().to_json(compressed=compressed, num_neighbors=num_neighbors)
+        result["metric"] = self.metric
+        result["n_neighbors"] = self.n_neighbors
+        return standardize_json(result)
+    
+    @classmethod
+    def from_json(cls, data, label=None, parent=None):
+        """
+        Builds a neighbor-only Embedding object from the given JSON object.
+        """
+        format = data.get("_format", "expanded")
+        if format != "neighbor_only":
+            raise ValueError("Cannot load NeighborOnlyEmbedding from JSON with format '{}'".format(data))
+        
+        assert "neighbors" in data
+        neighbors = Neighbors.from_json(data["neighbors"])
+        metric = data.get("metric", "euclidean")
+        n_neighbors = data.get("n_neighbors", 100)
+        return cls(neighbors, label=label, metric=metric, n_neighbors=n_neighbors, parent=parent)
+    
+    def align_to(self, base_frame, ids=None, return_transform=False, base_transform=None, allow_flips=True):
+        raise NotImplementedError
+    
 class EmbeddingSet:
     """
     A set of high-dimensional embeddings, composed of a series of Embedding
@@ -742,26 +711,26 @@ class EmbeddingSet:
 
     def clear_neighbors(self):
         """
-        Removes the saved NeighborSet associated with this Embedding. This can
-        be used to determine which NeighborSet is returned by get_ancestor_neighbors().
+        Removes the saved Neighbors associated with this Embedding. This can
+        be used to determine which Neighbors is returned by get_ancestor_neighbors().
         """
         for emb in self.embeddings:
             emb.clear_neighbors()
                 
     def get_neighbors(self):
         """
-        Returns a list of NeighborSets corresponding to the nearest neighbors
+        Returns a NeighborSet object corresponding to the nearest neighbors
         of each embedding in the EmbeddingSet.
         """
-        return [emb.get_neighbors() for emb in self.embeddings]
+        return NeighborSet([emb.get_neighbors() for emb in self.embeddings])
     
     def get_ancestor_neighbors(self):
         """
-        Returns a list of ancestor NeighborSets for each embedding in the
+        Returns a NeighborSet containing ancestor Neighbors for each embedding in the
         EmbeddingSet. This corresponds to the highest-level Embedding in each
         Embedding's parent tree that has a neighbor set associated with it.
         """
-        return [emb.get_ancestor_neighbors() for emb in self.embeddings]
+        return NeighborSet([emb.get_ancestor_neighbors() for emb in self.embeddings])
             
     def to_json(self, compressed=True, save_neighbors=True, num_neighbors=None):
         """
@@ -769,7 +738,7 @@ class EmbeddingSet:
         
         compressed: whether to format Embedding JSON objects using base64 strings
             instead of as human-readable float arrays
-        save_neighbors: If True, save the NeighborSet into the "neighbors" key
+        save_neighbors: If True, save the Neighbors into the "neighbors" key
             of each individual embedding
         num_neighbors: number of neighbors to write for each point (can considerably
             save memory)
@@ -782,15 +751,20 @@ class EmbeddingSet:
         }
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, parents=None):
         """
         Builds an EmbeddingSet from a JSON object. The provided object should
         contain a "data" field containing frames, and optionally a "frameLabels"
         field containing a list of string names for each field.
         """
         assert "data" in data, "JSON object must contain a 'data' field"
-        labels = data.get("frameLabels", [None for _ in range(len(data["data"]))])
-        embs = [Embedding.from_json(frame, label=label) for frame, label in zip(data["data"], labels)]
+        embs = data["data"]
+        labels = data.get("frameLabels", [None for _ in range(len(embs))])
+        if parents is None:
+            parents = [None for _ in range(len(embs))]
+        elif len(parents) == 1:
+            parents = [parents[0] for _ in range(len(embs))]
+        embs = [Embedding.from_json(frame, label=label, parent=parent) for frame, label, parent in zip(embs, labels, parents)]
         return cls(embs, align=False)
     
     def save(self, file_path_or_buffer, **kwargs):
