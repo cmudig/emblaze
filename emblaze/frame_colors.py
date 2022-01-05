@@ -109,9 +109,9 @@ def compute_colors(frames, ids_of_interest=None, scale_factor=1.0):
     outer_jaccard_distances = np.zeros((len(frames), len(frames)))
     inner_jaccard_distances = np.zeros((len(frames), len(frames)))
     for i in range(len(frames)):
-        frame_1_neighbors = frames[i].neighbors[distance_sample]
+        frame_1_neighbors = frames[i].get_recent_neighbors()[distance_sample]
         for j in range(len(frames)):
-            frame_2_neighbors = frames[j].neighbors[distance_sample]
+            frame_2_neighbors = frames[j].get_recent_neighbors()[distance_sample]
             # If the id set is the entire frame, there will be no outer neighbors
             # so we can just leave this at zero
             if ids_of_interest is not None and len(ids_of_interest):

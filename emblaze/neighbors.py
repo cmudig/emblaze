@@ -169,3 +169,8 @@ class NeighborSet:
     @classmethod
     def from_json(cls, data):
         return [Neighbors.from_json(d) for d in data]
+    
+    def identical(self):
+        """Returns True if all Neighbors objects within this NeighborSet are equal to each other."""
+        if len(self) == 0: return True
+        return all(n == self[0] for n in self)

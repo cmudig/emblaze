@@ -218,7 +218,7 @@ class Viewer(DOMWidget):
     def _observe_embeddings(self, change):
         embeddings = change.new
         assert len(embeddings) > 0, "Must have at least one embedding"
-        assert not any(not e.has_neighbors() for e in embeddings), "All embeddings must have at least one Neighbors previously computed"
+        assert not any(not e.any_ancestor_has_neighbors() for e in embeddings), "All embeddings must have at least one Neighbors previously computed"
         if embeddings is not None:
             self.neighborData = []
             if self.storedNumNeighbors > 0:
@@ -378,8 +378,7 @@ class Viewer(DOMWidget):
         for id_val in selection:
             filtered_points.add(id_val)
         for frame in self.embeddings.embeddings if in_frame is None else [in_frame]:
-            # TODO replace this with requests to the "true" NeighborSet
-            filtered_points |= set(frame.neighbors[selection][:,:self.numNeighbors].flatten().tolist())
+            filtered_points |= set(frame.get_ancestor_neighbors()[selection][:,:self.numNeighbors].flatten().tolist())
         return list(filtered_points)
     
     @observe("recomputeSuggestionsFlag")
@@ -508,34 +507,41 @@ class Viewer(DOMWidget):
         result = {}
         
         ancestor_neighbors = self.embeddings.get_ancestor_neighbors()
+        recent_neighbors = self.embeddings.get_recent_neighbors()
+        neighbors = self.embeddings.get_neighbors()
         
         result["_format"] = "emblaze.Viewer.SaveData"
         result["embeddings"] = self.embeddings.to_json(compressed=compressed,
-                                                       save_neighbors=(self.embeddings.get_neighbors() == ancestor_neighbors))
+                                                       save_neighbors=True)
         result["thumbnails"] = self.thumbnails.to_json()
         
-        ancestors = [emb.find_ancestor_neighbor_embedding() for emb in self.embeddings]
+        # Save recent neighbors (those used for frame colors and recommendations)
+        # if they do not originate from the embeddings or in the ancestor embeddings
+        if neighbors != recent_neighbors and recent_neighbors != ancestor_neighbors:
+            # Save these in mock format
+            if recent_neighbors.identical():
+                result["recent_neighbors"] = [NeighborOnlyEmbedding.from_embedding(recent_neighbors[0]).to_json(compressed=compressed)]
+            else:
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in recent_neighbors]
+                result["recent_neighbors"] = [e.to_json(compressed=compressed) for e in mock_embs]
+        
+        # Save ancestor neighbors (and positions, if ancestor_data = True)
+        ancestors = EmbeddingSet([emb.find_ancestor_neighbor_embedding() for emb in self.embeddings], align=False)
         if ancestor_data:
-            all_ancestors_equal = all(a == ancestors[0] for a in ancestors)
-            if all_ancestors_equal:
+            if ancestors.identical():
                 result["ancestor_data"] = [ancestors[0].to_json(compressed=compressed)]
             else:
                 result["ancestor_data"] = [
                     anc.to_json(compressed=compressed)
                     for anc in ancestors
                 ]
-        elif ancestor_neighbors != self.embeddings.get_neighbors():
+        elif neighbors != ancestor_neighbors:
             # Create mock NeighborOnlyEmbeddings here to show that we are
             # saving only the neighbor data
-            all_neighbors_equal = all(n == ancestor_neighbors[0] for n in ancestor_neighbors)
-            if all_neighbors_equal:
-                first_ancestor = ancestors[0]
-                result["ancestor_neighbors"] = [NeighborOnlyEmbedding(first_ancestor.get_neighbors(),
-                                                                        metric=first_ancestor.metric,
-                                                                        n_neighbors=first_ancestor.n_neighbors).to_json(compressed=compressed)]
+            if ancestor_neighbors.identical():
+                result["ancestor_neighbors"] = [NeighborOnlyEmbedding.from_embedding(ancestors[0]).to_json(compressed=compressed)]
             else:
-                mock_embs = [NeighborOnlyEmbedding(a.get_neighbors(), metric=a.metric, n_neighbors=a.n_neighbors)
-                                for a in ancestors]
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in ancestors]
                 result["ancestor_neighbors"] = [e.to_json(compressed=compressed) for e in mock_embs]
             
         return result
@@ -552,6 +558,17 @@ class Viewer(DOMWidget):
             parents = [Embedding.from_json(item) for item in data["ancestor_data"]]
         elif "ancestor_neighbors" in data:
             parents = [NeighborOnlyEmbedding.from_json(item) for item in data["ancestor_neighbors"]]
+            
+        if "recent_neighbors" in data:
+            # The neighbors to display will come from these, so put them in between
+            # the ancestor embeddings and the final ones
+            recent_parents = parents
+            if recent_parents is None:
+                recent_parents = [None for _ in range(len(self.embeddings))]
+            elif len(parents) == 1:
+                recent_parents = [recent_parents[0] for _ in range(len(self.embeddings))]
+            parents = [NeighborOnlyEmbedding.from_json(item, parent=p)
+                       for item, p in zip(data["recent_neighbors"], recent_parents)]
         
         self.embeddings = EmbeddingSet.from_json(data["embeddings"], parents=parents)
         self.thumbnails = Thumbnails.from_json(data["thumbnails"])

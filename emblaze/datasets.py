@@ -142,6 +142,14 @@ class Embedding(ColumnarData):
                          neighbors=self.neighbors,
                          parent=self)
     
+    def copy_with_fields(self, updated_fields, clear_neighbors=False):
+        copy = self.copy()
+        for field, vals in updated_fields.items():
+            copy.set_field(field, vals)
+        if clear_neighbors:
+            copy.clear_neighbors()
+        return copy
+
     def concat(self, other):
         """
         Returns a new Embedding with this Embedding and the given one
@@ -167,6 +175,13 @@ class Embedding(ColumnarData):
     def has_neighbors(self):
         return self.neighbors is not None
     
+    def any_ancestor_has_neighbors(self):
+        """
+        Returns True if any of the Embeddings in the parent tree have embeddings
+        computed.
+        """
+        return self.find_recent_neighbor_embedding() is not None
+    
     def get_neighbors(self):
         return self.neighbors
     
@@ -190,6 +205,25 @@ class Embedding(ColumnarData):
         ancestor = self.find_ancestor_neighbor_embedding()
         if ancestor:
             return ancestor.get_neighbors()
+    
+    def find_recent_neighbor_embedding(self):
+        """
+        Returns the Embedding that is closest to this Embedding in the parent
+        tree (including this Embedding) that has a neighbor set.
+        """
+        curr = self
+        while curr is not None and not curr.has_neighbors():
+            curr = curr.parent
+        return curr
+    
+    def get_recent_neighbors(self):
+        """
+        Gets the neighbor set of the Embedding that is closest to this Embedding
+        in the parent tree (including itself) and that has a neighbor set.
+        """
+        recent = self.find_recent_neighbor_embedding()
+        if recent:
+            return recent.get_neighbors()
     
     def dimension(self):
         """Returns the dimensionality of the Field.POSITION field."""
@@ -224,7 +258,7 @@ class Embedding(ColumnarData):
         else:
             raise ValueError("Unrecognized projection technique '{}'".format(method))
         
-        return self.copy_with_fields({Field.POSITION: lo_d})
+        return self.copy_with_fields({Field.POSITION: lo_d}, clear_neighbors=True)
     
     def get_relations(self, other_emb):
         """
@@ -262,7 +296,7 @@ class Embedding(ColumnarData):
         """
         self.neighbors = None
         
-    def clear_ancestor_neighbors(self):
+    def clear_upstream_neighbors(self):
         """
         Clears the neighbor sets for all Embeddings in the parent tree of this
         Embedding (but not this one).
@@ -447,8 +481,6 @@ class Embedding(ColumnarData):
 
         if "neighbors" in data:
             neighbors = Neighbors.from_json(data["neighbors"])
-        elif parent is not None and parent.has_neighbors():
-            neighbors = parent.get_neighbors()
         else:
             neighbors = None
         metric = data.get("metric", "euclidean")
@@ -560,6 +592,16 @@ class NeighborOnlyEmbedding(Embedding):
                           neighbors=neighbors,
                           parent=parent)
 
+    @staticmethod
+    def from_embedding(emb):
+        """
+        Creates a NeighborOnlyEmbedding that mocks an existing embedding, but
+        contains only its neighbor set with no positions or color data.
+        """
+        return NeighborOnlyEmbedding(emb.get_neighbors(),
+                                     metric=emb.metric,
+                                     n_neighbors=emb.n_neighbors)
+    
     def copy(self):
         return NeighborOnlyEmbedding(self.neighbors,
                                     label=self.label,
@@ -666,6 +708,10 @@ class EmbeddingSet:
     def __len__(self):
         return len(self.embeddings)
     
+    def identical(self):
+        if len(self) == 0: return True
+        return all(e == self[0] for e in self.embeddings)
+    
     def project(self, method=ProjectionTechnique.ALIGNED_UMAP, align=True, **params):
         """
         Projects the embedding set into 2D. The method parameter can be a
@@ -688,11 +734,11 @@ class EmbeddingSet:
                 relations=[self.embeddings[i].get_relations(self.embeddings[i + 1])
                             for i in range(len(self.embeddings) - 1)])
             pre_aligned = True
-            lo_ds = [emb.copy_with_fields({Field.POSITION: lo_d})
+            lo_ds = [emb.copy_with_fields({Field.POSITION: lo_d}, clear_neighbors=True)
                      for emb, lo_d in zip(self.embeddings, lo_d_mats)]
         elif callable(method):
             lo_d_mats = method(hi_ds, id_sets, **params)
-            lo_ds = [emb.copy_with_fields({Field.POSITION: lo_d})
+            lo_ds = [emb.copy_with_fields({Field.POSITION: lo_d}, clear_neighbors=True)
                      for emb, lo_d in zip(self.embeddings, lo_d_mats)]
         else:
             lo_ds = [emb.project(method=method, **params)
@@ -723,7 +769,16 @@ class EmbeddingSet:
         of each embedding in the EmbeddingSet.
         """
         return NeighborSet([emb.get_neighbors() for emb in self.embeddings])
-    
+
+    def get_recent_neighbors(self):
+        """
+        Returns a NeighborSet containing ancestor Neighbors for each embedding in the
+        EmbeddingSet. This corresponds to the lowest-level Embedding in each
+        Embedding's parent tree (including the Embedding itself) that has a
+        neighbor set associated with it.
+        """
+        return NeighborSet([emb.get_recent_neighbors() for emb in self.embeddings])
+                
     def get_ancestor_neighbors(self):
         """
         Returns a NeighborSet containing ancestor Neighbors for each embedding in the
