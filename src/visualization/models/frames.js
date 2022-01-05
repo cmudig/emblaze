@@ -311,13 +311,13 @@ const FRAME_SCHEMA = {
   alpha: { array: Float32Array },
   r: { array: Float32Array },
   color: { array: Array },
-  highlightIndexes: { array: 'id', field: 'highlight', nested: true },
   visible: { array: Array },
 };
 
 export class ColumnarFrame extends ColumnarData {
   _kdTree;
   title;
+  neighborSet;
 
   constructor(frame, title, additionalFields = null) {
     super(FRAME_SCHEMA, frame, additionalFields);
@@ -359,6 +359,16 @@ export class ColumnarFrame extends ColumnarData {
   neighbors(pointID, k) {
     if (!this._kdTree) this.buildKdTree();
     return this._kdTree.nearest(pointID, k);
+  }
+}
+
+const NEIGHBOR_SET_SCHEMA = {
+  neighbors: { array: 'id', nested: true },
+};
+
+export class NeighborSet extends ColumnarData {
+  constructor(data) {
+    super(NEIGHBOR_SET_SCHEMA, data);
   }
 }
 

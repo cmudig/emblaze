@@ -24,6 +24,7 @@
   import { ThumbnailProvider } from './visualization/models/thumbnails';
 
   let data = syncValue(model, 'data', {});
+  let neighborData = syncValue(model, 'neighborData', []);
   let isLoading = syncValue(model, 'isLoading', true);
   let loadingMessage = syncValue(model, 'loadingMessage', '');
 
@@ -61,7 +62,7 @@
 
   $: updateDataset($data);
 
-  function updateDataset(rawData) {
+  function updateDataset(rawData, neighbors) {
     if (!!rawData && !!rawData['data']) {
       dataset = new Dataset(rawData, 'color');
       if (!!$frameTransformations && $frameTransformations.length > 0)
@@ -76,6 +77,10 @@
     if (!!canvas && animate) {
       canvas.animateDatasetUpdate();
     }
+  }
+
+  $: if (!!$neighborData && $neighborData.length > 0 && !!dataset) {
+    dataset.setNeighbors($neighborData);
   }
 
   onMount(() => {

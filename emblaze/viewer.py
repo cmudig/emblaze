@@ -62,6 +62,9 @@ class Viewer(DOMWidget):
     thumbnails = Instance(Thumbnails, allow_none=True)
     # JSON-serializable dictionary of thumbnail info
     thumbnailData = Dict({}).tag(sync=True)
+    
+    # High dimensional neighbors, one dictionary corresponding to each Embedding
+    neighborData = List([]).tag(sync=True)
 
     saveSelectionFlag = Bool(False).tag(sync=True)
     selectionName = Unicode("").tag(sync=True)
@@ -177,14 +180,14 @@ class Viewer(DOMWidget):
         frames are mostly the same, and a neighbor similarity preview mode
         otherwise.
         """
-        for emb_1 in self.embeddings:
-            if not emb_1.has_field(Field.NEIGHBORS):
+        ancestor_neighbors = [emb.get_ancestor_neighbors() for emb in self.embeddings]
+        for n1 in ancestor_neighbors:
+            if not n1:
                 return PreviewMode.PROJECTION_SIMILARITY
-            for emb_2 in self.embeddings:
-                if not emb_2.has_field(Field.NEIGHBORS):
+            for n2 in ancestor_neighbors:
+                if not n2:
                     return PreviewMode.PROJECTION_SIMILARITY
-                if not np.allclose(emb_1.field(Field.NEIGHBORS),
-                                   emb_2.field(Field.NEIGHBORS)):
+                if n1 != n2:
                     return PreviewMode.NEIGHBOR_SIMILARITY
         return PreviewMode.PROJECTION_SIMILARITY
         
@@ -201,7 +204,7 @@ class Viewer(DOMWidget):
             new_val = 50
         elif num_points > 100000:
             new_val = 75
-        if new_val is not None and any(new_val < len(emb.field(Field.NEIGHBORS, ids=emb.ids[0]).flatten()) for emb in embeddings.embeddings):
+        if new_val is not None and any(new_val < emb.n_neighbors for emb in embeddings.embeddings):
             print(("WARNING: Reducing the number of nearest neighbors passed to the "
                    "widget to {} to save space. You can control this by setting the "
                    "storedNumNeighbors property of the widget when initializing.").format(new_val))
@@ -216,9 +219,12 @@ class Viewer(DOMWidget):
                 n_neighbors = self.storedNumNeighbors 
             else:
                 n_neighbors = self._select_stored_num_neighbors(embeddings)
-            self.data = embeddings.to_json(num_neighbors=n_neighbors)
+            self.data = embeddings.to_json(save_neighbors=False)
+            self.neighborData = [neighbor_set.to_json(num_neighbors=n_neighbors)
+                                 for neighbor_set in embeddings.get_ancestor_neighbors()]
         else:
             self.data = {}
+            self.neighborData = []
         self.selectedIDs = []
         self.alignedIDs = []
         self.currentFrame = 0
@@ -358,7 +364,8 @@ class Viewer(DOMWidget):
         for id_val in selection:
             filtered_points.add(id_val)
         for frame in self.embeddings.embeddings if in_frame is None else [in_frame]:
-            filtered_points |= set(frame.field(Field.NEIGHBORS, ids=selection)[:,:self.numNeighbors].flatten().tolist())
+            # TODO replace this with requests to the "true" NeighborSet
+            filtered_points |= set(frame.neighbors[selection][:,:self.numNeighbors].flatten().tolist())
         return list(filtered_points)
     
     @observe("recomputeSuggestionsFlag")

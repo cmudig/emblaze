@@ -14,7 +14,6 @@ class Field:
     POSITION = "position"
     COLOR = "color"
     RADIUS = "r"
-    NEIGHBORS = "highlight"
     ALPHA = "alpha"
     
     # Thumbnail fields
@@ -174,6 +173,19 @@ def choose_integer_type(values):
         return np.uint16, "u2"
     return np.uint8, "u1"
     
+def _detect_numerical_sequence(arr):
+    """
+    Detects a numerical sequence to compress large arrays of integer IDs when
+    they are regularly spaced. If a sequence is detected, returns the start, end,
+    and step such that using np.arange() with these three arguments yields the
+    appropriate result. If no sequence is detected, returns None.
+    """
+    diffs = arr[1:] - arr[:-1]
+    if np.allclose(diffs, diffs[0]):
+        step = diffs[0]
+        return (arr[0], arr[-1] + step, step)
+    return None
+    
 def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None):
     """
     Encodes the given numpy array into a base64 representation for fast transfer
@@ -187,6 +199,10 @@ def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None
     If interval is not None, it is passed into the result object directly (and
     signifies the same as positions, but with a regularly spaced interval).
     """
+    # TODO support saving arrays as numerical sequence metadata
+    # sequence_info = _detect_numerical_sequence(arr)
+    # if sequence_info is not None:
+    #     result = { ""}
     result = { "values": base64.b64encode(arr.astype(astype)).decode('ascii') }
     if positions is not None:
         result["positions"] = base64.b64encode(positions.astype(np.int32)).decode('ascii')

@@ -6,6 +6,7 @@ import {
   ColumnarFrame,
   FramePreview,
   NeighborPreview,
+  NeighborSet,
   PrecomputedPreview,
   ProjectionPreview,
 } from './frames';
@@ -19,6 +20,7 @@ export const PreviewMode = {
 export class Dataset {
   frames = [];
   frameTransformations = [];
+  neighborSets = [];
   colorKey = 'color';
   length = 0; // number of points
   frameCount = 0;
@@ -288,5 +290,20 @@ export class Dataset {
     this.spritesheets = null;
     this.thumbnailData = null;
     this.frames.forEach((f) => f.removeComputedField('label'));
+  }
+
+  // neighborData should be a list of JSON objects, each representing a set of neighbors
+  setNeighbors(neighborData) {
+    if (neighborData.length != this.frames.length)
+      console.warn('Neighbor data has different length than frames');
+    this.neighborSets = neighborData.map((n) => new NeighborSet(n));
+    this.frames.forEach((f, i) => {
+      f.linkField('highlightIndexes', this.neighborSets[i], 'neighbors');
+    });
+  }
+
+  clearNeighbors() {
+    this.neighborSets = [];
+    this.frames.forEach((f) => f.removeComputedField('highlightIndexes'));
   }
 }
