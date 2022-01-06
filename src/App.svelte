@@ -131,10 +131,10 @@
   let description = '';
 
   const SidebarPanes = {
-    CURRENT: 0,
-    SAVED: 1,
-    RECENT: 2,
-    SUGGESTED: 3,
+    CURRENT: 1,
+    SAVED: 2,
+    RECENT: 3,
+    SUGGESTED: 4,
   };
   let visibleSidebarPane = syncValue(
     model,
@@ -184,8 +184,8 @@
       let invalidAligned = !(event.detail.alignedIDs || []).every(filterFn);
       let invalidFilter = !(event.detail.filterIDs || []).every(filterFn);
 
-      $currentFrame = event.detail.currentFrame || $currentFrame;
-      $alignedFrame = event.detail.alignedFrame || $currentFrame;
+      $currentFrame = event.detail.currentFrame || $currentFrame || 0;
+      $alignedFrame = event.detail.alignedFrame || $currentFrame || 0;
       if (!!event.detail.selectedIDs)
         $selectedIDs = event.detail.selectedIDs.filter(filterFn);
       if (!!event.detail.alignedIDs)

@@ -5,11 +5,7 @@ export function syncValue(model: any, name_: string, defaultVal: any) {
   const name: string = name_;
   const curVal: Writable<any> = writable(model.get(name) || defaultVal);
 
-  model.on(
-    'change:' + name,
-    (model: any, val: any) => curVal.set(val || model.get(name)),
-    null
-  );
+  model.on('change:' + name, (model: any, val: any) => curVal.set(val), null);
 
   if (!!model.onAttach)
     model.onAttach(async () => {
