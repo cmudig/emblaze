@@ -527,7 +527,10 @@
 </Modal>
 
 {#if !dataset}
-  <div class="text-center">No data yet...</div>
+  <div class="loading-container">
+    <div class="spinner-border text-primary" role="status" />
+    <div class="loading-message text-center">Loading data...</div>
+  </div>
 {:else}
   <div class="vis-container" style="height: {fillHeight ? '100%' : '600px'};">
     <div class="frame-sidebar">
@@ -719,6 +722,19 @@
     display: flex;
     justify-items: stretch;
     /*border: 2px solid #bbb;*/
+  }
+
+  .loading-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-message {
+    padding-top: 12px;
   }
 
   .frame-sidebar {
