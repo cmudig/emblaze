@@ -4,186 +4,157 @@
   import { Dataset, PreviewMode } from './visualization/models/dataset';
   import TemporalVisualization from './visualization/TemporalVisualization.svelte';
   import SpatialVisualization from './visualization/SpatialVisualization.svelte';
+  import Modal from './visualization/components/Modal.svelte';
   import ColorSchemes from './colorschemes';
   import { ThumbnailProvider } from './visualization/models/thumbnails';
+  import { SocketModel } from './socketstores';
+  import App from './App.svelte';
+  import { syncValue } from './stores';
+  import { MODULE_VERSION } from './version';
 
-  let datasetOptions = ['mnist-tsne'];
-  let datasetName = 'mnist-tsne';
+  // Socket boilerplate
 
-  let colorChannel = 'constant';
-  let colorChannelOptions = ['constant'];
+  let connected = false;
 
-  let colorScheme = ColorSchemes.getColorScheme('tableau');
+  let model = new SocketModel();
 
-  let useHalos = false;
-
-  let thumbnailData;
-  let thumbnailProvider;
-
-  var data = null;
-  let previewMode = PreviewMode.PROJECTION_SIMILARITY;
-
-  let visualizationMode = 'temporal'; // "spatial" or "temporal"
-
-  let visualization;
+  let socket = io();
 
   onMount(async () => {
     datasetOptions = await (await fetch('/datasets')).json();
+
+    socket.on('connect', () => {
+      connected = true;
+      model.attach(socket);
+    });
+    socket.on('disconnect', () => {
+      connected = false;
+      model.detach();
+    });
   });
 
-  // Simple method to get a list of quantitative channels in the data
-  function getQuantitativeChannels(frame) {
-    if (frame['_format'] == 'compressed') {
-      // compressed format doesn't support other color channels
-      return ['color'];
-    } else {
-      let ids = Object.keys(frame);
-      let testItem = frame[ids[0]];
-      let fields = Object.keys(testItem);
-      return fields.filter(
-        (f) => typeof testItem[f] == 'number' || typeof testItem[f] == 'string'
-      );
-    }
+  // Config
+
+  let datasetOptions = [];
+  let datasetPath = syncValue(model, 'file', '');
+
+  function getDatasetName(path) {
+    let match = path.match(/\/([^\/.]+)\.json/);
+    if (!match) return '';
+    return match[1];
   }
 
-  function getChannelType(channelName) {
-    let frame = data.frame(0);
-    let ids = Object.keys(frame);
-    let testItem = frame[ids[0]];
-    return typeof testItem[channelName];
-  }
+  let colorScheme = syncValue(model, 'colorScheme', 'tableau');
+  let previewMode = syncValue(
+    model,
+    'previewMode',
+    PreviewMode.PROJECTION_SIMILARITY
+  );
 
-  let oldColorChannel = null;
-  let oldDatasetName = null;
+  // About
 
-  $: if (oldDatasetName != datasetName || oldColorChannel != colorChannel) {
-    fetchData(datasetName, oldDatasetName != datasetName);
-    oldDatasetName = datasetName;
-    oldColorChannel = colorChannel;
-  }
-
-  async function fetchData(datasetName, resetColor = true) {
-    try {
-      let result = await fetch('/datasets/' + datasetName + '/data');
-      let respJSON = await result.json();
-      let thumbnailJSON;
-      try {
-        result = await fetch('/datasets/' + datasetName + '/thumbnails');
-        thumbnailJSON = await result.json();
-      } catch (error) {
-        console.log(error);
-      } finally {
-        initializeData(respJSON, resetColor);
-        if (!!thumbnailJSON) {
-          thumbnailData = thumbnailJSON;
-          data.addThumbnails(thumbnailData);
-          if (!!thumbnailProvider) thumbnailProvider.destroy();
-          thumbnailProvider = new ThumbnailProvider(data);
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  function initializeData(respJSON, resetColor = true) {
-    let testFrame;
-    if (!!respJSON['data']) testFrame = respJSON['data'][0];
-    else testFrame = respJSON[0];
-    let options = ['constant', ...getQuantitativeChannels(testFrame)];
-    colorChannelOptions = options;
-    if (resetColor || !options.includes(colorChannel)) {
-      if (options.includes('color')) {
-        // Automatically initialize it to color
-        colorChannel = 'color';
-      } else {
-        colorChannel = 'constant';
-      }
-    }
-    oldColorChannel = colorChannel; // this prevents the color channel reloader from being called
-    console.log('Initializing data', respJSON);
-    data = new Dataset(respJSON, colorChannel, 3);
-    if (data.previewMode != previewMode) previewMode = data.previewMode;
-    let colorType = getChannelType(colorChannel);
-    if (
-      (colorType == 'string' || colorType == 'object') &&
-      colorScheme.type != 'categorical'
-    ) {
-      colorScheme = ColorSchemes.defaultColorScheme('categorical');
-    }
-  }
-
-  $: if (!!data) data.setPreviewMode(previewMode);
-
-  async function alignVisualization(e) {
-    let { baseFrame, alignedIDs } = e.detail;
-    try {
-      let postBody = { ids: alignedIDs };
-      if (
-        !!data.frameTransformations &&
-        data.frameTransformations.length > baseFrame
-      ) {
-        postBody.initialTransform = data.frameTransformations[baseFrame];
-      }
-
-      let response = await fetch(`/align/${datasetName}/${baseFrame}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(postBody),
-      });
-      let result = await response.json();
-      if (!!result && !!result.transformations) {
-        data.transform(result.transformations);
-        visualization.animateDatasetUpdate();
-      }
-      return null;
-    } catch (error) {
-      console.log('Error aligning points:', error);
-      return null;
-    }
-  }
+  let isAboutPaneOpen = false;
 </script>
 
 <main>
-  <div class="config-view">
-    <h3>Dataset Configuration</h3>
-    <div style="display: flex">
-      <select bind:value={datasetName} class="config-item">
-        {#each datasetOptions as opt}
-          <option value={opt}>{opt}</option>
-        {/each}
-      </select>
-      <select bind:value={colorChannel} class="config-item">
-        {#each colorChannelOptions as opt}
-          <option value={opt}>{opt}</option>
-        {/each}
-      </select>
-      <select bind:value={colorScheme} class="config-item">
-        {#each ColorSchemes.allColorSchemes as opt}
-          <option value={opt}>{opt.name}</option>
-        {/each}
-      </select>
-      <label class="config-item"
-        ><input type="checkbox" bind:checked={useHalos} />
-        Halos</label
+  <Modal visible={isAboutPaneOpen} width={400}>
+    <div class="dialog-body">
+      <h4>Emblaze v{MODULE_VERSION}</h4>
+      <p>
+        This software is provided on a BSD 3-Clause license. To cite Emblaze in
+        your publications, please use the following reference:
+      </p>
+      <p>
+        Sivaraman, V., Wu, Y., and Perer, A. (2022). Emblaze: Illuminating
+        Machine Learning Representations through Interactive Comparison of
+        Embedding Spaces. <em
+          >IUI '22: Proceedings of 27th International Conference on Intelligent
+          User Interfaces.</em
+        >
+      </p>
+    </div>
+    <div class="dialog-footer">
+      <button
+        type="button"
+        class="dialog-footer-button btn btn-secondary jp-Dialog-button jp-mod-reject jp-mod-styled"
+        on:click={() => (isAboutPaneOpen = false)}>Close</button
       >
-      <select bind:value={previewMode} class="config-item">
-        {#each Object.values(PreviewMode) as mode}
-          <option value={mode}>{mode}</option>
+    </div>
+  </Modal>
+
+  <nav
+    class="title-bar navbar navbar-expand-lg navbar-dark"
+    style="justify-content: space-between;"
+  >
+    <span class="navbar-brand">Emblaze Demo</span>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon" />
+    </button>
+
+    <div
+      class="collapse navbar-collapse"
+      style="flex-grow: 0;"
+      id="navbarSupportedContent"
+    >
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            href="https://github.com/cmudig/emblaze"
+            target="_blank">GitHub</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" on:click={() => (isAboutPaneOpen = true)}
+            >About</a
+          >
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="config-view">
+    <div style="display: flex; align-items: center;">
+      <h6 class="config-item">Dataset</h6>
+      <select bind:value={$datasetPath} class="config-item">
+        {#each datasetOptions as opt}
+          <option value={opt}>{getDatasetName(opt)}</option>
         {/each}
+      </select>
+      <h6 class="config-item">Color Scheme</h6>
+      <select bind:value={$colorScheme} class="config-item">
+        {#each ColorSchemes.allColorSchemes as opt}
+          <option value={opt.name}>{opt.name}</option>
+        {/each}
+      </select>
+      <h6 class="config-item">Star Trails</h6>
+      <select bind:value={$previewMode} class="config-item">
+        <option value={PreviewMode.NEIGHBOR_SIMILARITY}>
+          High-D Neighbors
+        </option>
+        <option value={PreviewMode.NEIGHBOR_SIMILARITY}>
+          Projection Neighbors
+        </option>
       </select>
     </div>
   </div>
 
   <div class="visualization-view">
-    <TemporalVisualization
-      bind:this={visualization}
-      {data}
-      {thumbnailProvider}
-      {colorScheme}
-      {useHalos}
-      on:align={alignVisualization}
-    />
+    {#if connected}
+      <App {model} fillHeight={true} />
+    {:else}
+      <div class="loading-container">
+        <div class="spinner-border text-primary" role="status" />
+        <div class="loading-message text-center">Connecting...</div>
+      </div>
+    {/if}
   </div>
 </main>
 
@@ -194,11 +165,34 @@
     display: flex;
     flex-direction: column;
   }
+  .title-bar {
+    background-color: darkslateblue;
+    color: white;
+  }
+  .config-view {
+    padding: 12px;
+    background-color: #eee;
+    border-bottom: 1px solid #bbb;
+  }
   .config-item {
     margin-right: 16px;
+    margin-bottom: 0;
   }
   .visualization-view {
     flex: 1;
     overflow: scroll;
+    padding: 8px;
+  }
+  .loading-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-message {
+    padding-top: 12px;
   }
 </style>

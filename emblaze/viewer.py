@@ -26,6 +26,13 @@ import numpy as np
 PERFORMANCE_SUGGESTIONS_RECOMPUTE = 1000
 PERFORMANCE_SUGGESTIONS_ENABLE = 10000
 
+def default_thread_starter(fn, args=[], kwargs={}):
+    thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
+    thread.start()
+    
+def synchronous_thread_starter(fn, args=[], kwargs={}):
+    fn(args, kwargs)
+
 class Viewer(DOMWidget):
     """TODO: Add docstring here
     """
@@ -35,13 +42,12 @@ class Viewer(DOMWidget):
     _view_name = Unicode('Viewer').tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
+    
+    thread_starter = Any(default_thread_starter)
 
     embeddings = Instance(EmbeddingSet, allow_none=True)
-    data = Dict({}).tag(sync=True)
-    isLoading = Bool(True).tag(sync=True)
-    loadingMessage = Unicode("").tag(sync=True)
-    file = Any(allow_none=True)
-    
+    data = Dict(None, allow_none=True).tag(sync=True)
+    file = Any(allow_none=True).tag(sync=True)    
     plotPadding = Float(10.0).tag(sync=True)
     
     currentFrame = Integer(0).tag(sync=True)
@@ -70,6 +76,7 @@ class Viewer(DOMWidget):
     saveSelectionFlag = Bool(False).tag(sync=True)
     selectionName = Unicode("").tag(sync=True)
     selectionDescription = Unicode("").tag(sync=True)
+    allowsSavingSelections = Bool(True).tag(sync=True)
 
     visibleSidebarPane = Integer(SidebarPane.CURRENT).tag(sync=True)
     selectionList = List([]).tag(sync=True)
@@ -116,7 +123,6 @@ class Viewer(DOMWidget):
         if self.file:
             self.load_comparison(self.file)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
-        self.isLoading = False
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
@@ -135,6 +141,9 @@ class Viewer(DOMWidget):
 
     @observe("saveSelectionFlag")
     def _observe_save_selection(self, change):
+        if not self.allowsSavingSelections:
+            self.saveSelectionFlag = False
+            return
         if change.new:
             newSelection = { }
             newSelection["selectedIDs"] = self.selectedIDs
@@ -214,6 +223,11 @@ class Viewer(DOMWidget):
                    "storedNumNeighbors property of the widget when initializing.").format(new_val))
         return new_val                        
         
+    @observe("file")
+    def _observe_file(self, change):
+        if change.new is not None:
+            self.load_comparison(change.new)
+        
     @observe("embeddings")
     def _observe_embeddings(self, change):
         embeddings = change.new
@@ -230,10 +244,7 @@ class Viewer(DOMWidget):
         else:
             self.neighborData = []
             self.data = {}
-        self.selectedIDs = []
-        self.alignedIDs = []
-        self.currentFrame = 0
-        self.reset_alignment()
+        self.reset_state()
         
         # Compute padding based on first embedding
         base_frame = embeddings[0].field(Field.POSITION)
@@ -270,8 +281,7 @@ class Viewer(DOMWidget):
             self.align_to_points(None, None)
         else:
             ids_of_interest = change.new
-            thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
-            thread.start()
+            self.thread_starter(self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
     
     @observe("selectedIDs")
     def _observe_selected_ids(self, change):
@@ -284,12 +294,22 @@ class Viewer(DOMWidget):
         """Update suggestions when the filter changes."""
         self._update_suggested_selections()
 
+    def reset_state(self):
+        """Resets the view state of the widget."""
+        self.currentFrame = 0
+        self.previewFrame = -1
+        self.selectedIDs = []
+        self.alignedIDs = []
+        self.filterIDs = []
+        self.reset_alignment()
+
     def reset_alignment(self):
         """Removes any transformations applied to the embedding frames."""
         self.frameTransformations = [
             np.eye(3).tolist()
             for i in range(len(self.embeddings))
         ]
+        self.alignedFrame = 0
         self.update_frame_colors()
         
     def align_to_points(self, point_ids, peripheral_points):
@@ -396,6 +416,7 @@ class Viewer(DOMWidget):
         self.recomputeSuggestionsFlag = False
         if self.loadingSuggestions: 
             return
+        
 
         filter_points = None
         self._update_performance_suggestions_mode()
@@ -418,7 +439,6 @@ class Viewer(DOMWidget):
             filter_points = self._get_filter_points(filter_points, in_frame=self.embeddings[self.currentFrame])
             
         self.loadingSuggestions = True
-        
         try:
             if self.recommender is None or self.performanceSuggestionsMode:
                 self.loadingSuggestionsProgress = 0.0
@@ -471,13 +491,13 @@ class Viewer(DOMWidget):
                 
             self.loadingSuggestions = False
         except Exception as e:
+            print(e)
             self.loadingSuggestions = False
             raise e
         
     def _update_suggested_selections(self):
         """Recomputes the suggested selections."""
-        thread = threading.Thread(target=self._update_suggested_selections_background)
-        thread.start()
+        self.thread_starter(self._update_suggested_selections_background)
 
     @observe("saveInteractionsFlag")
     def _save_interactions(self, change):
@@ -485,7 +505,7 @@ class Viewer(DOMWidget):
         The widget sets the flag to save interaction history periodically
         because we can't use a timer in the backend.
         """
-        if change.new:
+        if change.new and self.loggingHelper:
             self.loggingHelper.add_logs(self.interactionHistory)
             self.interactionHistory = []
             self.saveInteractionsFlag = False
@@ -551,6 +571,12 @@ class Viewer(DOMWidget):
         Loads comparison information from a JSON object, including the
         EmbeddingSet, Thumbnails, and NeighborSet.
         """
+        if self.embeddings is not None:
+            self.reset_state()
+            self.data = None
+            self.neighborData = []
+            self.thumbnailData = {}
+        
         assert data["_format"] == "emblaze.Viewer.SaveData", "Unsupported JSON _format key '{}'".format(data["_format"])
         # Load neighbors first, to create mock parent embeddings
         parents = None

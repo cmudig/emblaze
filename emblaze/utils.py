@@ -39,10 +39,10 @@ class PreviewMode:
     
 class SidebarPane:
     """Indexes of sidebar panes in the widget."""
-    CURRENT = 0
-    SAVED = 1
-    RECENT = 2
-    SUGGESTED = 3
+    CURRENT = 1
+    SAVED = 2
+    RECENT = 3
+    SUGGESTED = 4
 
 FLIP_FACTORS = [
     np.array([1, 1, 1]),

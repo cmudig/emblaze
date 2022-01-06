@@ -23,10 +23,10 @@
   import SettingsPane from './visualization/components/SettingsPane.svelte';
   import { ThumbnailProvider } from './visualization/models/thumbnails';
 
-  let data = syncValue(model, 'data', {});
+  export let fillHeight = false;
+
+  let data = syncValue(model, 'data', null);
   let neighborData = syncValue(model, 'neighborData', []);
-  let isLoading = syncValue(model, 'isLoading', true);
-  let loadingMessage = syncValue(model, 'loadingMessage', '');
 
   let plotPadding = syncValue(model, 'plotPadding', 10.0);
   let height = 600; // can make this reactive later
@@ -121,6 +121,11 @@
   let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = syncValue(model, 'previewFrame', 0);
 
+  let allowsSavingSelections = syncValue(
+    model,
+    'allowsSavingSelections',
+    false
+  );
   let saveSelectionFlag = syncValue(model, 'saveSelectionFlag', false);
   let selectionName = syncValue(model, 'selectionName', '');
   let selectionDescription = syncValue(model, 'selectionDescription', '');
@@ -131,11 +136,27 @@
   let description = '';
 
   const SidebarPanes = {
-    CURRENT: 0,
-    SAVED: 1,
-    RECENT: 2,
-    SUGGESTED: 3,
+    CURRENT: 1,
+    SAVED: 2,
+    RECENT: 3,
+    SUGGESTED: 4,
   };
+  let sidebarPaneOptions = [];
+  $: {
+    if ($allowsSavingSelections)
+      sidebarPaneOptions = [
+        { value: SidebarPanes.CURRENT, name: 'Current' },
+        { value: SidebarPanes.SAVED, name: 'Saved' },
+        { value: SidebarPanes.RECENT, name: 'Recent' },
+        { value: SidebarPanes.SUGGESTED, name: 'Suggested' },
+      ];
+    else
+      sidebarPaneOptions = [
+        { value: SidebarPanes.CURRENT, name: 'Current' },
+        { value: SidebarPanes.RECENT, name: 'Recent' },
+        { value: SidebarPanes.SUGGESTED, name: 'Suggested' },
+      ];
+  }
   let visibleSidebarPane = syncValue(
     model,
     'visibleSidebarPane',
@@ -184,8 +205,8 @@
       let invalidAligned = !(event.detail.alignedIDs || []).every(filterFn);
       let invalidFilter = !(event.detail.filterIDs || []).every(filterFn);
 
-      $currentFrame = event.detail.currentFrame || $currentFrame;
-      $alignedFrame = event.detail.alignedFrame || $currentFrame;
+      $currentFrame = event.detail.currentFrame || $currentFrame || 0;
+      $alignedFrame = event.detail.alignedFrame || $currentFrame || 0;
       if (!!event.detail.selectedIDs)
         $selectedIDs = event.detail.selectedIDs.filter(filterFn);
       if (!!event.detail.alignedIDs)
@@ -476,63 +497,63 @@
   $: logEvent({ type: 'filter', numPoints: $filterIDs.length });
 </script>
 
-{#if $isLoading}
-  <div class="text-center">
-    Loading {#if $loadingMessage.length > 0} ({$loadingMessage}){/if}...
-    <i class="text-primary fa fa-spinner fa-spin" />
+<Modal visible={isOpenDialogue} width={400}>
+  <SaveSelectionPane
+    bind:name={$selectionName}
+    bind:description={$selectionDescription}
+    on:cancel={() => (isOpenDialogue = false)}
+    on:save={saveSelection}
+  >
+    <div slot="summary">
+      <p>
+        <strong>Frame number:</strong>
+        {$currentFrame}
+      </p>
+      <p>
+        <strong>Filter:</strong>
+        {#if $filterIDs.length > 0}
+          {$filterIDs.length} points
+        {:else}
+          No filter
+        {/if}
+      </p>
+      <p>
+        <strong>Selected:</strong>
+        {$selectedIDs.length} points
+      </p>
+      <p>
+        <strong>Aligned:</strong>
+        {#if $alignedIDs.length > 0}
+          {$alignedIDs.length} points, to frame {$alignedFrame}
+        {:else}
+          No alignment
+        {/if}
+      </p>
+    </div>
+  </SaveSelectionPane>
+</Modal>
+
+<Modal visible={isSettingsOpen} width={400}>
+  <SettingsPane
+    bind:colorScheme={$colorScheme}
+    bind:showLegend
+    bind:previewMode={$previewMode}
+    previewModes={Object.values(PreviewMode)}
+    colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
+    bind:numNeighbors={$numNeighbors}
+    bind:previewK
+    bind:similarityThreshold={previewSimilarityThreshold}
+    on:close={() => (isSettingsOpen = false)}
+  />
+</Modal>
+
+{#if !dataset}
+  <div class="loading-container">
+    <div class="spinner-border text-primary" role="status" />
+    <div class="loading-message text-center">Loading data...</div>
   </div>
 {:else}
-  <Modal visible={isOpenDialogue} width={400}>
-    <SaveSelectionPane
-      bind:name={$selectionName}
-      bind:description={$selectionDescription}
-      on:cancel={() => (isOpenDialogue = false)}
-      on:save={saveSelection}
-    >
-      <div slot="summary">
-        <p>
-          <strong>Frame number:</strong>
-          {$currentFrame}
-        </p>
-        <p>
-          <strong>Filter:</strong>
-          {#if $filterIDs.length > 0}
-            {$filterIDs.length} points
-          {:else}
-            No filter
-          {/if}
-        </p>
-        <p>
-          <strong>Selected:</strong>
-          {$selectedIDs.length} points
-        </p>
-        <p>
-          <strong>Aligned:</strong>
-          {#if $alignedIDs.length > 0}
-            {$alignedIDs.length} points, to frame {$alignedFrame}
-          {:else}
-            No alignment
-          {/if}
-        </p>
-      </div>
-    </SaveSelectionPane>
-  </Modal>
-
-  <Modal visible={isSettingsOpen} width={400}>
-    <SettingsPane
-      bind:colorScheme={$colorScheme}
-      bind:showLegend
-      bind:previewMode={$previewMode}
-      previewModes={Object.values(PreviewMode)}
-      colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
-      bind:numNeighbors={$numNeighbors}
-      bind:previewK
-      bind:similarityThreshold={previewSimilarityThreshold}
-      on:close={() => (isSettingsOpen = false)}
-    />
-  </Modal>
-
-  <div class="vis-container">
+  <div class="vis-container" style="height: {fillHeight ? '100%' : '600px'};">
     <div class="frame-sidebar">
       <div class="frame-thumbnail-container">
         {#each [...d3.range(dataset.frameCount)] as i}
@@ -621,11 +642,11 @@
       <div class="action-toolbar">
         <SegmentedControl
           bind:selected={$visibleSidebarPane}
-          options={['Current', 'Saved', 'Recent', 'Suggested']}
+          options={sidebarPaneOptions}
         />
       </div>
       <div class="sidebar-content">
-        {#if $visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
+        {#if $visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData && !!$neighborData}
           <DefaultThumbnailViewer
             on:thumbnailClick={handleThumbnailClick}
             on:thumbnailHover={handleThumbnailHover}
@@ -680,16 +701,18 @@
         {/if}
       </div>
       <div class="action-toolbar">
-        <button
-          type="button"
-          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
-          on:click|preventDefault={openSaveSelectionDialog}
-          disabled={$selectedIDs.length == 0 &&
-            $alignedIDs.length == 0 &&
-            $filterIDs.length == 0}
-        >
-          Save Selection
-        </button>
+        {#if $allowsSavingSelections}
+          <button
+            type="button"
+            class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
+            on:click|preventDefault={openSaveSelectionDialog}
+            disabled={$selectedIDs.length == 0 &&
+              $alignedIDs.length == 0 &&
+              $filterIDs.length == 0}
+          >
+            Save Selection
+          </button>
+        {/if}
         <div style="flex-grow: 1" />
         <button
           type="button"
@@ -719,10 +742,22 @@
 
   .vis-container {
     width: 100%;
-    height: 600px;
     display: flex;
     justify-items: stretch;
     /*border: 2px solid #bbb;*/
+  }
+
+  .loading-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-message {
+    padding-top: 12px;
   }
 
   .frame-sidebar {
@@ -763,7 +798,7 @@
 
   .sidebar {
     width: 300px;
-    height: 600px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     margin-right: 8px;
