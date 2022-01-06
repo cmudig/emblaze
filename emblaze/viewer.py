@@ -10,10 +10,10 @@ TODO: Add module docstring
 
 from ipywidgets import DOMWidget
 from numpy.core.fromnumeric import sort
-from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, Set, observe
+from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, Set, observe, Any
 from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
-from .datasets import EmbeddingSet
+from .datasets import EmbeddingSet, NeighborOnlyEmbedding, Embedding
 from .thumbnails import Thumbnails
 from .utils import Field, LoggingHelper, SidebarPane, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
 from .recommender import SelectionRecommender
@@ -40,6 +40,7 @@ class Viewer(DOMWidget):
     data = Dict({}).tag(sync=True)
     isLoading = Bool(True).tag(sync=True)
     loadingMessage = Unicode("").tag(sync=True)
+    file = Any(allow_none=True)
     
     plotPadding = Float(10.0).tag(sync=True)
     
@@ -62,6 +63,9 @@ class Viewer(DOMWidget):
     thumbnails = Instance(Thumbnails, allow_none=True)
     # JSON-serializable dictionary of thumbnail info
     thumbnailData = Dict({}).tag(sync=True)
+    
+    # High dimensional neighbors, one dictionary corresponding to each Embedding
+    neighborData = List([]).tag(sync=True)
 
     saveSelectionFlag = Bool(False).tag(sync=True)
     selectionName = Unicode("").tag(sync=True)
@@ -106,8 +110,11 @@ class Viewer(DOMWidget):
         """
         embeddings: An EmbeddingSet object.
         thumbnails: A ThumbnailSet object.
+        file: A file path or file-like object from which to read a comparison JSON file.
         """
         super(Viewer, self).__init__(*args, **kwargs)
+        if self.file:
+            self.load_comparison(self.file)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
         self.isLoading = False
         self.saveSelectionFlag = False
@@ -177,14 +184,14 @@ class Viewer(DOMWidget):
         frames are mostly the same, and a neighbor similarity preview mode
         otherwise.
         """
-        for emb_1 in self.embeddings:
-            if not emb_1.has_field(Field.NEIGHBORS):
+        ancestor_neighbors = [emb.get_ancestor_neighbors() for emb in self.embeddings]
+        for n1 in ancestor_neighbors:
+            if not n1:
                 return PreviewMode.PROJECTION_SIMILARITY
-            for emb_2 in self.embeddings:
-                if not emb_2.has_field(Field.NEIGHBORS):
+            for n2 in ancestor_neighbors:
+                if not n2:
                     return PreviewMode.PROJECTION_SIMILARITY
-                if not np.allclose(emb_1.field(Field.NEIGHBORS),
-                                   emb_2.field(Field.NEIGHBORS)):
+                if n1 != n2:
                     return PreviewMode.NEIGHBOR_SIMILARITY
         return PreviewMode.PROJECTION_SIMILARITY
         
@@ -201,7 +208,7 @@ class Viewer(DOMWidget):
             new_val = 50
         elif num_points > 100000:
             new_val = 75
-        if new_val is not None and any(new_val < len(emb.field(Field.NEIGHBORS, ids=emb.ids[0]).flatten()) for emb in embeddings.embeddings):
+        if new_val is not None and any(new_val < emb.n_neighbors for emb in embeddings.embeddings):
             print(("WARNING: Reducing the number of nearest neighbors passed to the "
                    "widget to {} to save space. You can control this by setting the "
                    "storedNumNeighbors property of the widget when initializing.").format(new_val))
@@ -211,13 +218,17 @@ class Viewer(DOMWidget):
     def _observe_embeddings(self, change):
         embeddings = change.new
         assert len(embeddings) > 0, "Must have at least one embedding"
+        assert not any(not e.any_ancestor_has_neighbors() for e in embeddings), "All embeddings must have at least one Neighbors previously computed"
         if embeddings is not None:
+            self.neighborData = []
             if self.storedNumNeighbors > 0:
                 n_neighbors = self.storedNumNeighbors 
             else:
                 n_neighbors = self._select_stored_num_neighbors(embeddings)
-            self.data = embeddings.to_json(num_neighbors=n_neighbors)
+            self.data = embeddings.to_json(save_neighbors=False)
+            self.neighborData = embeddings.get_ancestor_neighbors().to_json(num_neighbors=n_neighbors)
         else:
+            self.neighborData = []
             self.data = {}
         self.selectedIDs = []
         self.alignedIDs = []
@@ -232,13 +243,13 @@ class Viewer(DOMWidget):
         
         self.colorScheme = self.detect_color_scheme()
         self.previewMode = self.detect_preview_mode()
-        self.selectionUnit = embeddings[0].metric
+        self._update_selection_unit(embeddings[0])
         
         self._update_suggested_selections()
 
     @observe("currentFrame")
     def _observe_current_frame(self, change):
-        self.selectionUnit = self.embeddings[change.new].metric
+        self._update_selection_unit(self.embeddings[change.new])
         self._update_suggested_selections()
 
     @observe("previewFrame")
@@ -325,6 +336,15 @@ class Viewer(DOMWidget):
         else:
             self.frameColors = compute_colors(self.embeddings, self.selectedIDs)
 
+    def _update_selection_unit(self, frame):
+        """Sets the selection unit if the current frame can be queried for
+        distances."""
+        ancestor = frame.find_ancestor_neighbor_embedding()
+        if isinstance(ancestor, NeighborOnlyEmbedding):
+            self.selectionUnit = ''
+        else:
+            self.selectionUnit = ancestor.metric
+        
     @observe("selectionOrderRequest")
     def _compute_selection_order(self, change):
         """Compute an ordering of the points by distance from the selected ID."""
@@ -336,7 +356,7 @@ class Viewer(DOMWidget):
         frame = change.new['frame']
         # metric = change.new['metric'] # for now, unused
         
-        hi_d = self.embeddings[frame].get_root()
+        hi_d = self.embeddings[frame].find_ancestor_neighbor_embedding()
         order, distances = hi_d.neighbor_distances(ids=[centerID], n_neighbors=2000)
         
         self.selectionOrder = [(int(x), y) for x, y in np.vstack([
@@ -358,7 +378,7 @@ class Viewer(DOMWidget):
         for id_val in selection:
             filtered_points.add(id_val)
         for frame in self.embeddings.embeddings if in_frame is None else [in_frame]:
-            filtered_points |= set(frame.field(Field.NEIGHBORS, ids=selection)[:,:self.numNeighbors].flatten().tolist())
+            filtered_points |= set(frame.get_ancestor_neighbors()[selection][:,:self.numNeighbors].flatten().tolist())
         return list(filtered_points)
     
     @observe("recomputeSuggestionsFlag")
@@ -469,3 +489,115 @@ class Viewer(DOMWidget):
             self.loggingHelper.add_logs(self.interactionHistory)
             self.interactionHistory = []
             self.saveInteractionsFlag = False
+            
+    def comparison_to_json(self, compressed=True, ancestor_data=True):
+        """
+        Saves the data used to produce this comparison to a JSON object. This
+        includes the EmbeddingSet and the Thumbnails that are visualized, as
+        well as the immediate and ancestor neighbor data (see below). Ancestor
+        neighbors are used to display nearest neighbors in the UI.
+        
+        If ancestor_data is True (default), the full Embedding object that
+        produces the ancestor neighbors will be stored, including its neighbor
+        set. If ancestor_data is set to False, only the ancestor
+        neighbors themselves will be stored. This can save space if the ancestor
+        embedding is very high-dimensional. However, the high-dimensional radius
+        select tool will not work if ancestor data is not saved.
+        """
+        result = {}
+        
+        ancestor_neighbors = self.embeddings.get_ancestor_neighbors()
+        recent_neighbors = self.embeddings.get_recent_neighbors()
+        neighbors = self.embeddings.get_neighbors()
+        
+        result["_format"] = "emblaze.Viewer.SaveData"
+        result["embeddings"] = self.embeddings.to_json(compressed=compressed,
+                                                       save_neighbors=True)
+        result["thumbnails"] = self.thumbnails.to_json()
+        
+        # Save recent neighbors (those used for frame colors and recommendations)
+        # if they do not originate from the embeddings or in the ancestor embeddings
+        if neighbors != recent_neighbors and recent_neighbors != ancestor_neighbors:
+            # Save these in mock format
+            if recent_neighbors.identical():
+                result["recent_neighbors"] = [NeighborOnlyEmbedding.from_embedding(recent_neighbors[0]).to_json(compressed=compressed)]
+            else:
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in recent_neighbors]
+                result["recent_neighbors"] = [e.to_json(compressed=compressed) for e in mock_embs]
+        
+        # Save ancestor neighbors (and positions, if ancestor_data = True)
+        ancestors = EmbeddingSet([emb.find_ancestor_neighbor_embedding() for emb in self.embeddings], align=False)
+        if ancestor_data:
+            if ancestors.identical():
+                result["ancestor_data"] = [ancestors[0].to_json(compressed=compressed)]
+            else:
+                result["ancestor_data"] = [
+                    anc.to_json(compressed=compressed)
+                    for anc in ancestors
+                ]
+        elif neighbors != ancestor_neighbors:
+            # Create mock NeighborOnlyEmbeddings here to show that we are
+            # saving only the neighbor data
+            if ancestor_neighbors.identical():
+                result["ancestor_neighbors"] = [NeighborOnlyEmbedding.from_embedding(ancestors[0]).to_json(compressed=compressed)]
+            else:
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in ancestors]
+                result["ancestor_neighbors"] = [e.to_json(compressed=compressed) for e in mock_embs]
+            
+        return result
+    
+    def load_comparison_from_json(self, data):
+        """
+        Loads comparison information from a JSON object, including the
+        EmbeddingSet, Thumbnails, and NeighborSet.
+        """
+        assert data["_format"] == "emblaze.Viewer.SaveData", "Unsupported JSON _format key '{}'".format(data["_format"])
+        # Load neighbors first, to create mock parent embeddings
+        parents = None
+        if "ancestor_data" in data:
+            parents = [Embedding.from_json(item) for item in data["ancestor_data"]]
+        elif "ancestor_neighbors" in data:
+            parents = [NeighborOnlyEmbedding.from_json(item) for item in data["ancestor_neighbors"]]
+            
+        if "recent_neighbors" in data:
+            # The neighbors to display will come from these, so put them in between
+            # the ancestor embeddings and the final ones
+            recent_parents = parents
+            if recent_parents is None:
+                recent_parents = [None for _ in range(len(self.embeddings))]
+            elif len(parents) == 1:
+                recent_parents = [recent_parents[0] for _ in range(len(self.embeddings))]
+            parents = [NeighborOnlyEmbedding.from_json(item, parent=p)
+                       for item, p in zip(data["recent_neighbors"], recent_parents)]
+        
+        self.embeddings = EmbeddingSet.from_json(data["embeddings"], parents=parents)
+        self.thumbnails = Thumbnails.from_json(data["thumbnails"])
+        
+        return self
+                
+    def save_comparison(self, file_path_or_buffer, ancestor_data=True):
+        """
+        Saves the comparison data (EmbeddingSet, Thumbnails, and NeighborSet) to
+        the given file path or file-like object. See comparison_to_json() for
+        more details.
+        """
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, 'w') as file:
+                json.dump(self.comparison_to_json(ancestor_data=ancestor_data), file)
+        else:
+            # File object
+            json.dump(self.comparison_to_json(ancestor_data=ancestor_data), file_path_or_buffer)
+            
+    def load_comparison(self, file_path_or_buffer):
+        """
+        Load the comparison data from the given file path or
+        file-like object containing JSON data.
+        """
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, 'r') as file:
+                return self.load_comparison_from_json(json.load(file))
+        else:
+            # File object
+            return self.load_comparison_from_json(json.load(file_path_or_buffer))

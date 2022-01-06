@@ -48,13 +48,15 @@ X, Y = ...
 
 # Represent the high-dimensional embedding
 emb = emblaze.Embedding({Field.POSITION: X, Field.COLOR: Y})
-# Compute nearest neighbors in the high-D space
-emb.compute_neighbors(metric='euclidean')
+# Compute nearest neighbors in the high-D space (for display)
+emb.compute_neighbors(metric='cosine')
 
 # Generate UMAP 2D representations - you can pass UMAP parameters to project()
 variants = emblaze.EmbeddingSet([
     emb.project(method=ProjectionTechnique.UMAP) for _ in range(10)
 ])
+# Compute neighbors again (to indicate that we want to compare projections)
+variants.compute_neighbors(metric='euclidean')
 
 w = emblaze.Viewer(embeddings=variants)
 w
@@ -76,7 +78,7 @@ embeddings = emblaze.EmbeddingSet([
     emblaze.Embedding({Field.POSITION: X, Field.COLOR: Y}, label=emb_name)
     for X, emb_name in zip(Xs, embedding_names)
 ])
-embeddings.compute_neighbors()
+embeddings.compute_neighbors(metric='cosine')
 
 # Make aligned UMAP
 reduced = embeddings.project(method=ProjectionTechnique.ALIGNED_UMAP)

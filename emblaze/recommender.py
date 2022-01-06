@@ -67,8 +67,8 @@ class SelectionRecommender:
         """
         frame_1 = self.embeddings[idx_1]
         frame_2 = self.embeddings[idx_2]
-        frame_1_neighbors = frame_1.field(Field.NEIGHBORS, ids=filter_points or None)
-        frame_2_neighbors = frame_2.field(Field.NEIGHBORS, ids=filter_points or None)
+        frame_1_neighbors = frame_1.get_recent_neighbors()[filter_points or None]
+        frame_2_neighbors = frame_2.get_recent_neighbors()[filter_points or None]
         gained_ids = [set(frame_2_neighbors[i]) - set(frame_1_neighbors[i]) for i in range(len(filter_points or frame_1))]
         lost_ids = [set(frame_1_neighbors[i]) - set(frame_2_neighbors[i]) for i in range(len(filter_points or frame_1))]
 
@@ -79,15 +79,15 @@ class SelectionRecommender:
         Computes the consistency between the neighbors for the given set of IDs 
         in the given frame.
         """
-        return (np.sum(1 - self._pairwise_jaccard_distances(frame.field(Field.NEIGHBORS, ids=ids))) - len(ids)) / (len(ids) * (len(ids) - 1))
+        return (np.sum(1 - self._pairwise_jaccard_distances(frame.get_recent_neighbors()[ids])) - len(ids)) / (len(ids) * (len(ids) - 1))
         
     def _inner_change_score(self, ids, frame_1, frame_2):
         """
         Computes the inverse intersection of the neighbor sets in the given
         two frames.
         """
-        return np.mean(inverse_intersection(frame_1.field(Field.NEIGHBORS, ids=ids),
-                                            frame_2.field(Field.NEIGHBORS, ids=ids),
+        return np.mean(inverse_intersection(frame_1.get_recent_neighbors()[ids],
+                                            frame_2.get_recent_neighbors()[ids],
                                             List(ids),
                                             False))
         
@@ -180,7 +180,7 @@ class SelectionRecommender:
                 
             # Assemble a list of candidates
             if ids_of_interest is not None:
-                neighbor_ids = set([n for n in self.embeddings[frame_key[0]].field(Field.NEIGHBORS, ids_of_interest)[:,:NUM_NEIGHBORS_FOR_SEARCH].flatten()])
+                neighbor_ids = set([n for n in self.embeddings[frame_key[0]].get_recent_neighbors()[ids_of_interest][:,:NUM_NEIGHBORS_FOR_SEARCH].flatten()])
             else:
                 neighbor_ids = None    
 
