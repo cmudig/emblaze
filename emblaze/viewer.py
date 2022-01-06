@@ -47,8 +47,7 @@ class Viewer(DOMWidget):
 
     embeddings = Instance(EmbeddingSet, allow_none=True)
     data = Dict(None, allow_none=True).tag(sync=True)
-    file = Any(allow_none=True).tag(sync=True)
-    
+    file = Any(allow_none=True).tag(sync=True)    
     plotPadding = Float(10.0).tag(sync=True)
     
     currentFrame = Integer(0).tag(sync=True)
@@ -120,6 +119,8 @@ class Viewer(DOMWidget):
         file: A file path or file-like object from which to read a comparison JSON file.
         """
         super(Viewer, self).__init__(*args, **kwargs)
+        if self.file:
+            self.load_comparison(self.file)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False

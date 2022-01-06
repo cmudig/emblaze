@@ -62,7 +62,7 @@
 
   $: updateDataset($data);
 
-  function updateDataset(rawData) {
+  function updateDataset(rawData, neighbors) {
     if (!!rawData && !!rawData['data']) {
       dataset = new Dataset(rawData, 'color');
       if (!!$frameTransformations && $frameTransformations.length > 0)
