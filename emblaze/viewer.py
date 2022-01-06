@@ -76,6 +76,7 @@ class Viewer(DOMWidget):
     saveSelectionFlag = Bool(False).tag(sync=True)
     selectionName = Unicode("").tag(sync=True)
     selectionDescription = Unicode("").tag(sync=True)
+    allowsSavingSelections = Bool(True).tag(sync=True)
 
     visibleSidebarPane = Integer(SidebarPane.CURRENT).tag(sync=True)
     selectionList = List([]).tag(sync=True)
@@ -140,6 +141,9 @@ class Viewer(DOMWidget):
 
     @observe("saveSelectionFlag")
     def _observe_save_selection(self, change):
+        if not self.allowsSavingSelections:
+            self.saveSelectionFlag = False
+            return
         if change.new:
             newSelection = { }
             newSelection["selectedIDs"] = self.selectedIDs

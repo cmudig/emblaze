@@ -1,6 +1,9 @@
 <script>
   export let selected = 1;
-  export let options = ['A', 'B'];
+  export let options = [
+    { value: 1, name: 'A' },
+    { value: 2, name: 'B' },
+  ];
 </script>
 
 <ul class="segmented-control">
@@ -12,13 +15,13 @@
       <input
         class="segmented-control__input"
         type="radio"
-        value={i + 1}
+        value={option.value}
         name="option"
         id="option-{i + 1}"
         bind:group={selected}
       />
       <label class="segmented-control__label" for="option-{i + 1}"
-        >{option}</label
+        >{option.name}</label
       >
     </li>
   {/each}

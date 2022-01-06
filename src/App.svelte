@@ -121,6 +121,11 @@
   let currentFrame = syncValue(model, 'currentFrame', 0);
   let previewFrame = syncValue(model, 'previewFrame', 0);
 
+  let allowsSavingSelections = syncValue(
+    model,
+    'allowsSavingSelections',
+    false
+  );
   let saveSelectionFlag = syncValue(model, 'saveSelectionFlag', false);
   let selectionName = syncValue(model, 'selectionName', '');
   let selectionDescription = syncValue(model, 'selectionDescription', '');
@@ -136,6 +141,22 @@
     RECENT: 3,
     SUGGESTED: 4,
   };
+  let sidebarPaneOptions = [];
+  $: {
+    if ($allowsSavingSelections)
+      sidebarPaneOptions = [
+        { value: SidebarPanes.CURRENT, name: 'Current' },
+        { value: SidebarPanes.SAVED, name: 'Saved' },
+        { value: SidebarPanes.RECENT, name: 'Recent' },
+        { value: SidebarPanes.SUGGESTED, name: 'Suggested' },
+      ];
+    else
+      sidebarPaneOptions = [
+        { value: SidebarPanes.CURRENT, name: 'Current' },
+        { value: SidebarPanes.RECENT, name: 'Recent' },
+        { value: SidebarPanes.SUGGESTED, name: 'Suggested' },
+      ];
+  }
   let visibleSidebarPane = syncValue(
     model,
     'visibleSidebarPane',
@@ -621,7 +642,7 @@
       <div class="action-toolbar">
         <SegmentedControl
           bind:selected={$visibleSidebarPane}
-          options={['Current', 'Saved', 'Recent', 'Suggested']}
+          options={sidebarPaneOptions}
         />
       </div>
       <div class="sidebar-content">
@@ -680,16 +701,18 @@
         {/if}
       </div>
       <div class="action-toolbar">
-        <button
-          type="button"
-          class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
-          on:click|preventDefault={openSaveSelectionDialog}
-          disabled={$selectedIDs.length == 0 &&
-            $alignedIDs.length == 0 &&
-            $filterIDs.length == 0}
-        >
-          Save Selection
-        </button>
+        {#if $allowsSavingSelections}
+          <button
+            type="button"
+            class="btn btn-primary btn-sm jp-Dialog-button jp-mod-accept jp-mod-styled"
+            on:click|preventDefault={openSaveSelectionDialog}
+            disabled={$selectedIDs.length == 0 &&
+              $alignedIDs.length == 0 &&
+              $filterIDs.length == 0}
+          >
+            Save Selection
+          </button>
+        {/if}
         <div style="flex-grow: 1" />
         <button
           type="button"
