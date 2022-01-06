@@ -39,7 +39,7 @@
   let datasetPath = syncValue(model, 'file', '');
 
   function getDatasetName(path) {
-    let match = path.match(/\/([^\/]+)\/data.json/);
+    let match = path.match(/\/([^\/.]+)\.json/);
     if (!match) return '';
     return match[1];
   }
@@ -136,9 +136,12 @@
       </select>
       <h6 class="config-item">Star Trails</h6>
       <select bind:value={$previewMode} class="config-item">
-        {#each Object.values(PreviewMode) as mode}
-          <option value={mode}>{mode}</option>
-        {/each}
+        <option value={PreviewMode.NEIGHBOR_SIMILARITY}>
+          High-D Neighbors
+        </option>
+        <option value={PreviewMode.NEIGHBOR_SIMILARITY}>
+          Projection Neighbors
+        </option>
       </select>
     </div>
   </div>

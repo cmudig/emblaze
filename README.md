@@ -31,7 +31,11 @@ Although the full application is designed to work as a Jupyter widget, you can r
 python -m emblaze.server
 ```
 
-Visit `localhost:5000` to see the running application. This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets (for example, to host an instance of Emblaze showing a custom dataset), see the standalone app development instructions below.
+Visit `localhost:5000` to see the running application. This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets to the standalone app, you can create a directory containing your saved comparison JSON files (see Saving and Loading below), then pass it as a command-line argument:
+
+```bash
+python -m emblaze.server /path/to/comparisons
+```
 
 ## Examples
 
@@ -110,6 +114,18 @@ Once you have loaded a `Viewer` instance in the notebook, you can read and write
 - `alignedIDs` (`List[int]`) The IDs of the points to which the embedding spaces are aligned (same format as `selectedIDs`). Alignment is computed relative to the positions of the points in the current frame.
 - `colorScheme` (`string`) The name of a color scheme to use to render the points. A variety of color schemes are available, listed in `src/colorschemes.ts`. This property can also be changed in the Settings panel of the widget.
 - `previewMode` (`string`) The method to use to generate preview lines, which should be one of the values in `utils.
+
+### Saving and Loading
+
+You can save the data used to make comparisons to JSON, so that it is easy to load them again in Jupyter or the standalone application without re-running the embedding/projection code. Comparisons consist of an `EmbeddingSet` (containing the positions of the points in each 2D projection), a `Thumbnails` object (dictating how to display each point), and one or more `NeighborSet`s (which contain the nearest-neighbor sets used for comparison and display).
+
+To save a comparison, call the `save_comparison()` method on the `Viewer`. Note that if you are using high-dimensional nearest neighbors (most use cases), this method by default saves both the high-dimensional coordinates and the nearest-neighbor IDs. This can create files ranging from hundreds of MB to GBs. To store only the nearest neighbor IDs, pass `ancestor_data=False` as a keyword argument. Note that if you disable storing the high-dimensional coordinates, you will be unable to use tools that depend on _distances_ in hi-D space (such as the high-dimensional radius select).
+
+To load a comparison, simply initialize the `Viewer` as follows:
+
+```python
+w = emblaze.Viewer(file="/path/to/comparison.json")
+```
 
 ---
 
