@@ -35,12 +35,12 @@ class Viewer(DOMWidget):
     _view_name = Unicode('Viewer').tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
+    
+    allow_async = Bool(True)
 
     embeddings = Instance(EmbeddingSet, allow_none=True)
     data = Dict({}).tag(sync=True)
-    isLoading = Bool(True).tag(sync=True)
-    loadingMessage = Unicode("").tag(sync=True)
-    file = Any(allow_none=True)
+    file = Any(allow_none=True).tag(sync=True)
     
     plotPadding = Float(10.0).tag(sync=True)
     
@@ -113,10 +113,7 @@ class Viewer(DOMWidget):
         file: A file path or file-like object from which to read a comparison JSON file.
         """
         super(Viewer, self).__init__(*args, **kwargs)
-        if self.file:
-            self.load_comparison(self.file)
         assert len(self.embeddings) > 0, "Must have at least one embedding"
-        self.isLoading = False
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
@@ -214,6 +211,12 @@ class Viewer(DOMWidget):
                    "storedNumNeighbors property of the widget when initializing.").format(new_val))
         return new_val                        
         
+    @observe("file")
+    def _observe_file(self, change):
+        if change.new is not None:
+            self.load_comparison(change.new)
+            print(len(self.embeddings), self.embeddings[0])
+        
     @observe("embeddings")
     def _observe_embeddings(self, change):
         embeddings = change.new
@@ -270,8 +273,11 @@ class Viewer(DOMWidget):
             self.align_to_points(None, None)
         else:
             ids_of_interest = change.new
-            thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
-            thread.start()
+            if self.allow_async:
+                thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
+                thread.start()
+            else:
+                self.align_to_points(change.new, list(set(ids_of_interest)))
     
     @observe("selectedIDs")
     def _observe_selected_ids(self, change):
@@ -384,7 +390,9 @@ class Viewer(DOMWidget):
     @observe("recomputeSuggestionsFlag")
     def _observe_suggestion_flag(self, change):
         """Recomputes suggestions when recomputeSuggestionsFlag is set to True."""
+        print("Recomputing suggested selections")
         if change.new and not self.loadingSuggestions:
+            print("Updating")
             self._update_suggested_selections()
     
     def _update_performance_suggestions_mode(self):
@@ -393,9 +401,12 @@ class Viewer(DOMWidget):
         
     def _update_suggested_selections_background(self):
         """Function that runs in the background to recompute suggested selections."""
+        print("Updating in background")
         self.recomputeSuggestionsFlag = False
         if self.loadingSuggestions: 
             return
+        
+        print("Actually loading")
 
         filter_points = None
         self._update_performance_suggestions_mode()
@@ -413,16 +424,18 @@ class Viewer(DOMWidget):
                 not filter_points or
                 len(filter_points) > PERFORMANCE_SUGGESTIONS_RECOMPUTE):
                 self.suggestedSelections = []
+                print("Not computing")
                 return
             # Add the vicinity around these points just to be safe
             filter_points = self._get_filter_points(filter_points, in_frame=self.embeddings[self.currentFrame])
             
         self.loadingSuggestions = True
-        
+        print("LOADING!")
         try:
             if self.recommender is None or self.performanceSuggestionsMode:
                 self.loadingSuggestionsProgress = 0.0
                 def progress_fn(progress):
+                    print("Progress", progress)
                     self.loadingSuggestionsProgress = progress
                 self.recommender = SelectionRecommender(
                     self.embeddings, 
@@ -471,13 +484,17 @@ class Viewer(DOMWidget):
                 
             self.loadingSuggestions = False
         except Exception as e:
+            print(e)
             self.loadingSuggestions = False
             raise e
         
     def _update_suggested_selections(self):
         """Recomputes the suggested selections."""
-        thread = threading.Thread(target=self._update_suggested_selections_background)
-        thread.start()
+        if self.allow_async:
+            thread = threading.Thread(target=self._update_suggested_selections_background)
+            thread.start()
+        else:
+            self._update_suggested_selections_background()
 
     @observe("saveInteractionsFlag")
     def _save_interactions(self, change):
@@ -485,7 +502,7 @@ class Viewer(DOMWidget):
         The widget sets the flag to save interaction history periodically
         because we can't use a timer in the backend.
         """
-        if change.new:
+        if change.new and self.loggingHelper:
             self.loggingHelper.add_logs(self.interactionHistory)
             self.interactionHistory = []
             self.saveInteractionsFlag = False

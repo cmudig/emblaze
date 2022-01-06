@@ -96,6 +96,8 @@ setup_args = dict(
         'pillow>=8.2.0',
         'umap-learn>=0.5.1',
         'flask>=1.1.2',
+        'flask-socketio>=5.1.1',
+        'eventlet>=0.33.0',
         'numba>=0.53.1',
     ],
     entry_points={

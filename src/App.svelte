@@ -23,10 +23,10 @@
   import SettingsPane from './visualization/components/SettingsPane.svelte';
   import { ThumbnailProvider } from './visualization/models/thumbnails';
 
+  export let fillHeight = false;
+
   let data = syncValue(model, 'data', {});
   let neighborData = syncValue(model, 'neighborData', []);
-  let isLoading = syncValue(model, 'isLoading', true);
-  let loadingMessage = syncValue(model, 'loadingMessage', '');
 
   let plotPadding = syncValue(model, 'plotPadding', 10.0);
   let height = 600; // can make this reactive later
@@ -62,7 +62,7 @@
 
   $: updateDataset($data);
 
-  function updateDataset(rawData, neighbors) {
+  function updateDataset(rawData) {
     if (!!rawData && !!rawData['data']) {
       dataset = new Dataset(rawData, 'color');
       if (!!$frameTransformations && $frameTransformations.length > 0)
@@ -476,63 +476,60 @@
   $: logEvent({ type: 'filter', numPoints: $filterIDs.length });
 </script>
 
-{#if $isLoading}
-  <div class="text-center">
-    Loading {#if $loadingMessage.length > 0} ({$loadingMessage}){/if}...
-    <i class="text-primary fa fa-spinner fa-spin" />
-  </div>
+<Modal visible={isOpenDialogue} width={400}>
+  <SaveSelectionPane
+    bind:name={$selectionName}
+    bind:description={$selectionDescription}
+    on:cancel={() => (isOpenDialogue = false)}
+    on:save={saveSelection}
+  >
+    <div slot="summary">
+      <p>
+        <strong>Frame number:</strong>
+        {$currentFrame}
+      </p>
+      <p>
+        <strong>Filter:</strong>
+        {#if $filterIDs.length > 0}
+          {$filterIDs.length} points
+        {:else}
+          No filter
+        {/if}
+      </p>
+      <p>
+        <strong>Selected:</strong>
+        {$selectedIDs.length} points
+      </p>
+      <p>
+        <strong>Aligned:</strong>
+        {#if $alignedIDs.length > 0}
+          {$alignedIDs.length} points, to frame {$alignedFrame}
+        {:else}
+          No alignment
+        {/if}
+      </p>
+    </div>
+  </SaveSelectionPane>
+</Modal>
+
+<Modal visible={isSettingsOpen} width={400}>
+  <SettingsPane
+    bind:colorScheme={$colorScheme}
+    bind:showLegend
+    bind:previewMode={$previewMode}
+    previewModes={Object.values(PreviewMode)}
+    colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
+    bind:numNeighbors={$numNeighbors}
+    bind:previewK
+    bind:similarityThreshold={previewSimilarityThreshold}
+    on:close={() => (isSettingsOpen = false)}
+  />
+</Modal>
+
+{#if !dataset}
+  <div class="text-center">No data yet...</div>
 {:else}
-  <Modal visible={isOpenDialogue} width={400}>
-    <SaveSelectionPane
-      bind:name={$selectionName}
-      bind:description={$selectionDescription}
-      on:cancel={() => (isOpenDialogue = false)}
-      on:save={saveSelection}
-    >
-      <div slot="summary">
-        <p>
-          <strong>Frame number:</strong>
-          {$currentFrame}
-        </p>
-        <p>
-          <strong>Filter:</strong>
-          {#if $filterIDs.length > 0}
-            {$filterIDs.length} points
-          {:else}
-            No filter
-          {/if}
-        </p>
-        <p>
-          <strong>Selected:</strong>
-          {$selectedIDs.length} points
-        </p>
-        <p>
-          <strong>Aligned:</strong>
-          {#if $alignedIDs.length > 0}
-            {$alignedIDs.length} points, to frame {$alignedFrame}
-          {:else}
-            No alignment
-          {/if}
-        </p>
-      </div>
-    </SaveSelectionPane>
-  </Modal>
-
-  <Modal visible={isSettingsOpen} width={400}>
-    <SettingsPane
-      bind:colorScheme={$colorScheme}
-      bind:showLegend
-      bind:previewMode={$previewMode}
-      previewModes={Object.values(PreviewMode)}
-      colorSchemes={ColorSchemes.allColorSchemes.map((c) => c.name)}
-      bind:numNeighbors={$numNeighbors}
-      bind:previewK
-      bind:similarityThreshold={previewSimilarityThreshold}
-      on:close={() => (isSettingsOpen = false)}
-    />
-  </Modal>
-
-  <div class="vis-container">
+  <div class="vis-container" style="height: {fillHeight ? '100%' : '600px'};">
     <div class="frame-sidebar">
       <div class="frame-thumbnail-container">
         {#each [...d3.range(dataset.frameCount)] as i}
@@ -719,7 +716,6 @@
 
   .vis-container {
     width: 100%;
-    height: 600px;
     display: flex;
     justify-items: stretch;
     /*border: 2px solid #bbb;*/
@@ -763,7 +759,7 @@
 
   .sidebar {
     width: 300px;
-    height: 600px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     margin-right: 8px;
