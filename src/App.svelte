@@ -625,7 +625,7 @@
         />
       </div>
       <div class="sidebar-content">
-        {#if $visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData}
+        {#if $visibleSidebarPane == SidebarPanes.CURRENT && !!$thumbnailData && !!$neighborData}
           <DefaultThumbnailViewer
             on:thumbnailClick={handleThumbnailClick}
             on:thumbnailHover={handleThumbnailHover}

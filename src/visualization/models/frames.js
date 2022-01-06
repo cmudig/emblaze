@@ -372,6 +372,14 @@ export class Neighbors extends ColumnarData {
   }
 }
 
+// Returns a data object that can be read by Neighbors to produce a placeholder
+// when neighbors are not yet loaded
+export function emptyNeighborData(ids) {
+  let result = {};
+  ids.forEach((id) => (result[id] = { neighbors: [] }));
+  return result;
+}
+
 // Previews
 
 const PREVIEW_LINE_SCHEMA = {

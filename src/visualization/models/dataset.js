@@ -4,6 +4,7 @@ import { transformPoint } from '../utils/helpers.js';
 import {
   ColumnarData,
   ColumnarFrame,
+  emptyNeighborData,
   FramePreview,
   NeighborPreview,
   Neighbors,
@@ -51,6 +52,7 @@ export class Dataset {
     this.frameCount = frameSource.length;
     this.hasPreviews = !!this.previews;
     this.reformat(frameSource);
+    this.setNeighbors(this.frames.map((f) => emptyNeighborData(f.getIDs())));
   }
 
   reformat(rawData) {
