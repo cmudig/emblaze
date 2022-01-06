@@ -25,7 +25,7 @@
 
   export let fillHeight = false;
 
-  let data = syncValue(model, 'data', {});
+  let data = syncValue(model, 'data', null);
   let neighborData = syncValue(model, 'neighborData', []);
 
   let plotPadding = syncValue(model, 'plotPadding', 10.0);

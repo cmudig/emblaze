@@ -26,6 +26,13 @@ import numpy as np
 PERFORMANCE_SUGGESTIONS_RECOMPUTE = 1000
 PERFORMANCE_SUGGESTIONS_ENABLE = 10000
 
+def default_thread_starter(fn, args=[], kwargs={}):
+    thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
+    thread.start()
+    
+def synchronous_thread_starter(fn, args=[], kwargs={}):
+    fn(args, kwargs)
+
 class Viewer(DOMWidget):
     """TODO: Add docstring here
     """
@@ -36,10 +43,10 @@ class Viewer(DOMWidget):
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
     
-    allow_async = Bool(True)
+    thread_starter = Any(default_thread_starter)
 
     embeddings = Instance(EmbeddingSet, allow_none=True)
-    data = Dict({}).tag(sync=True)
+    data = Dict(None, allow_none=True).tag(sync=True)
     file = Any(allow_none=True).tag(sync=True)
     
     plotPadding = Float(10.0).tag(sync=True)
@@ -215,7 +222,6 @@ class Viewer(DOMWidget):
     def _observe_file(self, change):
         if change.new is not None:
             self.load_comparison(change.new)
-            print(len(self.embeddings), self.embeddings[0])
         
     @observe("embeddings")
     def _observe_embeddings(self, change):
@@ -233,10 +239,7 @@ class Viewer(DOMWidget):
         else:
             self.neighborData = []
             self.data = {}
-        self.selectedIDs = []
-        self.alignedIDs = []
-        self.currentFrame = 0
-        self.reset_alignment()
+        self.reset_state()
         
         # Compute padding based on first embedding
         base_frame = embeddings[0].field(Field.POSITION)
@@ -273,11 +276,7 @@ class Viewer(DOMWidget):
             self.align_to_points(None, None)
         else:
             ids_of_interest = change.new
-            if self.allow_async:
-                thread = threading.Thread(target=self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
-                thread.start()
-            else:
-                self.align_to_points(change.new, list(set(ids_of_interest)))
+            self.thread_starter(self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
     
     @observe("selectedIDs")
     def _observe_selected_ids(self, change):
@@ -290,12 +289,22 @@ class Viewer(DOMWidget):
         """Update suggestions when the filter changes."""
         self._update_suggested_selections()
 
+    def reset_state(self):
+        """Resets the view state of the widget."""
+        self.currentFrame = 0
+        self.previewFrame = -1
+        self.selectedIDs = []
+        self.alignedIDs = []
+        self.filterIDs = []
+        self.reset_alignment()
+
     def reset_alignment(self):
         """Removes any transformations applied to the embedding frames."""
         self.frameTransformations = [
             np.eye(3).tolist()
             for i in range(len(self.embeddings))
         ]
+        self.alignedFrame = 0
         self.update_frame_colors()
         
     def align_to_points(self, point_ids, peripheral_points):
@@ -390,9 +399,7 @@ class Viewer(DOMWidget):
     @observe("recomputeSuggestionsFlag")
     def _observe_suggestion_flag(self, change):
         """Recomputes suggestions when recomputeSuggestionsFlag is set to True."""
-        print("Recomputing suggested selections")
         if change.new and not self.loadingSuggestions:
-            print("Updating")
             self._update_suggested_selections()
     
     def _update_performance_suggestions_mode(self):
@@ -401,12 +408,10 @@ class Viewer(DOMWidget):
         
     def _update_suggested_selections_background(self):
         """Function that runs in the background to recompute suggested selections."""
-        print("Updating in background")
         self.recomputeSuggestionsFlag = False
         if self.loadingSuggestions: 
             return
         
-        print("Actually loading")
 
         filter_points = None
         self._update_performance_suggestions_mode()
@@ -424,18 +429,15 @@ class Viewer(DOMWidget):
                 not filter_points or
                 len(filter_points) > PERFORMANCE_SUGGESTIONS_RECOMPUTE):
                 self.suggestedSelections = []
-                print("Not computing")
                 return
             # Add the vicinity around these points just to be safe
             filter_points = self._get_filter_points(filter_points, in_frame=self.embeddings[self.currentFrame])
             
         self.loadingSuggestions = True
-        print("LOADING!")
         try:
             if self.recommender is None or self.performanceSuggestionsMode:
                 self.loadingSuggestionsProgress = 0.0
                 def progress_fn(progress):
-                    print("Progress", progress)
                     self.loadingSuggestionsProgress = progress
                 self.recommender = SelectionRecommender(
                     self.embeddings, 
@@ -490,11 +492,7 @@ class Viewer(DOMWidget):
         
     def _update_suggested_selections(self):
         """Recomputes the suggested selections."""
-        if self.allow_async:
-            thread = threading.Thread(target=self._update_suggested_selections_background)
-            thread.start()
-        else:
-            self._update_suggested_selections_background()
+        self.thread_starter(self._update_suggested_selections_background)
 
     @observe("saveInteractionsFlag")
     def _save_interactions(self, change):
@@ -568,6 +566,12 @@ class Viewer(DOMWidget):
         Loads comparison information from a JSON object, including the
         EmbeddingSet, Thumbnails, and NeighborSet.
         """
+        if self.embeddings is not None:
+            self.reset_state()
+            self.data = None
+            self.neighborData = []
+            self.thumbnailData = {}
+        
         assert data["_format"] == "emblaze.Viewer.SaveData", "Unsupported JSON _format key '{}'".format(data["_format"])
         # Load neighbors first, to create mock parent embeddings
         parents = None

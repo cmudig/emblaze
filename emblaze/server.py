@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import request, Flask, send_from_directory, jsonify, send_file
 from flask_socketio import SocketIO, send, emit
 from engineio.payload import Payload
@@ -13,13 +16,16 @@ EXCLUDE_TRAITLETS = set([
 Payload.max_decode_packets = 200
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet', message_queue='redis://')
 
 parent_dir = os.path.dirname(__file__)
 public_dir = os.path.join(parent_dir, "public")
 data_dir = os.path.join(parent_dir, "data")
 
 user_data = {}
+
+def socketio_thread_starter(fn, args=[], kwargs={}):
+    socketio.start_background_task(fn, *args, **kwargs)
 
 # Path for our main Svelte page
 @app.route("/")
@@ -40,7 +46,7 @@ def list_datasets():
 @socketio.on('connect')
 def connect():
     print('connected', request.sid)
-    widget = Viewer(file=os.path.join(data_dir, "mnist-tsne", "data.json"), allow_async=False)
+    widget = Viewer(file=os.path.join(data_dir, "mnist-tsne", "data.json"), thread_starter=socketio_thread_starter)
     user_data[request.sid] = widget
     for trait_name in widget.trait_names(sync=lambda x: x):
         if trait_name in EXCLUDE_TRAITLETS: continue
@@ -70,7 +76,6 @@ def _write_value_handler(name):
         if request.sid not in user_data:
             print("Missing request SID:", request.sid)
             return
-        if name == "file": print(name, data)
         setattr(user_data[request.sid], name, data)
     return handle_msg
 
