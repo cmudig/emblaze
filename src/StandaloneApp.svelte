@@ -134,6 +134,13 @@
       </ul>
     </div>
   </nav>
+  <div class="mobile-warning">
+    <div class="loading-container">
+      <div class="loading-message text-center">
+        Sorry, Emblaze is not supported on small screen sizes.
+      </div>
+    </div>
+  </div>
   <div class="config-view">
     <div style="display: flex; align-items: center;">
       <h6 class="config-item">Dataset</h6>
@@ -212,5 +219,25 @@
 
   .loading-message {
     padding-top: 12px;
+  }
+
+  .mobile-warning {
+    display: none;
+    margin-top: 200px;
+    padding: 0 40px;
+  }
+
+  @media (max-width: 640px) {
+    .mobile-warning {
+      display: block;
+    }
+
+    .config-view {
+      display: none;
+    }
+
+    .visualization-view {
+      display: none;
+    }
   }
 </style>
