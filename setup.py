@@ -100,7 +100,8 @@ setup_args = dict(
         'eventlet>=0.33.0',
         'numba>=0.53.1',
         'redis>=4.1.0',
-        'redis-server>=6.0.9'
+        'redis-server>=6.0.9',
+        'tqdm>=4.61.2'
     ],
     entry_points={
     },

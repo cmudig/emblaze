@@ -7,6 +7,7 @@ scipy==1.6.0
 pillow==8.2.0
 umap-learn==0.5.1
 numba==0.53.1
+tqdm==4.61.2
 flask==2.0.1
 flask-socketio==5.1.1
 eventlet==0.33.0

@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
-from .utils import Field, inverse_intersection
+from .utils import Field, inverse_intersection, standardize_json
 from numba.typed import List
 from scipy.sparse import csr_matrix
 import collections
@@ -13,16 +13,17 @@ class SelectionRecommender:
     recommender works by pre-generating a list of clusters at various
     granularities, then sorting them by relevance to a given query.
     """
-    def __init__(self, embeddings, progress_fn=None, frame_idx=None, preview_frame_idx=None, filter_points=None):
+    def __init__(self, embeddings, clusters=None, progress_fn=None, frame_idx=None, preview_frame_idx=None, filter_points=None):
         super().__init__()
         self.embeddings = embeddings
-        self.clusters = {}
+        self.clusters = clusters if clusters is not None else {}
+        self.is_restricted = frame_idx is not None or preview_frame_idx is not None or filter_points is not None
         embs_first = [frame_idx] if frame_idx is not None else range(len(self.embeddings))
         embs_second = [preview_frame_idx] if preview_frame_idx is not None else range(len(self.embeddings))
         total_num_embs = sum(1 for x in embs_first for y in embs_second if x != y)
         for i in embs_first:
             for j in embs_second:
-                if i == j: continue
+                if i == j or (i, j) in self.clusters: continue
                 self.clusters[(i, j)] = self._make_clusters(i, j, np.log10(len(self.embeddings[i])), filter_points=filter_points)
                 if progress_fn is not None:
                     progress_fn(len(self.clusters) / total_num_embs)
@@ -230,3 +231,27 @@ class SelectionRecommender:
             if len(results) >= num_results: break
                 
         return results
+    
+    def to_json(self):
+        """
+        Converts the clusters stored in this Recommender object to JSON.
+        """
+        def _convert_cluster(cluster):
+            return {k: list(v) if isinstance(v, set) else v for k, v in cluster.items()}
+        return standardize_json({
+            ",".join((str(i), str(j))): [_convert_cluster(c) for c in clusters]
+            for (i, j), clusters in self.clusters.items()
+        })
+        
+    @classmethod
+    def from_json(cls, data, embeddings):
+        """
+        Reads the clusters stored in the given JSON object to a Recommender.
+        """
+        def _convert_cluster(cluster):
+            return {k: set(v) if k == 'ids' else v for k, v in cluster.items()}
+        def _convert_key(key):
+            i, j = key.split(",")
+            return (int(i), int(j))
+        return cls(embeddings, {_convert_key(k): [_convert_cluster(c) for c in clusters]
+                                for k, clusters in data.items()})

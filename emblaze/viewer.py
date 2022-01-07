@@ -20,6 +20,7 @@ from .recommender import SelectionRecommender
 from datetime import datetime
 import json
 import glob
+import tqdm
 import threading
 import numpy as np
 
@@ -411,6 +412,18 @@ class Viewer(DOMWidget):
         """Determines whether to use the performance mode for computing suggestions."""
         self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) >= PERFORMANCE_SUGGESTIONS_ENABLE
         
+    def precompute_suggested_selections(self):
+        """
+        Computes the suggested selections for all points in the embeddings. This
+        is useful to get quick recommendations later, though it may take time to
+        generate them upfront.
+        """
+        bar = tqdm.tqdm(total=len(self.embeddings) * (len(self.embeddings) - 1), desc='Clustering')
+        def progress_fn(progress):
+            bar.update(1)
+        self.recommender = SelectionRecommender(self.embeddings, progress_fn=progress_fn)
+        bar.close()
+        
     def _update_suggested_selections_background(self):
         """Function that runs in the background to recompute suggested selections."""
         self.recomputeSuggestionsFlag = False
@@ -420,7 +433,7 @@ class Viewer(DOMWidget):
 
         filter_points = None
         self._update_performance_suggestions_mode()
-        if self.performanceSuggestionsMode:
+        if self.performanceSuggestionsMode and (not self.recommender or self.recommender.is_restricted):
             # Check if sufficiently few points are visible to show suggestions
             if self.filterIDs and len(self.filterIDs) <= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
                 filter_points = self.filterIDs
@@ -440,7 +453,7 @@ class Viewer(DOMWidget):
             
         self.loadingSuggestions = True
         try:
-            if self.recommender is None or self.performanceSuggestionsMode:
+            if self.recommender is None or (self.recommender.is_restricted and self.performanceSuggestionsMode):
                 self.loadingSuggestionsProgress = 0.0
                 def progress_fn(progress):
                     self.loadingSuggestionsProgress = progress
@@ -449,7 +462,7 @@ class Viewer(DOMWidget):
                     progress_fn=progress_fn,
                     frame_idx=self.currentFrame if self.performanceSuggestionsMode else None,
                     preview_frame_idx=self.previewFrame if self.performanceSuggestionsMode and self.previewFrame >= 0 and self.previewFrame != self.currentFrame else None,
-                    filter_points=filter_points)
+                    filter_points=filter_points if self.performanceSuggestionsMode else None)
 
         
             # Only compute suggestions when pane is open
@@ -510,7 +523,7 @@ class Viewer(DOMWidget):
             self.interactionHistory = []
             self.saveInteractionsFlag = False
             
-    def comparison_to_json(self, compressed=True, ancestor_data=True):
+    def comparison_to_json(self, compressed=True, ancestor_data=True, suggestions=False):
         """
         Saves the data used to produce this comparison to a JSON object. This
         includes the EmbeddingSet and the Thumbnails that are visualized, as
@@ -523,6 +536,9 @@ class Viewer(DOMWidget):
         neighbors themselves will be stored. This can save space if the ancestor
         embedding is very high-dimensional. However, the high-dimensional radius
         select tool will not work if ancestor data is not saved.
+        
+        If suggestions is True and the viewer has a recommender associated with it,
+        the recommender will also be serialized.
         """
         result = {}
         
@@ -564,6 +580,8 @@ class Viewer(DOMWidget):
                 mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in ancestors]
                 result["ancestor_neighbors"] = [e.to_json(compressed=compressed) for e in mock_embs]
             
+        if suggestions and self.recommender is not None:
+            result["suggestions"] = self.recommender.to_json()
         return result
     
     def load_comparison_from_json(self, data):
@@ -599,9 +617,12 @@ class Viewer(DOMWidget):
         self.embeddings = EmbeddingSet.from_json(data["embeddings"], parents=parents)
         self.thumbnails = Thumbnails.from_json(data["thumbnails"])
         
+        if "suggestions" in data:
+            self.recommender = SelectionRecommender.from_json(data["suggestions"], self.embeddings)
+        
         return self
                 
-    def save_comparison(self, file_path_or_buffer, ancestor_data=True):
+    def save_comparison(self, file_path_or_buffer, **kwargs):
         """
         Saves the comparison data (EmbeddingSet, Thumbnails, and NeighborSet) to
         the given file path or file-like object. See comparison_to_json() for
@@ -610,10 +631,10 @@ class Viewer(DOMWidget):
         if isinstance(file_path_or_buffer, str):
             # File path
             with open(file_path_or_buffer, 'w') as file:
-                json.dump(self.comparison_to_json(ancestor_data=ancestor_data), file)
+                json.dump(self.comparison_to_json(**kwargs), file)
         else:
             # File object
-            json.dump(self.comparison_to_json(ancestor_data=ancestor_data), file_path_or_buffer)
+            json.dump(self.comparison_to_json(**kwargs), file_path_or_buffer)
             
     def load_comparison(self, file_path_or_buffer):
         """
