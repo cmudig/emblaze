@@ -15,14 +15,13 @@
   // Socket boilerplate
 
   let connected = false;
+  let errorMessage = '';
 
   let model = new SocketModel();
 
   let socket = io();
 
   onMount(async () => {
-    datasetOptions = await (await fetch('/datasets')).json();
-
     socket.on('connect', () => {
       connected = true;
       model.attach(socket);
@@ -30,7 +29,22 @@
     socket.on('disconnect', () => {
       connected = false;
       model.detach();
+      errorMessage =
+        'The connection to the server has been lost. Please reload the page to reconnect.';
     });
+
+    try {
+      let datasetResult = await fetch('/datasets');
+      if (!datasetResult.ok) {
+        errorMessage = await datasetResult.text();
+      } else {
+        datasetOptions = await datasetResult.json();
+      }
+    } catch (e) {
+      errorMessage =
+        'An error occurred connecting to the server. Please try again later.';
+      console.log('Connection error:', e);
+    }
   });
 
   // Config
@@ -147,12 +161,16 @@
   </div>
 
   <div class="visualization-view">
-    {#if connected}
+    {#if connected && !errorMessage}
       <App {model} fillHeight={true} />
     {:else}
       <div class="loading-container">
-        <div class="spinner-border text-primary" role="status" />
-        <div class="loading-message text-center">Connecting...</div>
+        {#if !!errorMessage}
+          <div class="loading-message text-center">{errorMessage}</div>
+        {:else}
+          <div class="spinner-border text-primary" role="status" />
+          <div class="loading-message text-center">Connecting...</div>
+        {/if}
       </div>
     {/if}
   </div>
