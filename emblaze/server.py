@@ -25,7 +25,7 @@ parent_dir = os.path.dirname(__file__)
 public_dir = os.path.join(parent_dir, "public")
 data_dir = os.environ.get("EMBLAZE_DATA_DIR", os.path.join(parent_dir, "data"))
 
-allow_save_selections = os.environ.get("EMBLAZE_ALLOW_SAVE_SELECTIONS", True)
+disable_save_selections = os.environ.get("EMBLAZE_DISABLE_SAVE_SELECTIONS", "0") == "1"
 
 user_data = {}
 
@@ -56,7 +56,7 @@ def connect():
     print('connected', request.sid)
     widget = Viewer(file=_get_all_datasets()[0],
                     thread_starter=socketio_thread_starter,
-                    allowsSavingSelections=allow_save_selections)
+                    allowsSavingSelections=not disable_save_selections)
     user_data[request.sid] = widget
     for trait_name in widget.trait_names(sync=lambda x: x):
         if trait_name in EXCLUDE_TRAITLETS: continue

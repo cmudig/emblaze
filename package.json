@@ -1,6 +1,6 @@
 {
   "name": "emblaze",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Interactive Jupyter notebook widget for visually comparing embeddings",
   "keywords": [
     "jupyter",
