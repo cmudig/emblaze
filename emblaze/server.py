@@ -23,7 +23,9 @@ socketio = SocketIO(app,
 
 parent_dir = os.path.dirname(__file__)
 public_dir = os.path.join(parent_dir, "public")
-data_dir = os.path.join(parent_dir, "data")
+data_dir = os.environ.get("EMBLAZE_DATA_DIR", os.path.join(parent_dir, "data"))
+
+allow_save_selections = os.environ.get("EMBLAZE_ALLOW_SAVE_SELECTIONS", True)
 
 user_data = {}
 
@@ -52,7 +54,9 @@ def list_datasets():
 @socketio.on('connect')
 def connect():
     print('connected', request.sid)
-    widget = Viewer(file=_get_all_datasets()[0], thread_starter=socketio_thread_starter)
+    widget = Viewer(file=_get_all_datasets()[0],
+                    thread_starter=socketio_thread_starter,
+                    allowsSavingSelections=allow_save_selections)
     user_data[request.sid] = widget
     for trait_name in widget.trait_names(sync=lambda x: x):
         if trait_name in EXCLUDE_TRAITLETS: continue
