@@ -15,14 +15,13 @@
   // Socket boilerplate
 
   let connected = false;
+  let errorMessage = '';
 
   let model = new SocketModel();
 
   let socket = io();
 
   onMount(async () => {
-    datasetOptions = await (await fetch('/datasets')).json();
-
     socket.on('connect', () => {
       connected = true;
       model.attach(socket);
@@ -30,7 +29,22 @@
     socket.on('disconnect', () => {
       connected = false;
       model.detach();
+      errorMessage =
+        'The connection to the server has been lost. Please reload the page to reconnect.';
     });
+
+    try {
+      let datasetResult = await fetch('/datasets');
+      if (!datasetResult.ok) {
+        errorMessage = await datasetResult.text();
+      } else {
+        datasetOptions = await datasetResult.json();
+      }
+    } catch (e) {
+      errorMessage =
+        'An error occurred connecting to the server. Please try again later.';
+      console.log('Connection error:', e);
+    }
   });
 
   // Config
@@ -120,6 +134,13 @@
       </ul>
     </div>
   </nav>
+  <div class="mobile-warning">
+    <div class="loading-container">
+      <div class="loading-message text-center">
+        Sorry, Emblaze is not supported on small screen sizes.
+      </div>
+    </div>
+  </div>
   <div class="config-view">
     <div style="display: flex; align-items: center;">
       <h6 class="config-item">Dataset</h6>
@@ -147,12 +168,16 @@
   </div>
 
   <div class="visualization-view">
-    {#if connected}
+    {#if connected && !errorMessage}
       <App {model} fillHeight={true} />
     {:else}
       <div class="loading-container">
-        <div class="spinner-border text-primary" role="status" />
-        <div class="loading-message text-center">Connecting...</div>
+        {#if !!errorMessage}
+          <div class="loading-message text-center">{errorMessage}</div>
+        {:else}
+          <div class="spinner-border text-primary" role="status" />
+          <div class="loading-message text-center">Connecting...</div>
+        {/if}
       </div>
     {/if}
   </div>
@@ -194,5 +219,25 @@
 
   .loading-message {
     padding-top: 12px;
+  }
+
+  .mobile-warning {
+    display: none;
+    margin-top: 200px;
+    padding: 0 40px;
+  }
+
+  @media (max-width: 640px) {
+    .mobile-warning {
+      display: block;
+    }
+
+    .config-view {
+      display: none;
+    }
+
+    .visualization-view {
+      display: none;
+    }
   }
 </style>

@@ -20,6 +20,7 @@ from .recommender import SelectionRecommender
 from datetime import datetime
 import json
 import glob
+import tqdm
 import threading
 import numpy as np
 
@@ -44,11 +45,14 @@ class Viewer(DOMWidget):
     _view_module_version = Unicode(module_version).tag(sync=True)
     
     thread_starter = Any(default_thread_starter)
+    _autogenerate_embeddings = Bool(True) # only set this if caching embedding data
 
     embeddings = Instance(EmbeddingSet, allow_none=True)
     data = Dict(None, allow_none=True).tag(sync=True)
     file = Any(allow_none=True).tag(sync=True)    
     plotPadding = Float(10.0).tag(sync=True)
+    
+    isLoading = Bool(False).tag(sync=True)
     
     currentFrame = Integer(0).tag(sync=True)
     previewFrame = Integer(0).tag(sync=True)
@@ -95,6 +99,7 @@ class Viewer(DOMWidget):
     selectionUnit = Unicode("").tag(sync=True)
     selectionOrderRequest = Dict({}).tag(sync=True)
     selectionOrder = List([]).tag(sync=True)
+    selectionOrderCount = Integer(2000) # number of points to return distances for
 
     # Name of a color scheme (e.g. tableau, turbo, reds)
     colorScheme = Unicode("").tag(sync=True)
@@ -233,17 +238,20 @@ class Viewer(DOMWidget):
         embeddings = change.new
         assert len(embeddings) > 0, "Must have at least one embedding"
         assert not any(not e.any_ancestor_has_neighbors() for e in embeddings), "All embeddings must have at least one Neighbors previously computed"
-        if embeddings is not None:
-            self.neighborData = []
-            if self.storedNumNeighbors > 0:
-                n_neighbors = self.storedNumNeighbors 
+        if self._autogenerate_embeddings or self.data is None:
+            if embeddings is not None:
+                self.isLoading = True
+                self.neighborData = []
+                if self.storedNumNeighbors > 0:
+                    n_neighbors = self.storedNumNeighbors 
+                else:
+                    n_neighbors = self._select_stored_num_neighbors(embeddings)
+                self.data = embeddings.to_json(save_neighbors=False)
+                self.neighborData = embeddings.get_ancestor_neighbors().to_json(num_neighbors=n_neighbors)
+                self.isLoading = False
             else:
-                n_neighbors = self._select_stored_num_neighbors(embeddings)
-            self.data = embeddings.to_json(save_neighbors=False)
-            self.neighborData = embeddings.get_ancestor_neighbors().to_json(num_neighbors=n_neighbors)
-        else:
-            self.neighborData = []
-            self.data = {}
+                self.neighborData = []
+                self.data = {}
         self.reset_state()
         
         # Compute padding based on first embedding
@@ -269,11 +277,12 @@ class Viewer(DOMWidget):
 
     @observe("thumbnails")
     def _observe_thumbnails(self, change):
-        if change.new is not None:
-            self.thumbnailData = change.new.to_json()
-        else:
-            self.thumbnailData = {}
-    
+        if self._autogenerate_embeddings or self.thumbnailData is None or len(self.thumbnailData) == 0:
+            if change.new is not None:
+                self.thumbnailData = change.new.to_json()
+            else:
+                self.thumbnailData = {} 
+  
     @observe("alignedIDs")
     def _observe_alignment_ids(self, change):
         """Align to the currently selected points and their neighbors."""
@@ -377,9 +386,9 @@ class Viewer(DOMWidget):
         # metric = change.new['metric'] # for now, unused
         
         hi_d = self.embeddings[frame].find_ancestor_neighbor_embedding()
-        order, distances = hi_d.neighbor_distances(ids=[centerID], n_neighbors=2000)
+        order, distances = hi_d.neighbor_distances(ids=[centerID], n_neighbors=self.selectionOrderCount)
         
-        self.selectionOrder = [(int(x), y) for x, y in np.vstack([
+        self.selectionOrder = [(int(x), np.round(y, 4)) for x, y in np.vstack([
             order.flatten(),
             distances.flatten()
         ]).T.tolist()]
@@ -411,6 +420,18 @@ class Viewer(DOMWidget):
         """Determines whether to use the performance mode for computing suggestions."""
         self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) >= PERFORMANCE_SUGGESTIONS_ENABLE
         
+    def precompute_suggested_selections(self):
+        """
+        Computes the suggested selections for all points in the embeddings. This
+        is useful to get quick recommendations later, though it may take time to
+        generate them upfront.
+        """
+        bar = tqdm.tqdm(total=len(self.embeddings) * (len(self.embeddings) - 1), desc='Clustering')
+        def progress_fn(progress):
+            bar.update(1)
+        self.recommender = SelectionRecommender(self.embeddings, progress_fn=progress_fn)
+        bar.close()
+        
     def _update_suggested_selections_background(self):
         """Function that runs in the background to recompute suggested selections."""
         self.recomputeSuggestionsFlag = False
@@ -420,7 +441,7 @@ class Viewer(DOMWidget):
 
         filter_points = None
         self._update_performance_suggestions_mode()
-        if self.performanceSuggestionsMode:
+        if self.performanceSuggestionsMode and (not self.recommender or self.recommender.is_restricted):
             # Check if sufficiently few points are visible to show suggestions
             if self.filterIDs and len(self.filterIDs) <= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
                 filter_points = self.filterIDs
@@ -440,7 +461,7 @@ class Viewer(DOMWidget):
             
         self.loadingSuggestions = True
         try:
-            if self.recommender is None or self.performanceSuggestionsMode:
+            if self.recommender is None or (self.recommender.is_restricted and self.performanceSuggestionsMode):
                 self.loadingSuggestionsProgress = 0.0
                 def progress_fn(progress):
                     self.loadingSuggestionsProgress = progress
@@ -449,7 +470,7 @@ class Viewer(DOMWidget):
                     progress_fn=progress_fn,
                     frame_idx=self.currentFrame if self.performanceSuggestionsMode else None,
                     preview_frame_idx=self.previewFrame if self.performanceSuggestionsMode and self.previewFrame >= 0 and self.previewFrame != self.currentFrame else None,
-                    filter_points=filter_points)
+                    filter_points=filter_points if self.performanceSuggestionsMode else None)
 
         
             # Only compute suggestions when pane is open
@@ -510,7 +531,7 @@ class Viewer(DOMWidget):
             self.interactionHistory = []
             self.saveInteractionsFlag = False
             
-    def comparison_to_json(self, compressed=True, ancestor_data=True):
+    def comparison_to_json(self, compressed=True, ancestor_data=True, suggestions=False):
         """
         Saves the data used to produce this comparison to a JSON object. This
         includes the EmbeddingSet and the Thumbnails that are visualized, as
@@ -523,6 +544,9 @@ class Viewer(DOMWidget):
         neighbors themselves will be stored. This can save space if the ancestor
         embedding is very high-dimensional. However, the high-dimensional radius
         select tool will not work if ancestor data is not saved.
+        
+        If suggestions is True and the viewer has a recommender associated with it,
+        the recommender will also be serialized.
         """
         result = {}
         
@@ -564,6 +588,8 @@ class Viewer(DOMWidget):
                 mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in ancestors]
                 result["ancestor_neighbors"] = [e.to_json(compressed=compressed) for e in mock_embs]
             
+        if suggestions and self.recommender is not None:
+            result["suggestions"] = self.recommender.to_json()
         return result
     
     def load_comparison_from_json(self, data):
@@ -571,6 +597,7 @@ class Viewer(DOMWidget):
         Loads comparison information from a JSON object, including the
         EmbeddingSet, Thumbnails, and NeighborSet.
         """
+        self.isLoading = True
         if self.embeddings is not None:
             self.reset_state()
             self.data = None
@@ -599,9 +626,13 @@ class Viewer(DOMWidget):
         self.embeddings = EmbeddingSet.from_json(data["embeddings"], parents=parents)
         self.thumbnails = Thumbnails.from_json(data["thumbnails"])
         
+        if "suggestions" in data:
+            self.recommender = SelectionRecommender.from_json(data["suggestions"], self.embeddings)
+        
+        self.isLoading = False
         return self
                 
-    def save_comparison(self, file_path_or_buffer, ancestor_data=True):
+    def save_comparison(self, file_path_or_buffer, **kwargs):
         """
         Saves the comparison data (EmbeddingSet, Thumbnails, and NeighborSet) to
         the given file path or file-like object. See comparison_to_json() for
@@ -610,10 +641,10 @@ class Viewer(DOMWidget):
         if isinstance(file_path_or_buffer, str):
             # File path
             with open(file_path_or_buffer, 'w') as file:
-                json.dump(self.comparison_to_json(ancestor_data=ancestor_data), file)
+                json.dump(self.comparison_to_json(**kwargs), file)
         else:
             # File object
-            json.dump(self.comparison_to_json(ancestor_data=ancestor_data), file_path_or_buffer)
+            json.dump(self.comparison_to_json(**kwargs), file_path_or_buffer)
             
     def load_comparison(self, file_path_or_buffer):
         """

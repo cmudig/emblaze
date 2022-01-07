@@ -25,6 +25,8 @@
 
   export let fillHeight = false;
 
+  let isLoading = syncValue(model, 'isLoading', false);
+
   let data = syncValue(model, 'data', null);
   let neighborData = syncValue(model, 'neighborData', []);
 
@@ -62,7 +64,7 @@
 
   $: updateDataset($data);
 
-  function updateDataset(rawData, neighbors) {
+  function updateDataset(rawData) {
     if (!!rawData && !!rawData['data']) {
       dataset = new Dataset(rawData, 'color');
       if (!!$frameTransformations && $frameTransformations.length > 0)
@@ -426,12 +428,12 @@
   const SelectionOrderTimeout = 100;
 
   async function selectionOrderFn(pointID, metric) {
+    $selectionOrder = [];
     $selectionOrderRequest = {
       centerID: pointID,
       frame: $currentFrame,
       metric,
     };
-    $selectionOrder = [];
 
     return await _checkSelectionOrder(); // dataset.map((id) => [id, id]);
   }
@@ -547,7 +549,7 @@
   />
 </Modal>
 
-{#if !dataset}
+{#if !dataset || $isLoading}
   <div class="loading-container">
     <div class="spinner-border text-primary" role="status" />
     <div class="loading-message text-center">Loading data...</div>
