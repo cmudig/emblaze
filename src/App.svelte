@@ -1,3 +1,5 @@
+<svelte:options accessors />
+
 <script>
   import SynchronizedScatterplot from './visualization/SynchronizedScatterplot.svelte';
   import ScatterplotThumbnail from './visualization/components/ScatterplotThumbnail.svelte';
@@ -33,7 +35,7 @@
   let plotPadding = syncValue(model, 'plotPadding', 10.0);
   let height = 600; // can make this reactive later
 
-  let dataset = null;
+  export let dataset = null;
   let frameTransformations = syncValue(model, 'frameTransformations', []);
   let frameColors = syncValue(model, 'frameColors', []);
   let thumbnailData = syncValue(model, 'thumbnailData', {});

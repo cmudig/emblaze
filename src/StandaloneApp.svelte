@@ -21,6 +21,8 @@
 
   let socket = io();
 
+  let app;
+
   onMount(async () => {
     socket.on('connect', () => {
       connected = true;
@@ -52,6 +54,12 @@
   let datasetOptions = [];
   let datasetPath = syncValue(model, 'file', '');
 
+  // let oldDatasetPath = '';
+  // $: if (oldDatasetPath != datasetPath) {
+  //   $colorScheme = 'tableau';
+  //   oldDatasetPath = datasetPath;
+  // }
+
   function getDatasetName(path) {
     let match = path.match(/\/([^\/.]+)\.json/);
     if (!match) return '';
@@ -64,6 +72,24 @@
     'previewMode',
     PreviewMode.PROJECTION_SIMILARITY
   );
+
+  $: if (!!app && !!$colorScheme) {
+    validateColorSchemeCompatibility();
+  }
+
+  function validateColorSchemeCompatibility() {
+    let cs = ColorSchemes.getColorScheme($colorScheme);
+    if (
+      !!app &&
+      !!app.dataset &&
+      !app.dataset.supportsContinuousColorSchemes &&
+      !!cs &&
+      cs.type == 'continuous'
+    ) {
+      $colorScheme = 'tableau';
+      alert('Continuous color schemes are not supported for this dataset.');
+    }
+  }
 
   // About
 
@@ -169,7 +195,7 @@
 
   <div class="visualization-view">
     {#if connected && !errorMessage}
-      <App {model} fillHeight={true} />
+      <App bind:this={app} {model} fillHeight={true} />
     {:else}
       <div class="loading-container">
         {#if !!errorMessage}
