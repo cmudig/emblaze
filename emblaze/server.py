@@ -131,7 +131,7 @@ def run_server(start_redis=False, data_directory=None, debug=False):
     
     print("Running Flask server with public dir '{}' and data dir '{}'".format(public_dir, data_dir))
     try:
-        socketio.run(app, debug=debug)
+        socketio.run(app, debug=debug, port=4999)
     except KeyboardInterrupt as e:
         if redis_pid is not None:
             print("Shutting down redis server")

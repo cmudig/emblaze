@@ -196,7 +196,7 @@ First clean all npm build intermediates:
 npm run clean
 ```
 
-Bump the widget version in `emblaze/_version.py` and `package.json` if applicable. Then build the notebook widgets and standalone app:
+Bump the widget version in `emblaze/_version.py`, `emblaze/_frontend.py`, and `package.json` if applicable. Then build the notebook widgets and standalone app:
 
 ```
 npm run build:all
