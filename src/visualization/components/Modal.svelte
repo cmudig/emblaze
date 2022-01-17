@@ -37,5 +37,6 @@
     padding: 32px;
     background-color: white;
     border-radius: 8px;
+    max-width: 80% !important;
   }
 </style>

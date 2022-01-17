@@ -127,7 +127,7 @@
     </div>
   </Modal>
 
-  <Modal visible={isTutorialPaneOpen} width={400}>
+  <Modal visible={isTutorialPaneOpen} width={600}>
     <div class="dialog-body">
       <h4>What is Emblaze?</h4>
       <p>
