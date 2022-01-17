@@ -6,6 +6,7 @@ from flask_socketio import SocketIO, send, emit
 from engineio.payload import Payload
 import os
 import sys
+import datetime
 
 from .viewer import Viewer
 
@@ -54,10 +55,14 @@ def list_datasets():
 @socketio.on('connect')
 def connect():
     print('connected', request.sid)
-    widget = Viewer(file=_get_all_datasets()[0],
-                    thread_starter=socketio_thread_starter,
-                    allowsSavingSelections=not disable_save_selections)
-    user_data[request.sid] = widget
+    if request.sid not in user_data:
+        widget = Viewer(file=_get_all_datasets()[0],
+                        thread_starter=socketio_thread_starter,
+                        allowsSavingSelections=not disable_save_selections)
+        user_data[request.sid] = { "widget": widget, "dt": datetime.datetime.now(), "locks": {} }
+    else:
+        widget = user_data[request.sid]["widget"]
+        
     for trait_name in widget.trait_names(sync=lambda x: x):
         if trait_name in EXCLUDE_TRAITLETS: continue
         
@@ -71,14 +76,17 @@ def connect():
 @socketio.on('disconnect')
 def disconnect():
     print('disconnected', request.sid)
-    del user_data[request.sid]
+    if request.sid in user_data:
+        del user_data[request.sid]
     
 def _read_value_handler(name):
     def handle_msg():
         if request.sid not in user_data:
             print("Missing request SID:", request.sid)
             return None
-        return getattr(user_data[request.sid], name)
+        session_data = user_data[request.sid]
+        session_data["dt"] = datetime.datetime.now()
+        return getattr(session_data["widget"], name)
     return handle_msg
 
 def _write_value_handler(name):
@@ -86,13 +94,25 @@ def _write_value_handler(name):
         if request.sid not in user_data:
             print("Missing request SID:", request.sid)
             return
-        setattr(user_data[request.sid], name, data)
+        session_data = user_data[request.sid]
+        session_data["dt"] = datetime.datetime.now()
+        # Set a lock on this value so that if the widget emits a change for it,
+        # we do not redundantly send the client a change message
+        session_data["locks"][name] = data
+        try:
+            setattr(session_data["widget"], name, data)
+        except Exception as e:
+            raise e
+        finally:
+            del session_data["locks"][name]
     return handle_msg
 
 def _emit_value_handler(name, sid):
     def handle_msg(change):
         with app.app_context():
-            emit('change:' + name, change.new, room=sid, namespace='/')
+            session_data = user_data[sid]
+            if name not in session_data["locks"] or session_data["locks"][name] != change.new:
+                emit('change:' + name, change.new, room=sid, namespace='/')
     return handle_msg
 
 def run_server(start_redis=False, data_directory=None, debug=False):
