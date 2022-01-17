@@ -13,6 +13,7 @@
   import { MODULE_VERSION } from './version';
   import { helpMessagesVisible } from './visualization/utils/stores';
   import HelpMessage from './visualization/components/HelpMessage.svelte';
+  import { getOSName } from './visualization/utils/helpers';
 
   // Socket boilerplate
 
@@ -96,6 +97,8 @@
   // About
 
   let isAboutPaneOpen = false;
+
+  let isTutorialPaneOpen = false;
 </script>
 
 <main>
@@ -124,6 +127,34 @@
     </div>
   </Modal>
 
+  <Modal visible={isTutorialPaneOpen} width={400}>
+    <div class="dialog-body">
+      <h4>What is Emblaze?</h4>
+      <p>
+        <strong
+          >Emblaze is a visual tool for comparing embedding spaces through
+          animated 2D scatter plots.</strong
+        > Each provided dataset consists of multiple "frames", or variants for comparison.
+        You can navigate between and compare these frames using the thumbnails to
+        the left of the main scatter plot.
+      </p>
+      <p>
+        The tool offers a variety of methods to select and browse groups of
+        points in each embedding. Try clicking on points, {#if getOSName() == 'MacOS'}Cmd{:else}Ctrl{/if}
+        + clicking and dragging to lasso select, or going to the Suggested pane to
+        see recommendations.
+      </p>
+      <p>For more tips, click the Help button in the lower-right corner.</p>
+    </div>
+    <div class="dialog-footer">
+      <button
+        type="button"
+        class="dialog-footer-button btn btn-secondary jp-Dialog-button jp-mod-reject jp-mod-styled"
+        on:click={() => (isTutorialPaneOpen = false)}>Continue</button
+      >
+    </div>
+  </Modal>
+
   <nav
     class="title-bar navbar navbar-expand-lg navbar-dark"
     style="justify-content: space-between;"
@@ -147,6 +178,13 @@
       id="navbarSupportedContent"
     >
       <ul class="navbar-nav">
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            href="#"
+            on:click={() => (isTutorialPaneOpen = true)}>What is Emblaze?</a
+          >
+        </li>
         <li class="nav-item">
           <a
             class="nav-link"
