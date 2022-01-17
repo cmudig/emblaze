@@ -1,5 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { helpMessagesVisible } from '../utils/stores';
+  import HelpMessage from './HelpMessage.svelte';
 
   import SelectionBrowseItem from './SelectionBrowseItem';
 
@@ -10,6 +12,7 @@
 
   export let emptyMessage = 'No items yet';
   export let loadingMessage = 'Loading...';
+  export let helpMessage = '';
 </script>
 
 {#if loading}
@@ -23,6 +26,11 @@
   </div>
 {:else}
   <div class="selection-browser-container">
+    {#if $helpMessagesVisible && !!helpMessage}
+      <HelpMessage width={240}>
+        {@html helpMessage}
+      </HelpMessage>
+    {/if}
     {#each data as entry}
       <SelectionBrowseItem {entry} {thumbnailProvider} on:loadSelection />
     {/each}

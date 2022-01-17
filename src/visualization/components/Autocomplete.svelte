@@ -42,6 +42,7 @@
 <div class="autocomplete-container" style={fillWidth ? 'width: 100%;' : ''}>
   <input
     type="text"
+    class="autocomplete-input"
     {placeholder}
     bind:this={autocomplete}
     bind:value={autocompleteText}
@@ -72,6 +73,9 @@
 <style>
   .autocomplete-container {
     position: relative;
+  }
+  .autocomplete-input {
+    margin-bottom: 0;
   }
   .dropdown-item {
     padding: 4px 12px;

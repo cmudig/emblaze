@@ -11,6 +11,8 @@
   import App from './App.svelte';
   import { syncValue } from './stores';
   import { MODULE_VERSION } from './version';
+  import { helpMessagesVisible } from './visualization/utils/stores';
+  import HelpMessage from './visualization/components/HelpMessage.svelte';
 
   // Socket boilerplate
 
@@ -169,24 +171,45 @@
   </div>
   <div class="config-view">
     <div style="display: flex; align-items: center;">
+      {#if $helpMessagesVisible}
+        <HelpMessage pad={false} width={300}>
+          Choose among available <strong>sample datasets</strong> here.
+        </HelpMessage>
+      {/if}
       <h6 class="config-item">Dataset</h6>
       <select bind:value={$datasetPath} class="config-item">
         {#each datasetOptions as opt}
           <option value={opt}>{getDatasetName(opt)}</option>
         {/each}
       </select>
+      {#if $helpMessagesVisible}
+        <HelpMessage pad={false} width={300}>
+          Choose the <strong>colors</strong> used to label points. Note that continuous
+          color schemes (such as 'turbo' and 'plasma') cannot be used for categorical
+          labels.
+        </HelpMessage>
+      {/if}
       <h6 class="config-item">Color Scheme</h6>
       <select bind:value={$colorScheme} class="config-item">
         {#each ColorSchemes.allColorSchemes as opt}
           <option value={opt.name}>{opt.name}</option>
         {/each}
       </select>
+      {#if $helpMessagesVisible}
+        <HelpMessage pad={false} width={300}>
+          Choose the method used to compute <strong
+            >similarity between frames</strong
+          > for displaying star trails. 'Projection Neighbors' uses the nearest neighbors
+          in the 2D space, while 'Hi-D Neighbors' uses nearest neighbors in the original
+          embedding.
+        </HelpMessage>
+      {/if}
       <h6 class="config-item">Star Trails</h6>
       <select bind:value={$previewMode} class="config-item">
         <option value={PreviewMode.NEIGHBOR_SIMILARITY}>
           High-D Neighbors
         </option>
-        <option value={PreviewMode.NEIGHBOR_SIMILARITY}>
+        <option value={PreviewMode.PROJECTION_SIMILARITY}>
           Projection Neighbors
         </option>
       </select>
