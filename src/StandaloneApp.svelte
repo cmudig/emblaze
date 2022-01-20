@@ -104,18 +104,17 @@
 <main>
   <Modal visible={isAboutPaneOpen} width={400}>
     <div class="dialog-body">
-      <h4>Emblaze v{MODULE_VERSION}</h4>
+      <h4>Install Emblaze</h4>
       <p>
-        This software is provided on a BSD 3-Clause license. To cite Emblaze in
-        your publications, please use the following reference:
+        Emblaze is available for use as a Jupyter notebook widget. You can
+        install it from PyPI:
       </p>
+      <pre class="code-snippet">pip install emblaze</pre>
       <p>
-        Sivaraman, V., Wu, Y., and Perer, A. (2022). Emblaze: Illuminating
-        Machine Learning Representations through Interactive Comparison of
-        Embedding Spaces. <em
-          >IUI '22: Proceedings of 27th International Conference on Intelligent
-          User Interfaces.</em
-        >
+        For more detailed instructions and usage examples, please visit the <a
+          href="https://github.com/cmudig/emblaze"
+          target="_blank">GitHub page</a
+        >.
       </p>
     </div>
     <div class="dialog-footer">
@@ -145,6 +144,22 @@
         see recommendations.
       </p>
       <p>For more tips, click the Help button in the lower-right corner.</p>
+      <p>
+        <small>
+          Emblaze is provided on a BSD 3-Clause license. To cite Emblaze in your
+          publications, please use the following reference:
+        </small>
+      </p>
+      <p>
+        <small>
+          Sivaraman, V., Wu, Y., and Perer, A. (2022). Emblaze: Illuminating
+          Machine Learning Representations through Interactive Comparison of
+          Embedding Spaces. <em
+            >IUI '22: Proceedings of 27th International Conference on
+            Intelligent User Interfaces.</em
+          >
+        </small>
+      </p>
     </div>
     <div class="dialog-footer">
       <button
@@ -186,15 +201,15 @@
           >
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="#" on:click={() => (isAboutPaneOpen = true)}
+            >Install</a
+          >
+        </li>
+        <li class="nav-item">
           <a
             class="nav-link"
             href="https://github.com/cmudig/emblaze"
             target="_blank">GitHub</a
-          >
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" on:click={() => (isAboutPaneOpen = true)}
-            >About</a
           >
         </li>
       </ul>
@@ -211,7 +226,11 @@
     <div style="display: flex; align-items: center;">
       {#if $helpMessagesVisible}
         <HelpMessage pad={false} width={300}>
-          Choose among available <strong>sample datasets</strong> here.
+          Choose among available <strong>sample datasets</strong> here. You can
+          view your own datasets by installing Emblaze and trying it in a
+          Jupyter notebook (see
+          <a href="https://github.com/cmudig/emblaze" target="_blank">here</a> for
+          details).
         </HelpMessage>
       {/if}
       <h6 class="config-item">Dataset</h6>
@@ -312,6 +331,12 @@
     display: none;
     margin-top: 200px;
     padding: 0 40px;
+  }
+
+  .code-snippet {
+    padding: 12px;
+    background-color: #eeeeee;
+    border-radius: 4px;
   }
 
   @media (max-width: 640px) {
