@@ -21,6 +21,12 @@
       .slice(0, isOpen ? 10 : 3);
   }
 
+  function makeEtCeteraMessage(num) {
+    if (num == 1) return 'and 1 other';
+    else if (num <= 0) return '';
+    return `and ${num} others`;
+  }
+
   let selectionComponents = [];
   $: {
     selectionComponents = [];
@@ -55,7 +61,7 @@
           />
         {/each}
         <p class="accordion-subtitle">
-          and {entry.selectedIDs.length - (isOpen ? 6 : 3)} others
+          {makeEtCeteraMessage(entry.selectedIDs.length - (isOpen ? 6 : 3))}
         </p>
       </div>
     {:else}
@@ -64,7 +70,9 @@
           <strong>{item}</strong>{i == entry.selectedIDs.length - 1 ? '' : ', '}
         {/each}
         {#if entry.selectedIDs.length > selectionPreviewItems.length}
-          and {entry.selectedIDs.length - selectionPreviewItems.length} others
+          {makeEtCeteraMessage(
+            entry.selectedIDs.length - selectionPreviewItems.length
+          )}
         {/if}
       </p>
     {/if}

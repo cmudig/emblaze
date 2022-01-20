@@ -29,6 +29,7 @@ export class Dataset {
   previewMode = PreviewMode.PROJECTION_SIMILARITY;
   previewParameters = {};
   ids = [];
+  supportsContinuousColorSchemes = true;
 
   thumbnailData = null;
   spritesheets = null;
@@ -78,6 +79,10 @@ export class Dataset {
     });
     this.ids = Array.from(allIDs);
     this.length = this.ids.length;
+
+    this.supportsContinuousColorSchemes = this.frames.every((frame) => {
+      return !frame.getField('color').some((v) => isNaN(v));
+    });
   }
 
   getXExtent() {

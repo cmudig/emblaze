@@ -9,6 +9,9 @@
   import Scatterplot from './pixi/Scatterplot.svelte';
   import PreviewSlider from './components/PreviewSlider.svelte';
   import PixiScatterplot from './pixi/PixiScatterplot';
+  import { helpMessagesVisible } from './utils/stores';
+  import HelpMessage from './components/HelpMessage.svelte';
+
   const dispatch = createEventDispatcher();
 
   let container;
@@ -463,6 +466,29 @@
       {/if}
     </div>
     <div id="message-panel">
+      {#if $helpMessagesVisible}
+        {#if previewFrame >= 0 && previewFrame != frame}
+          <HelpMessage anchor="lower left" width={300}>
+            You are viewing a <strong>comparison</strong> between frames '{data
+              .frameLabels[frame]}' and '{data.frameLabels[previewFrame]}'. The
+            widening lines (called <strong>star trails</strong>) highlight
+            points whose neighbors change the most between the two frames. Drag
+            the slider in the bottom-right or click one of the frame thumbnails
+            to transition between the two frames.
+          </HelpMessage>
+        {:else if alignedIDs.length > 0}
+          <HelpMessage anchor="lower left" width={300}>
+            The view is currently <strong>aligned</strong> to a group of {alignedIDs.length}
+            points. The motion for these points will be minimized as you transition
+            between frames.
+          </HelpMessage>
+        {:else if filterIDs.length > 0}
+          <HelpMessage anchor="lower left" width={300}>
+            The view is currently <strong>filtered</strong> to a group of {filterIDs.length}
+            points. Click Show All to remove the filter.
+          </HelpMessage>
+        {/if}
+      {/if}
       {#if !!alignmentText}
         {@html alignmentText}
         {#if alignedIDs.length > 0 && !alignedToSelection}

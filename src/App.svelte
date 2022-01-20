@@ -1,3 +1,5 @@
+<svelte:options accessors />
+
 <script>
   import SynchronizedScatterplot from './visualization/SynchronizedScatterplot.svelte';
   import ScatterplotThumbnail from './visualization/components/ScatterplotThumbnail.svelte';
@@ -22,6 +24,8 @@
   import SegmentedControl from './visualization/components/SegmentedControl.svelte';
   import SettingsPane from './visualization/components/SettingsPane.svelte';
   import { ThumbnailProvider } from './visualization/models/thumbnails';
+  import HelpMessage from './visualization/components/HelpMessage.svelte';
+  import { helpMessagesVisible } from './visualization/utils/stores';
 
   export let fillHeight = false;
 
@@ -33,7 +37,7 @@
   let plotPadding = syncValue(model, 'plotPadding', 10.0);
   let height = 600; // can make this reactive later
 
-  let dataset = null;
+  export let dataset = null;
   let frameTransformations = syncValue(model, 'frameTransformations', []);
   let frameColors = syncValue(model, 'frameColors', []);
   let thumbnailData = syncValue(model, 'thumbnailData', {});
@@ -557,6 +561,14 @@
 {:else}
   <div class="vis-container" style="height: {fillHeight ? '100%' : '600px'};">
     <div class="frame-sidebar">
+      {#if $helpMessagesVisible}
+        <HelpMessage width={360}>
+          Click a <strong>frame thumbnail</strong> once to compare it with the
+          current frame, and click again to animate to that frame. You can
+          compare the <strong>color stripes</strong> next to each thumbnail to get
+          a sense of how different the frames are.
+        </HelpMessage>
+      {/if}
       <div class="frame-thumbnail-container">
         {#each [...d3.range(dataset.frameCount)] as i}
           <div class="frame-thumbnail-item">
@@ -630,6 +642,11 @@
     </div>
     <div class="sidebar">
       <div class="search-bar">
+        {#if $helpMessagesVisible}
+          <HelpMessage>
+            Search to select a point by its ID number or text description.
+          </HelpMessage>
+        {/if}
         <Autocomplete
           placeholder="Search for a point..."
           options={pointSelectorOptions}
@@ -695,6 +712,7 @@
             emptyMessage="No suggested selections right now.{performanceSuggestionsMode
               ? ' Suggestions are in performance mode - will compute when less than 1,000 points are displayed.'
               : ''}"
+            helpMessage="This view lists <strong>Suggested Selections</strong>, which are groups of points that exhibit potentially interesting changes between frames. Try selecting different frames or moving around the scatter plot to see different suggestions."
             on:loadSelection={(e) => {
               handleLoadSelection(e);
               logEvent({ type: 'loadSelection', source: 'suggested' });
@@ -716,6 +734,16 @@
           </button>
         {/if}
         <div style="flex-grow: 1" />
+        <button
+          type="button"
+          class="btn btn-sm jp-Dialog-button jp-mod-styled mr-2 {$helpMessagesVisible
+            ? 'jp-mod-accept btn-primary'
+            : 'jp-mod-reject btn-secondary'}"
+          on:click|preventDefault={() =>
+            ($helpMessagesVisible = !$helpMessagesVisible)}
+        >
+          Help
+        </button>
         <button
           type="button"
           class="btn btn-secondary btn-sm jp-Dialog-button jp-mod-reject jp-mod-styled"
@@ -832,5 +860,9 @@
   .jp-Dialog-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .mr-2 {
+    margin-right: 0.5rem !important; /* from bootstrap */
   }
 </style>

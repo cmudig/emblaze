@@ -2,6 +2,8 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import { base64ToBlob, getOSName } from '../utils/helpers';
   import Thumbnail from './Thumbnail.svelte';
+  import { helpMessagesVisible } from '../utils/stores';
+  import HelpMessage from './HelpMessage.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -263,7 +265,15 @@
     </div>
   {:else}
     <div class="header-bar">
-      {primaryTitle}
+      {#if $helpMessagesVisible}
+        <HelpMessage pad={false}>
+          This area shows the <strong>current selection</strong>. {#if getOSName() == 'MacOS'}Cmd{:else}Ctrl{/if}
+          + click a point here to <strong>remove it</strong> from the selection.
+        </HelpMessage>
+      {/if}
+      <div class="header-text">
+        {primaryTitle}
+      </div>
     </div>
     <div class="thumbnails-container">
       {#if !!message}
@@ -312,7 +322,16 @@
   {/if}
   {#if secondaryItems.length > 0}
     <div class="header-bar">
-      {secondaryTitle}
+      {#if $helpMessagesVisible}
+        <HelpMessage pad={false}>
+          This area shows the <strong>nearest neighbors</strong> of the current
+          selection. {#if getOSName() == 'MacOS'}Cmd{:else}Ctrl{/if} + click a point
+          here to <strong>add it</strong> to the selection.
+        </HelpMessage>
+      {/if}
+      <div class="header-text">
+        {secondaryTitle}
+      </div>
     </div>
     <div class="thumbnails-container column-container">
       <div class="thumbnail-column">
@@ -381,7 +400,15 @@
     {/if}
   {/if}
   {#if commonChangeItems.length > 0}
-    <div class="header-bar">Common Changes</div>
+    <div class="header-bar">
+      {#if $helpMessagesVisible}
+        <HelpMessage pad={false}>
+          This area shows the most common neighbors <strong>added to</strong>
+          and <strong>removed from</strong> the current frame in the comparing frame.
+        </HelpMessage>
+      {/if}
+      <div class="header-text">Common Changes</div>
+    </div>
     <div class="thumbnails-container column-container">
       <div class="thumbnail-column">
         {#each commonChangeItems as item}
@@ -446,6 +473,11 @@
   .header-bar {
     background-color: #ddd;
     padding: 8px 12px;
+    display: flex;
+    align-items: center;
+  }
+  .header-text {
+    flex-grow: 1;
     font-weight: 600;
     font-size: 10pt;
     text-transform: uppercase;
