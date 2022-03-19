@@ -203,6 +203,8 @@ def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None
     # sequence_info = _detect_numerical_sequence(arr)
     # if sequence_info is not None:
     #     result = { ""}
+    if not arr.flags['C_CONTIGUOUS']:
+        arr = arr.copy(order='C')
     result = { "values": base64.b64encode(arr.astype(astype)).decode('ascii') }
     if positions is not None:
         result["positions"] = base64.b64encode(positions.astype(np.int32)).decode('ascii')

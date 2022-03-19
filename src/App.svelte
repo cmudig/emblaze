@@ -709,8 +709,10 @@
                 ? ` (${($loadingSuggestionsProgress * 100.0).toFixed(0)}%)`
                 : '') +
               '...'}
-            emptyMessage="No suggested selections right now.{performanceSuggestionsMode
+            emptyMessage="No suggested selections right now.{$performanceSuggestionsMode
               ? ' Suggestions are in performance mode - will compute when less than 1,000 points are displayed.'
+              : dataset != null && dataset.frameCount <= 1
+              ? ' Add more embeddings to see suggestions.'
               : ''}"
             helpMessage="This view lists <strong>Suggested Selections</strong>, which are groups of points that exhibit potentially interesting changes between frames. Try selecting different frames or moving around the scatter plot to see different suggestions."
             on:loadSelection={(e) => {

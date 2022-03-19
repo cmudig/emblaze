@@ -127,7 +127,10 @@ class Viewer(DOMWidget):
         super(Viewer, self).__init__(*args, **kwargs)
         if self.file:
             self.load_comparison(self.file)
-        assert len(self.embeddings) > 0, "Must have at least one embedding"
+        if len(self.embeddings) == 0:
+            raise ValueError("Must have at least one embedding.")
+        if not all(emb.dimension() == 2 for emb in self.embeddings):
+            raise ValueError("All Embeddings must contain 2-dimensional coordinates. Try projecting the embeddings to 2D using the .project() method.")
         self.saveSelectionFlag = False
         self.loadSelectionFlag = False
         self.selectionList = []
@@ -355,7 +358,9 @@ class Viewer(DOMWidget):
         the sidebar. The selectedIDs property is used first, followed by
         alignedIDs if applicable.
         """
-        if not self.selectedIDs:
+        if len(self.embeddings) <= 1:
+            self.frameColors = []
+        elif not self.selectedIDs:
             if self.alignedIDs:
                 self.frameColors = compute_colors(self.embeddings, self.alignedIDs)
             else:
@@ -418,7 +423,10 @@ class Viewer(DOMWidget):
     
     def _update_performance_suggestions_mode(self):
         """Determines whether to use the performance mode for computing suggestions."""
-        self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) >= PERFORMANCE_SUGGESTIONS_ENABLE
+        if len(self.embeddings) <= 1:
+            self.performanceSuggestionsMode = False
+        else:
+            self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) >= PERFORMANCE_SUGGESTIONS_ENABLE
         
     def precompute_suggested_selections(self):
         """
@@ -441,6 +449,10 @@ class Viewer(DOMWidget):
 
         filter_points = None
         self._update_performance_suggestions_mode()
+        if len(self.embeddings) == 1:
+            # We cannot generate suggested selections when there is only one embedding
+            self.suggestedSelections = []
+            return
         if self.performanceSuggestionsMode and (not self.recommender or self.recommender.is_restricted):
             # Check if sufficiently few points are visible to show suggestions
             if self.filterIDs and len(self.filterIDs) <= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
