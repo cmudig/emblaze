@@ -1,3 +1,7 @@
+"""
+Defines model classes to store thumbnail data in text and/or image formats.
+"""
+
 import json
 from typing import Text
 import numpy as np

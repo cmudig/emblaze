@@ -5,7 +5,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 """
-TODO: Add module docstring
+Defines the main Emblaze visualization class, `emblaze.Viewer`.
 """
 
 from ipywidgets import DOMWidget
@@ -35,7 +35,17 @@ def synchronous_thread_starter(fn, args=[], kwargs={}):
     fn(args, kwargs)
 
 class Viewer(DOMWidget):
-    """TODO: Add docstring here
+    """
+    Represents and maintains the state of an interactive Emblaze interface to
+    display in a Jupyter notebook. The basic instantiation of an Emblaze viewer
+    proceeds as follows:
+    
+    ```python
+    embeddings = emblaze.EmbeddingSet(...)
+    thumbnails = emblaze.TextThumbnails(...)
+    w = emblaze.Viewer(embeddings=embeddings, thumbnails=thumbnails)
+    w
+    ```
     """
     _model_name = Unicode('ViewerModel').tag(sync=True)
     _model_module = Unicode(module_name).tag(sync=True)
@@ -47,82 +57,194 @@ class Viewer(DOMWidget):
     thread_starter = Any(default_thread_starter)
     _autogenerate_embeddings = Bool(True) # only set this if caching embedding data
 
+    #: An [`EmbeddingSet`](datasets.html#emblaze.datasets.EmbeddingSet) containing
+    #: one or more embeddings to visualize. The coordinates contained in this 
+    #: `EmbeddingSet` must be 2-dimensional.
     embeddings = Instance(EmbeddingSet, allow_none=True)
+    #: The JSON-serializable data passed to the frontend. You should not need to modify this variable.
     data = Dict(None, allow_none=True).tag(sync=True)
-    file = Any(allow_none=True).tag(sync=True)    
+    #: A file path or file-like object from which to read an embedding comparison (see [`save_comparison`](viewer.html#emblaze.viewer.Viewer.save_comparison)).
+    file = Any(allow_none=True).tag(sync=True)
+    #: Padding around the plot in data coordinates.
     plotPadding = Float(10.0).tag(sync=True)
     
+    #: `True` if the widget is currently loading a comparison from file, `False` otherwise.
     isLoading = Bool(False).tag(sync=True)
     
+    #: The index of the currently-viewing frame in the Viewer's [`embeddings`](#emblaze.viewer.Viewer.embeddings).
     currentFrame = Integer(0).tag(sync=True)
+    #: The index of the previewed frame in the Viewer's [`embeddings`](#emblaze.viewer.Viewer.embeddings). The
+    #: previewed frame is the frame to which points move when the Star Trail visualization is active.
     previewFrame = Integer(0).tag(sync=True)
+    #: The index of the aligned frame in the Viewer's [`embeddings`](#emblaze.viewer.Viewer.embeddings).
+    #: When the frames are aligned to a selection, they are anchored to the same
+    #: position as before in this frame only.
     alignedFrame = Integer(0).tag(sync=True)
+    #: A list of integer IDs corresponding to the selected points. By default,
+    #: these are zero-indexed and span the range from zero to the number of points in each
+    #: embedding.
     selectedIDs = List([]).tag(sync=True)
+    #: A list of integer IDs corresponding to the aligned points (points selected
+    #: to minimize motion across frames). By default, these are zero-indexed and
+    #: span the range from zero to the number of points in each embedding.    
     alignedIDs = List([]).tag(sync=True)
+    #: A list of integer IDs corresponding to the filtered points (a subset of
+    #: points selected to be visible in the plot). By default, these are zero-indexed and
+    #: span the range from zero to the number of points in each embedding.        
     filterIDs = List([]).tag(sync=True)
     
+    #: The number of neighbors to show in nearest neighbor lines and the detail
+    #: sidebar. This number cannot be greater than [`storedNumNeighbors`](#emblaze.viewer.Viewer.storedNumNeighbors).
     numNeighbors = Integer(10).tag(sync=True)
+    #: The number of nearest neighbors to store for each point in the frontend
+    #: visualization. This number cannot be greater than the number of neighbors
+    #: computed in the embeddings' `Neighbors` objects. This is 100 by default,
+    #: but will be automatically reduced to improve performance and memory usage
+    #: when many points or frames are visualized. This value can be configured in the
+    #: initialization of the `Viewer` instance.
     storedNumNeighbors = Integer(0).tag(sync=True)
 
-    # List of lists of 3 elements each, containing HSV colors for each frame
+    #: The colors used to represent each frame in the sidebar, stored as lists
+    #: of 3 HSV components each.
     frameColors = List([]).tag(sync=True)
     _defaultFrameColors = List([])
-    # List of 3 x 3 matrices (expressed as 3x3 nested lists)
+    #: Transformation matrices that result in an alignment of frames to the
+    #: viewer's current [`alignedIDs`](#emblaze.viewer.Viewer.alignedIDs). The
+    #: matrices are represented as 3x3 nested lists.
     frameTransformations = List([]).tag(sync=True)
     
+    #: A [`Thumbnails`](thumbnails.html#emblaze.thumbnails.Thumbnails) instance
+    #: containing text and/or image descriptions for the IDs of the points
+    #: provided in [`embeddings`](#emblaze.viewer.Viewer.embeddings).
     thumbnails = Instance(Thumbnails, allow_none=True)
-    # JSON-serializable dictionary of thumbnail info
+    #: A JSON-serializable dictionary of thumbnail info. You should not need to
+    #: modify this variable.
     thumbnailData = Dict({}).tag(sync=True)
     
-    # High dimensional neighbors, one dictionary corresponding to each Embedding
+    #: A JSON-serializable list of high-dimensional neighbors, containing one
+    #: dictionary corresponding to each `Embedding`. You should not need to
+    #: modify this variable.
     neighborData = List([]).tag(sync=True)
 
+    #: Boolean marking that the current state of the visualization should be
+    #: saved to file. The current values of [`selectionName`](#emblaze.viewer.Viewer.selectionName)
+    #: and [`selectionDescription`](#emblaze.viewer.Viewer.selectionDescription)
+    #: will be used.
     saveSelectionFlag = Bool(False).tag(sync=True)
+    #: The name of the selection to save.
     selectionName = Unicode("").tag(sync=True)
+    #: A description of the selection to save.
     selectionDescription = Unicode("").tag(sync=True)
+    #: Boolean indicating whether selection saving and restoring should be
+    #: enabled in the interface.
     allowsSavingSelections = Bool(True).tag(sync=True)
 
+    #: The currently-visible sidebar pane, enumerated in `emblaze.utils.SidebarPane`.
     visibleSidebarPane = Integer(SidebarPane.CURRENT).tag(sync=True)
+    #: A list of saved selections, to be displayed in the Saved sidebar pane.
     selectionList = List([]).tag(sync=True)
+    #: The [`SelectionRecommender`](recommender.html#emblaze.recommender.SelectionRecommender)
+    #: responsible for generating suggested selections.
     recommender = None
+    #: The current list of suggested selections. Each suggestion is represented
+    #: as a dictionary in the same format as a saved selection, including keys
+    #: for `currentFrame`, `selectedIDs`, `alignedIDs`, and `filterIDs`.
     suggestedSelections = List([]).tag(sync=True)
+    #: `True` if the recommender is currently computing suggested selections, `False` otherwise.
     loadingSuggestions = Bool(False).tag(sync=True)
+    #: Floating point value between 0 and 1 indicating the progress towards computing suggested selections.
     loadingSuggestionsProgress = Float(0.0).tag(sync=True)
+    #: A flag that, when `True`, indicates that suggested selections should be recomputed.
     recomputeSuggestionsFlag = Bool(False).tag(sync=True)
+    #: The bounding box of the screen in data coordinates, used to determine
+    #: which points are currently visible and should be included in Suggested
+    #: Selections. The bounding box is represented as a list of four values,
+    #: consisting of the minimum and maximum *x* values, followed by the minimum
+    #: and maximum *y* values.
     suggestedSelectionWindow = List([]).tag(sync=True)
-    # if True, recompute suggestions fully but only when less than PERFORMANCE_SUGGESTIONS_RECOMPUTE points are visible
+    #: If `True`, recompute suggestions fully but only when less than `PERFORMANCE_SUGGESTIONS_RECOMPUTE`
+    #: points are visible.
     performanceSuggestionsMode = Bool(False).tag(sync=True)
     
+    #: A list of recent selections, represented in the same format as saved
+    #: and suggested selections (including the `selectedIDs` and `currentFrame`)
+    #: keys.
     selectionHistory = List([]).tag(sync=True)
     
-    # Contains three keys: centerID (int), frame (int), unit (string)
+    #: The supported selection unit for the current embeddings. This corresponds
+    #: to the metric used by the embedding's `Neighbors` set.
     selectionUnit = Unicode("").tag(sync=True)
+    #: A dictionary that, when populated, indicates that the `Viewer` instance
+    #: should perform a radius select. The dictionary should contain three keys:
+    #: `centerID` (int - ID of the point around which to select), `frame` (int -
+    #: the frame in which to collect nearest neighbors), and `unit` (string -
+    #: the metric to use to define nearest neighbors, such as "pixels" or "cosine").
     selectionOrderRequest = Dict({}).tag(sync=True)
+    #: A list of tuples representing the results of a selection order request 
+    #: (see [`selectionOrderRequest`](#emblaze.viewer.Viewer.selectionOrderRequest)).
+    #: Each tuple contains a neighbor ID and its distance to the center point.
     selectionOrder = List([]).tag(sync=True)
-    selectionOrderCount = Integer(2000) # number of points to return distances for
+    #: The number of points to return IDs and distances for in a selection order
+    #: request (see [`selectionOrderRequest`](#emblaze.viewer.Viewer.selectionOrderRequest)).
+    selectionOrderCount = Integer(2000)
 
-    # Name of a color scheme (e.g. tableau, turbo, reds)
+    #: The name of the color scheme to use to color points in the scatter plot.
+    #: Supported color schemes are documented in `src/colorschemes.ts` and
+    #: include the following:
+    #: * `tableau` (categorical)
+    #: * `dark2` (categorical)
+    #: * `paired` (categorical)
+    #: * `set1` (categorical)
+    #: * `set2` (categorical)
+    #: * `set3` (categorical)
+    #: * `turbo` (continuous)
+    #: * `plasma` (continuous)
+    #: * `magma` (continuous)
+    #: * `viridis` (continuous)
+    #: * `RdBu` (continuous)
+    #: * `Blues` (continuous)
+    #: * `Greens` (continuous)
+    #: * `Reds` (continuous)
+    #: * `rainbow` (continuous)
     colorScheme = Unicode("").tag(sync=True)
     
-    # Preview info
+    #: String indicating how to compute Star Trails. Valid options are listed
+    #: in [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode).
     previewMode = Unicode("").tag(sync=True)
+    #: Parameters for generating Star Trails. These can be adjusted in the
+    #: Emblaze interface in the Settings menu, and consist of the following keys:
+    #: * `k`: Integer indicating the number of neighbors to compare between
+    #:   frames for each point. This cannot be greater than the Viewer's
+    #:   [`storedNumNeighbors`](#emblaze.viewer.Viewer.storedNumNeighbors).
+    #: * `similarityThreshold`: Similarity value above which a Star Trail will
+    #:   *not* be shown for a point. Similarity is computed as the number of
+    #:   neighbors in common between two frames divided by `k`.
     previewParameters = Dict({}).tag(sync=True)
     
-    # List of past interactions with the widget. When saveInteractionsFlag is
-    # set to True by the widget, the backend will save the interaction history
-    # to file using the loggingHelper.
+    #: List of past interactions with the widget. When [`loggingEnabled`](#emblaze.viewer.Viewer.loggingEnabled)
+    #: is set to `True` by the widget, the backend will save the interaction history
+    #: to file using the `loggingHelper`.
     interactionHistory = List([]).tag(sync=True)
+    #: Flag that, when `True`, indicates that the widget should save interaction
+    #: history to a local file. This is used by the frontend to periodically save
+    #: interactions when `loggingEnabled` is set to `True`. You should not need
+    #: to modify this variable.
     saveInteractionsFlag = Bool(False).tag(sync=True)
     
-    # Whether to save interaction history/logs to file
+    #: Flag that, when `True`, enables the widget to periodically save interaction
+    #: history and logs to a local file.
     loggingEnabled = Bool(False).tag(sync=True)
+    #: A `utils.LoggingHelper` object that handles saving interaction history.
     loggingHelper = None
     
     def __init__(self, *args, **kwargs):
         """
-        embeddings: An EmbeddingSet object.
-        thumbnails: A ThumbnailSet object.
-        file: A file path or file-like object from which to read a comparison JSON file.
+        You may pass additional traitlet values to the `Viewer` constructor
+        beyond the ones listed below.
+        Args:
+            embeddings: An `EmbeddingSet` object.
+            thumbnails: A `ThumbnailSet` object.
+            file: A file path or file-like object from which to read a comparison JSON file.
         """
         super(Viewer, self).__init__(*args, **kwargs)
         if self.file:
@@ -187,7 +309,13 @@ class Viewer(DOMWidget):
         
     def detect_color_scheme(self):
         """
-        Returns a default color scheme for the given type of data.
+        Infers an appropriate color scheme for the data based on whether the
+        data type of the embeddings' `Field.COLOR` field is categorical or
+        continuous.
+        
+        Returns:
+            A string name for a default color scheme for the given type of data
+            ("tableau" for categorical data or "plasma" for continuous data).
         """
         if len(self.embeddings) == 0:
             return "tableau"
@@ -197,9 +325,12 @@ class Viewer(DOMWidget):
     
     def detect_preview_mode(self):
         """
-        Returns a projection similarity preview mode if the neighbors in all the
-        frames are mostly the same, and a neighbor similarity preview mode
-        otherwise.
+        Infers the appropriate preview mode to use to generate Star Trails, based
+        on whether the neighbors in all the frames are mostly the same or not.
+        
+        Returns:
+            A value from [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode)
+            indicating how Star Trails should be computed.
         """
         ancestor_neighbors = [emb.get_ancestor_neighbors() for emb in self.embeddings]
         for n1 in ancestor_neighbors:
@@ -332,6 +463,7 @@ class Viewer(DOMWidget):
         
         Args:
             point_ids: Iterable of point IDs to use for alignment.
+            peripheral_points: Unused.
         """
         if point_ids is None:
             self.reset_alignment()
@@ -355,8 +487,8 @@ class Viewer(DOMWidget):
     def update_frame_colors(self):
         """
         Updates the colors of the color stripes next to each frame thumbnail in
-        the sidebar. The selectedIDs property is used first, followed by
-        alignedIDs if applicable.
+        the sidebar. The `selectedIDs` property is used first, followed by
+        `alignedIDs` if applicable.
         """
         if len(self.embeddings) <= 1:
             self.frameColors = []
@@ -371,8 +503,10 @@ class Viewer(DOMWidget):
             self.frameColors = compute_colors(self.embeddings, self.selectedIDs)
 
     def _update_selection_unit(self, frame):
-        """Sets the selection unit if the current frame can be queried for
-        distances."""
+        """
+        Sets the selection unit if the current frame can be queried for
+        distances.
+        """
         ancestor = frame.find_ancestor_neighbor_embedding()
         if isinstance(ancestor, NeighborOnlyEmbedding):
             self.selectionUnit = ''
@@ -432,7 +566,10 @@ class Viewer(DOMWidget):
         """
         Computes the suggested selections for all points in the embeddings. This
         is useful to get quick recommendations later, though it may take time to
-        generate them upfront.
+        generate them upfront. When this method completes, the viewer's
+        [`recommender`](#emblaze.viewer.Viewer.recommender) property will be a
+        fully loaded `SelectionRecommender` that can be queried for suggestions
+        relative to an area of the plot, selection, or set of frames.
         """
         bar = tqdm.tqdm(total=len(self.embeddings) * (len(self.embeddings) - 1), desc='Clustering')
         def progress_fn(progress):
@@ -546,19 +683,26 @@ class Viewer(DOMWidget):
     def comparison_to_json(self, compressed=True, ancestor_data=True, suggestions=False):
         """
         Saves the data used to produce this comparison to a JSON object. This
-        includes the EmbeddingSet and the Thumbnails that are visualized, as
+        includes the `EmbeddingSet` and the `Thumbnails` that are visualized, as
         well as the immediate and ancestor neighbor data (see below). Ancestor
         neighbors are used to display nearest neighbors in the UI.
         
-        If ancestor_data is True (default), the full Embedding object that
-        produces the ancestor neighbors will be stored, including its neighbor
-        set. If ancestor_data is set to False, only the ancestor
-        neighbors themselves will be stored. This can save space if the ancestor
-        embedding is very high-dimensional. However, the high-dimensional radius
-        select tool will not work if ancestor data is not saved.
+        Args:
+            compressed: If `True`, then save the embeddings in a base-64 encoded
+                format to save space.
+            ancestor_data: If `True` (default), the full `Embedding` object that
+                produces the ancestor neighbors will be stored, including its neighbor
+                set. If `False`, only the ancestor neighbors themselves will be
+                stored. This can save space if the ancestor embedding is very
+                high-dimensional. However, the high-dimensional radius
+                select tool will not work if ancestor data is not saved.
+            suggestions: If `True` and the viewer has a `recommender` associated
+                with it, the recommender will also be serialized.
         
-        If suggestions is True and the viewer has a recommender associated with it,
-        the recommender will also be serialized.
+        Returns:
+            A JSON-serializable dictionary representing the comparison, including
+            all `embeddings`, `thumbnails`, and optionally ancestor data and
+            suggestions.
         """
         result = {}
         
@@ -607,7 +751,14 @@ class Viewer(DOMWidget):
     def load_comparison_from_json(self, data):
         """
         Loads comparison information from a JSON object, including the
-        EmbeddingSet, Thumbnails, and NeighborSet.
+        `EmbeddingSet`, `Thumbnails`, and `NeighborSet`.
+        
+        Args:
+            data: A JSON-serializable dictionary generated using
+                [`Viewer.comparison_to_json`](#emblaze.viewer.Viewer.comparison_to_json).
+                
+        Returns:
+            The populated `Viewer` object.
         """
         self.isLoading = True
         if self.embeddings is not None:
@@ -646,9 +797,18 @@ class Viewer(DOMWidget):
                 
     def save_comparison(self, file_path_or_buffer, **kwargs):
         """
-        Saves the comparison data (EmbeddingSet, Thumbnails, and NeighborSet) to
-        the given file path or file-like object. See comparison_to_json() for
-        more details.
+        Saves the comparison data (`EmbeddingSet`, `Thumbnails`, and `NeighborSet`) to
+        the given file path or file-like object. See [`Viewer.comparison_to_json()`](#emblaze.viewer.Viewer.comparison_to_json)
+        for available keyword arguments. The comparison can be loaded later by
+        specifying a `file` during initialization:
+        
+        ```python
+        w = emblaze.Viewer(file=file_path)
+        ```
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object to which to
+                write the comparison.
         """
         if isinstance(file_path_or_buffer, str):
             # File path
@@ -662,6 +822,10 @@ class Viewer(DOMWidget):
         """
         Load the comparison data from the given file path or
         file-like object containing JSON data.
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object from which to
+                load the comparison.
         """
         if isinstance(file_path_or_buffer, str):
             # File path

@@ -1,3 +1,8 @@
+"""
+Defines model classes to compute and store nearest neighbor sets that can be
+inherited across different `Embedding` objects.
+"""
+
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from .utils import *
@@ -5,14 +10,23 @@ from .utils import *
 class Neighbors:
     """
     An object representing a serializable set of nearest neighbors within an
-    embedding. The Neighbors object simply stores a matrix of integer IDs, where rows
+    embedding. The `Neighbors` object simply stores a matrix of integer IDs, where rows
     correspond to points in the embedding and columns are IDs of neighbors in
-    order of proximity to each point.
+    order of proximity to each point. These neighbors can be accessed through the
+    `values` property.
     """
     def __init__(self, values, ids=None, metric='euclidean', n_neighbors=100, clf=None):
         """
-        pos: Matrix of n x D vectors indicating high-dimensional positions
-        ids: If supplied, a list of IDs for the points in the matrix
+        This constructor should typically not be used - use [`Neighbors.compute`](#emblaze.neighbors.Neighbors.compute) instead.
+        
+        Args:
+            values: Matrix of n x D high-dimensional positions
+            ids: If supplied, a list of IDs for the points in the matrix
+            metric: Distance metric to use to compute neighbors (can be any supported
+                metric for `sklearn.neighbors.NearestNeighbors`)
+            n_neighbors: Number of neighbors to compute and save
+            clf: The `NearestNeighbors` object (only used when loading a `Neighbors`
+                object from file)
         """
         super().__init__()
         self.values = values
@@ -24,6 +38,19 @@ class Neighbors:
     
     @classmethod
     def compute(cls, pos, ids=None, metric='euclidean', n_neighbors=100):
+        """
+        Compute a nearest-neighbor set using a given metric.
+        
+        Args:
+            pos: Matrix of n x D high-dimensional positions
+            ids: If supplied, a list of IDs for the points in the matrix
+            metric: Distance metric to use to compute neighbors (can be any supported
+                metric for `sklearn.neighbors.NearestNeighbors`)
+            n_neighbors: Number of neighbors to compute and save
+            
+        Returns:
+            An initialized `Neighbors` object containing computed neighbors.
+        """
         ids = ids if ids is not None else np.arange(len(pos))
         neighbor_clf = NearestNeighbors(metric=metric,
                                         n_neighbors=n_neighbors + 1).fit(pos)
