@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>emblaze.neighbors API documentation</title>
+<meta name="description" content="Defines model classes to compute and store nearest neighbor sets that can be
+inherited across different `Embedding` objects." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico"/>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>emblaze.neighbors</code></h1>
+</header>
+<section id="section-intro">
+<p>Defines model classes to compute and store nearest neighbor sets that can be
+inherited across different <code>Embedding</code> objects.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Defines model classes to compute and store nearest neighbor sets that can be
+inherited across different `Embedding` objects.
+&#34;&#34;&#34;
+
+import numpy as np
+from sklearn.neighbors import NearestNeighbors
+from .utils import *
+
+class Neighbors:
+    &#34;&#34;&#34;
+    An object representing a serializable set of nearest neighbors within an
+    embedding. The `Neighbors` object simply stores a matrix of integer IDs, where rows
+    correspond to points in the embedding and columns are IDs of neighbors in
+    order of proximity to each point. These neighbors can be accessed through the
+    `values` property.
+    &#34;&#34;&#34;
+    def __init__(self, values, ids=None, metric=&#39;euclidean&#39;, n_neighbors=100, clf=None):
+        &#34;&#34;&#34;
+        This constructor should typically not be used - use [`Neighbors.compute`](#emblaze.neighbors.Neighbors.compute) instead.
+        
+        Args:
+            values: Matrix of n x D high-dimensional positions
+            ids: If supplied, a list of IDs for the points in the matrix
+            metric: Distance metric to use to compute neighbors (can be any supported
+                metric for `sklearn.neighbors.NearestNeighbors`)
+            n_neighbors: Number of neighbors to compute and save
+            clf: The `NearestNeighbors` object (only used when loading a `Neighbors`
+                object from file)
+        &#34;&#34;&#34;
+        super().__init__()
+        self.values = values
+        self.ids = ids
+        self._id_index = {id: i for i, id in enumerate(self.ids)}
+        self.metric = metric
+        self.n_neighbors = n_neighbors
+        self.clf = clf
+    
+    @classmethod
+    def compute(cls, pos, ids=None, metric=&#39;euclidean&#39;, n_neighbors=100):
+        &#34;&#34;&#34;
+        Compute a nearest-neighbor set using a given metric.
+        
+        Args:
+            pos: Matrix of n x D high-dimensional positions
+            ids: If supplied, a list of IDs for the points in the matrix
+            metric: Distance metric to use to compute neighbors (can be any supported
+                metric for `sklearn.neighbors.NearestNeighbors`)
+            n_neighbors: Number of neighbors to compute and save
+            
+        Returns:
+            An initialized `Neighbors` object containing computed neighbors.
+        &#34;&#34;&#34;
+        ids = ids if ids is not None else np.arange(len(pos))
+        neighbor_clf = NearestNeighbors(metric=metric,
+                                        n_neighbors=n_neighbors + 1).fit(pos)
+        _, neigh_indexes = neighbor_clf.kneighbors(pos)
+        
+        return cls(ids[neigh_indexes[:,1:]], ids=ids, metric=metric, n_neighbors=n_neighbors, clf=neighbor_clf)
+        
+    def index(self, id_vals):
+        &#34;&#34;&#34;
+        Returns the index(es) of the given IDs.
+        &#34;&#34;&#34;
+        if isinstance(id_vals, (list, np.ndarray, set)):
+            return [self._id_index[int(id_val)] for id_val in id_vals]
+        else:
+            return self._id_index[int(id_vals)]
+
+    def __getitem__(self, ids):
+        &#34;&#34;&#34;ids can be a single ID or a sequence of IDs&#34;&#34;&#34;
+        if ids is None: return self.values
+        return self.values[self.index(ids)]
+    
+    def __eq__(self, other):
+        if isinstance(other, NeighborSet): return other == self
+        if not isinstance(other, Neighbors): return False
+        return np.allclose(self.ids, other.ids) and np.allclose(self.values, other.values)
+    
+    def __ne__(self, other):
+        return not (self == other)
+        
+    def __len__(self):
+        return len(self.values)
+    
+    def calculate_neighbors(self, pos, return_distance=True, n_neighbors=None):
+        if self.clf is None:
+            raise ValueError(
+                (&#34;Cannot compute neighbors because the Neighbors was not &#34;
+                 &#34;initialized with a neighbor classifier - was it deserialized &#34;
+                 &#34;from JSON without saving the original coordinates or &#34;
+                 &#34;concatenated to another Neighbors?&#34;))
+        neigh_dists, neigh_indexes = self.clf.kneighbors(pos, n_neighbors=n_neighbors or self.n_neighbors)
+        if return_distance:
+            return neigh_dists, neigh_indexes
+        return neigh_indexes
+    
+    def concat(self, other):
+        &#34;&#34;&#34;Concatenates the two Neighbors together, discarding the original 
+        classifier.&#34;&#34;&#34;
+        assert not (set(self.ids.tolist()) &amp; set(other.ids.tolist())), &#34;Cannot concatenate Neighbors objects with overlapping ID values&#34;
+        assert self.metric == other.metric, &#34;Cannot concatenate Neighbors objects with different metrics&#34;
+        return Neighbors(
+            np.concatenate(self.values, other.values),
+            ids=np.concatenate(self.ids, other.ids),
+            metric=self.metric,
+            n_neighbors = max(self.n_neighbors, other.n_neighbors)
+        )
+    
+    def to_json(self, compressed=True, num_neighbors=None):
+        &#34;&#34;&#34;Serializes the neighbors to a JSON object.&#34;&#34;&#34;
+        result = {}
+        result[&#34;metric&#34;] = self.metric
+        result[&#34;n_neighbors&#34;] = self.n_neighbors
+        
+        neighbors = self.values
+        if num_neighbors is not None:
+            neighbors = neighbors[:,:min(num_neighbors, neighbors.shape[1])]
+            
+        if compressed:
+            result[&#34;_format&#34;] = &#34;compressed&#34;
+            # Specify the type name that will be used to encode the point IDs.
+            # This is important because the highlight array takes up the bulk
+            # of the space when transferring to file/widget.
+            dtype, type_name = choose_integer_type(self.ids)
+            result[&#34;_idtype&#34;] = type_name
+            result[&#34;_length&#34;] = len(self)
+            result[&#34;ids&#34;] = encode_numerical_array(self.ids, dtype)
+            
+            result[&#34;neighbors&#34;] = encode_numerical_array(neighbors.flatten(),
+                                                            astype=dtype,
+                                                            interval=neighbors.shape[1])
+        else:
+            result[&#34;_format&#34;] = &#34;expanded&#34;
+            result[&#34;neighbors&#34;] = {}
+            indexes = self.index(self.ids)
+            for id_val, index in zip(self.ids, indexes):
+                result[&#34;neighbors&#34;][id_val] = neighbors[index].tolist()
+        return result
+    
+    @classmethod
+    def from_json(cls, data):
+        if data.get(&#34;_format&#34;, &#34;expanded&#34;) == &#34;compressed&#34;:
+            dtype = np.dtype(data[&#34;_idtype&#34;])
+            ids = decode_numerical_array(data[&#34;ids&#34;], dtype)
+            neighbors = decode_numerical_array(data[&#34;neighbors&#34;], dtype)
+        else:
+            neighbor_dict = data[&#34;neighbors&#34;]
+            try:
+                ids = [int(id_val) for id_val in list(neighbor_dict.keys())]
+                neighbor_dict = {int(k): v for k, v in neighbor_dict.items()}
+            except:
+                ids = list(neighbor_dict.keys())
+            ids = sorted(ids)
+            neighbors = np.array([neighbor_dict[id_val] for id_val in ids])
+                
+        return cls(neighbors, ids=ids, metric=data[&#34;metric&#34;], n_neighbors=data[&#34;n_neighbors&#34;])
+
+class NeighborSet:
+    &#34;&#34;&#34;
+    An object representing a serializable collection of Neighbors objects.
+    &#34;&#34;&#34;
+    def __init__(self, neighbor_objects):
+        super().__init__()
+        self._neighbors = neighbor_objects
+        
+    def __getitem__(self, slice):
+        return self._neighbors[slice]
+    
+    def __setitem__(self, slice, val):
+        self._neighbors[slice] = val
+        
+    def __len__(self):
+        return len(self._neighbors)
+    
+    def __iter__(self):
+        return iter(self._neighbors)
+    
+    def __eq__(self, other):
+        if isinstance(other, NeighborSet):
+            return len(other) == len(self) and all(n1 == n2 for n1, n2 in zip(self, other))
+        elif isinstance(other, Neighbors):
+            return all(n1 == other for n1 in self)
+        return False
+    
+    def __ne__(self, other):
+        return not (self == other)
+    
+    def to_json(self, compressed=True, num_neighbors=None):
+        &#34;&#34;&#34;
+        Serializes the list of Neighbors objects to JSON.
+        &#34;&#34;&#34;
+        return [n.to_json(compressed=compressed, num_neighbors=num_neighbors)
+                for n in self]
+        
+    @classmethod
+    def from_json(cls, data):
+        return [Neighbors.from_json(d) for d in data]
+    
+    def identical(self):
+        &#34;&#34;&#34;Returns True if all Neighbors objects within this NeighborSet are equal to each other.&#34;&#34;&#34;
+        if len(self) == 0: return True
+        return all(n == self[0] for n in self)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="emblaze.neighbors.NeighborSet"><code class="flex name class">
+<span>class <span class="ident">NeighborSet</span></span>
+<span>(</span><span>neighbor_objects)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An object representing a serializable collection of Neighbors objects.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NeighborSet:
+    &#34;&#34;&#34;
+    An object representing a serializable collection of Neighbors objects.
+    &#34;&#34;&#34;
+    def __init__(self, neighbor_objects):
+        super().__init__()
+        self._neighbors = neighbor_objects
+        
+    def __getitem__(self, slice):
+        return self._neighbors[slice]
+    
+    def __setitem__(self, slice, val):
+        self._neighbors[slice] = val
+        
+    def __len__(self):
+        return len(self._neighbors)
+    
+    def __iter__(self):
+        return iter(self._neighbors)
+    
+    def __eq__(self, other):
+        if isinstance(other, NeighborSet):
+            return len(other) == len(self) and all(n1 == n2 for n1, n2 in zip(self, other))
+        elif isinstance(other, Neighbors):
+            return all(n1 == other for n1 in self)
+        return False
+    
+    def __ne__(self, other):
+        return not (self == other)
+    
+    def to_json(self, compressed=True, num_neighbors=None):
+        &#34;&#34;&#34;
+        Serializes the list of Neighbors objects to JSON.
+        &#34;&#34;&#34;
+        return [n.to_json(compressed=compressed, num_neighbors=num_neighbors)
+                for n in self]
+        
+    @classmethod
+    def from_json(cls, data):
+        return [Neighbors.from_json(d) for d in data]
+    
+    def identical(self):
+        &#34;&#34;&#34;Returns True if all Neighbors objects within this NeighborSet are equal to each other.&#34;&#34;&#34;
+        if len(self) == 0: return True
+        return all(n == self[0] for n in self)</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="emblaze.neighbors.NeighborSet.from_json"><code class="name flex">
+<span>def <span class="ident">from_json</span></span>(<span>data)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_json(cls, data):
+    return [Neighbors.from_json(d) for d in data]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="emblaze.neighbors.NeighborSet.identical"><code class="name flex">
+<span>def <span class="ident">identical</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns True if all Neighbors objects within this NeighborSet are equal to each other.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def identical(self):
+    &#34;&#34;&#34;Returns True if all Neighbors objects within this NeighborSet are equal to each other.&#34;&#34;&#34;
+    if len(self) == 0: return True
+    return all(n == self[0] for n in self)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.neighbors.NeighborSet.to_json"><code class="name flex">
+<span>def <span class="ident">to_json</span></span>(<span>self, compressed=True, num_neighbors=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serializes the list of Neighbors objects to JSON.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_json(self, compressed=True, num_neighbors=None):
+    &#34;&#34;&#34;
+    Serializes the list of Neighbors objects to JSON.
+    &#34;&#34;&#34;
+    return [n.to_json(compressed=compressed, num_neighbors=num_neighbors)
+            for n in self]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="emblaze.neighbors.Neighbors"><code class="flex name class">
+<span>class <span class="ident">Neighbors</span></span>
+<span>(</span><span>values, ids=None, metric='euclidean', n_neighbors=100, clf=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An object representing a serializable set of nearest neighbors within an
+embedding. The <code><a title="emblaze.neighbors.Neighbors" href="#emblaze.neighbors.Neighbors">Neighbors</a></code> object simply stores a matrix of integer IDs, where rows
+correspond to points in the embedding and columns are IDs of neighbors in
+order of proximity to each point. These neighbors can be accessed through the
+<code>values</code> property.</p>
+<p>This constructor should typically not be used - use <a href="#emblaze.neighbors.Neighbors.compute"><code>Neighbors.compute</code></a> instead.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>values</code></strong></dt>
+<dd>Matrix of n x D high-dimensional positions</dd>
+<dt><strong><code>ids</code></strong></dt>
+<dd>If supplied, a list of IDs for the points in the matrix</dd>
+<dt><strong><code>metric</code></strong></dt>
+<dd>Distance metric to use to compute neighbors (can be any supported
+metric for <code>sklearn.neighbors.NearestNeighbors</code>)</dd>
+<dt><strong><code>n_neighbors</code></strong></dt>
+<dd>Number of neighbors to compute and save</dd>
+<dt><strong><code>clf</code></strong></dt>
+<dd>The <code>NearestNeighbors</code> object (only used when loading a <code><a title="emblaze.neighbors.Neighbors" href="#emblaze.neighbors.Neighbors">Neighbors</a></code>
+object from file)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Neighbors:
+    &#34;&#34;&#34;
+    An object representing a serializable set of nearest neighbors within an
+    embedding. The `Neighbors` object simply stores a matrix of integer IDs, where rows
+    correspond to points in the embedding and columns are IDs of neighbors in
+    order of proximity to each point. These neighbors can be accessed through the
+    `values` property.
+    &#34;&#34;&#34;
+    def __init__(self, values, ids=None, metric=&#39;euclidean&#39;, n_neighbors=100, clf=None):
+        &#34;&#34;&#34;
+        This constructor should typically not be used - use [`Neighbors.compute`](#emblaze.neighbors.Neighbors.compute) instead.
+        
+        Args:
+            values: Matrix of n x D high-dimensional positions
+            ids: If supplied, a list of IDs for the points in the matrix
+            metric: Distance metric to use to compute neighbors (can be any supported
+                metric for `sklearn.neighbors.NearestNeighbors`)
+            n_neighbors: Number of neighbors to compute and save
+            clf: The `NearestNeighbors` object (only used when loading a `Neighbors`
+                object from file)
+        &#34;&#34;&#34;
+        super().__init__()
+        self.values = values
+        self.ids = ids
+        self._id_index = {id: i for i, id in enumerate(self.ids)}
+        self.metric = metric
+        self.n_neighbors = n_neighbors
+        self.clf = clf
+    
+    @classmethod
+    def compute(cls, pos, ids=None, metric=&#39;euclidean&#39;, n_neighbors=100):
+        &#34;&#34;&#34;
+        Compute a nearest-neighbor set using a given metric.
+        
+        Args:
+            pos: Matrix of n x D high-dimensional positions
+            ids: If supplied, a list of IDs for the points in the matrix
+            metric: Distance metric to use to compute neighbors (can be any supported
+                metric for `sklearn.neighbors.NearestNeighbors`)
+            n_neighbors: Number of neighbors to compute and save
+            
+        Returns:
+            An initialized `Neighbors` object containing computed neighbors.
+        &#34;&#34;&#34;
+        ids = ids if ids is not None else np.arange(len(pos))
+        neighbor_clf = NearestNeighbors(metric=metric,
+                                        n_neighbors=n_neighbors + 1).fit(pos)
+        _, neigh_indexes = neighbor_clf.kneighbors(pos)
+        
+        return cls(ids[neigh_indexes[:,1:]], ids=ids, metric=metric, n_neighbors=n_neighbors, clf=neighbor_clf)
+        
+    def index(self, id_vals):
+        &#34;&#34;&#34;
+        Returns the index(es) of the given IDs.
+        &#34;&#34;&#34;
+        if isinstance(id_vals, (list, np.ndarray, set)):
+            return [self._id_index[int(id_val)] for id_val in id_vals]
+        else:
+            return self._id_index[int(id_vals)]
+
+    def __getitem__(self, ids):
+        &#34;&#34;&#34;ids can be a single ID or a sequence of IDs&#34;&#34;&#34;
+        if ids is None: return self.values
+        return self.values[self.index(ids)]
+    
+    def __eq__(self, other):
+        if isinstance(other, NeighborSet): return other == self
+        if not isinstance(other, Neighbors): return False
+        return np.allclose(self.ids, other.ids) and np.allclose(self.values, other.values)
+    
+    def __ne__(self, other):
+        return not (self == other)
+        
+    def __len__(self):
+        return len(self.values)
+    
+    def calculate_neighbors(self, pos, return_distance=True, n_neighbors=None):
+        if self.clf is None:
+            raise ValueError(
+                (&#34;Cannot compute neighbors because the Neighbors was not &#34;
+                 &#34;initialized with a neighbor classifier - was it deserialized &#34;
+                 &#34;from JSON without saving the original coordinates or &#34;
+                 &#34;concatenated to another Neighbors?&#34;))
+        neigh_dists, neigh_indexes = self.clf.kneighbors(pos, n_neighbors=n_neighbors or self.n_neighbors)
+        if return_distance:
+            return neigh_dists, neigh_indexes
+        return neigh_indexes
+    
+    def concat(self, other):
+        &#34;&#34;&#34;Concatenates the two Neighbors together, discarding the original 
+        classifier.&#34;&#34;&#34;
+        assert not (set(self.ids.tolist()) &amp; set(other.ids.tolist())), &#34;Cannot concatenate Neighbors objects with overlapping ID values&#34;
+        assert self.metric == other.metric, &#34;Cannot concatenate Neighbors objects with different metrics&#34;
+        return Neighbors(
+            np.concatenate(self.values, other.values),
+            ids=np.concatenate(self.ids, other.ids),
+            metric=self.metric,
+            n_neighbors = max(self.n_neighbors, other.n_neighbors)
+        )
+    
+    def to_json(self, compressed=True, num_neighbors=None):
+        &#34;&#34;&#34;Serializes the neighbors to a JSON object.&#34;&#34;&#34;
+        result = {}
+        result[&#34;metric&#34;] = self.metric
+        result[&#34;n_neighbors&#34;] = self.n_neighbors
+        
+        neighbors = self.values
+        if num_neighbors is not None:
+            neighbors = neighbors[:,:min(num_neighbors, neighbors.shape[1])]
+            
+        if compressed:
+            result[&#34;_format&#34;] = &#34;compressed&#34;
+            # Specify the type name that will be used to encode the point IDs.
+            # This is important because the highlight array takes up the bulk
+            # of the space when transferring to file/widget.
+            dtype, type_name = choose_integer_type(self.ids)
+            result[&#34;_idtype&#34;] = type_name
+            result[&#34;_length&#34;] = len(self)
+            result[&#34;ids&#34;] = encode_numerical_array(self.ids, dtype)
+            
+            result[&#34;neighbors&#34;] = encode_numerical_array(neighbors.flatten(),
+                                                            astype=dtype,
+                                                            interval=neighbors.shape[1])
+        else:
+            result[&#34;_format&#34;] = &#34;expanded&#34;
+            result[&#34;neighbors&#34;] = {}
+            indexes = self.index(self.ids)
+            for id_val, index in zip(self.ids, indexes):
+                result[&#34;neighbors&#34;][id_val] = neighbors[index].tolist()
+        return result
+    
+    @classmethod
+    def from_json(cls, data):
+        if data.get(&#34;_format&#34;, &#34;expanded&#34;) == &#34;compressed&#34;:
+            dtype = np.dtype(data[&#34;_idtype&#34;])
+            ids = decode_numerical_array(data[&#34;ids&#34;], dtype)
+            neighbors = decode_numerical_array(data[&#34;neighbors&#34;], dtype)
+        else:
+            neighbor_dict = data[&#34;neighbors&#34;]
+            try:
+                ids = [int(id_val) for id_val in list(neighbor_dict.keys())]
+                neighbor_dict = {int(k): v for k, v in neighbor_dict.items()}
+            except:
+                ids = list(neighbor_dict.keys())
+            ids = sorted(ids)
+            neighbors = np.array([neighbor_dict[id_val] for id_val in ids])
+                
+        return cls(neighbors, ids=ids, metric=data[&#34;metric&#34;], n_neighbors=data[&#34;n_neighbors&#34;])</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="emblaze.neighbors.Neighbors.compute"><code class="name flex">
+<span>def <span class="ident">compute</span></span>(<span>pos, ids=None, metric='euclidean', n_neighbors=100)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute a nearest-neighbor set using a given metric.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pos</code></strong></dt>
+<dd>Matrix of n x D high-dimensional positions</dd>
+<dt><strong><code>ids</code></strong></dt>
+<dd>If supplied, a list of IDs for the points in the matrix</dd>
+<dt><strong><code>metric</code></strong></dt>
+<dd>Distance metric to use to compute neighbors (can be any supported
+metric for <code>sklearn.neighbors.NearestNeighbors</code>)</dd>
+<dt><strong><code>n_neighbors</code></strong></dt>
+<dd>Number of neighbors to compute and save</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>An initialized <code><a title="emblaze.neighbors.Neighbors" href="#emblaze.neighbors.Neighbors">Neighbors</a></code> object containing computed neighbors.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def compute(cls, pos, ids=None, metric=&#39;euclidean&#39;, n_neighbors=100):
+    &#34;&#34;&#34;
+    Compute a nearest-neighbor set using a given metric.
+    
+    Args:
+        pos: Matrix of n x D high-dimensional positions
+        ids: If supplied, a list of IDs for the points in the matrix
+        metric: Distance metric to use to compute neighbors (can be any supported
+            metric for `sklearn.neighbors.NearestNeighbors`)
+        n_neighbors: Number of neighbors to compute and save
+        
+    Returns:
+        An initialized `Neighbors` object containing computed neighbors.
+    &#34;&#34;&#34;
+    ids = ids if ids is not None else np.arange(len(pos))
+    neighbor_clf = NearestNeighbors(metric=metric,
+                                    n_neighbors=n_neighbors + 1).fit(pos)
+    _, neigh_indexes = neighbor_clf.kneighbors(pos)
+    
+    return cls(ids[neigh_indexes[:,1:]], ids=ids, metric=metric, n_neighbors=n_neighbors, clf=neighbor_clf)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.neighbors.Neighbors.from_json"><code class="name flex">
+<span>def <span class="ident">from_json</span></span>(<span>data)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_json(cls, data):
+    if data.get(&#34;_format&#34;, &#34;expanded&#34;) == &#34;compressed&#34;:
+        dtype = np.dtype(data[&#34;_idtype&#34;])
+        ids = decode_numerical_array(data[&#34;ids&#34;], dtype)
+        neighbors = decode_numerical_array(data[&#34;neighbors&#34;], dtype)
+    else:
+        neighbor_dict = data[&#34;neighbors&#34;]
+        try:
+            ids = [int(id_val) for id_val in list(neighbor_dict.keys())]
+            neighbor_dict = {int(k): v for k, v in neighbor_dict.items()}
+        except:
+            ids = list(neighbor_dict.keys())
+        ids = sorted(ids)
+        neighbors = np.array([neighbor_dict[id_val] for id_val in ids])
+            
+    return cls(neighbors, ids=ids, metric=data[&#34;metric&#34;], n_neighbors=data[&#34;n_neighbors&#34;])</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="emblaze.neighbors.Neighbors.calculate_neighbors"><code class="name flex">
+<span>def <span class="ident">calculate_neighbors</span></span>(<span>self, pos, return_distance=True, n_neighbors=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_neighbors(self, pos, return_distance=True, n_neighbors=None):
+    if self.clf is None:
+        raise ValueError(
+            (&#34;Cannot compute neighbors because the Neighbors was not &#34;
+             &#34;initialized with a neighbor classifier - was it deserialized &#34;
+             &#34;from JSON without saving the original coordinates or &#34;
+             &#34;concatenated to another Neighbors?&#34;))
+    neigh_dists, neigh_indexes = self.clf.kneighbors(pos, n_neighbors=n_neighbors or self.n_neighbors)
+    if return_distance:
+        return neigh_dists, neigh_indexes
+    return neigh_indexes</code></pre>
+</details>
+</dd>
+<dt id="emblaze.neighbors.Neighbors.concat"><code class="name flex">
+<span>def <span class="ident">concat</span></span>(<span>self, other)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concatenates the two Neighbors together, discarding the original
+classifier.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def concat(self, other):
+    &#34;&#34;&#34;Concatenates the two Neighbors together, discarding the original 
+    classifier.&#34;&#34;&#34;
+    assert not (set(self.ids.tolist()) &amp; set(other.ids.tolist())), &#34;Cannot concatenate Neighbors objects with overlapping ID values&#34;
+    assert self.metric == other.metric, &#34;Cannot concatenate Neighbors objects with different metrics&#34;
+    return Neighbors(
+        np.concatenate(self.values, other.values),
+        ids=np.concatenate(self.ids, other.ids),
+        metric=self.metric,
+        n_neighbors = max(self.n_neighbors, other.n_neighbors)
+    )</code></pre>
+</details>
+</dd>
+<dt id="emblaze.neighbors.Neighbors.index"><code class="name flex">
+<span>def <span class="ident">index</span></span>(<span>self, id_vals)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the index(es) of the given IDs.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def index(self, id_vals):
+    &#34;&#34;&#34;
+    Returns the index(es) of the given IDs.
+    &#34;&#34;&#34;
+    if isinstance(id_vals, (list, np.ndarray, set)):
+        return [self._id_index[int(id_val)] for id_val in id_vals]
+    else:
+        return self._id_index[int(id_vals)]</code></pre>
+</details>
+</dd>
+<dt id="emblaze.neighbors.Neighbors.to_json"><code class="name flex">
+<span>def <span class="ident">to_json</span></span>(<span>self, compressed=True, num_neighbors=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serializes the neighbors to a JSON object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_json(self, compressed=True, num_neighbors=None):
+    &#34;&#34;&#34;Serializes the neighbors to a JSON object.&#34;&#34;&#34;
+    result = {}
+    result[&#34;metric&#34;] = self.metric
+    result[&#34;n_neighbors&#34;] = self.n_neighbors
+    
+    neighbors = self.values
+    if num_neighbors is not None:
+        neighbors = neighbors[:,:min(num_neighbors, neighbors.shape[1])]
+        
+    if compressed:
+        result[&#34;_format&#34;] = &#34;compressed&#34;
+        # Specify the type name that will be used to encode the point IDs.
+        # This is important because the highlight array takes up the bulk
+        # of the space when transferring to file/widget.
+        dtype, type_name = choose_integer_type(self.ids)
+        result[&#34;_idtype&#34;] = type_name
+        result[&#34;_length&#34;] = len(self)
+        result[&#34;ids&#34;] = encode_numerical_array(self.ids, dtype)
+        
+        result[&#34;neighbors&#34;] = encode_numerical_array(neighbors.flatten(),
+                                                        astype=dtype,
+                                                        interval=neighbors.shape[1])
+    else:
+        result[&#34;_format&#34;] = &#34;expanded&#34;
+        result[&#34;neighbors&#34;] = {}
+        indexes = self.index(self.ids)
+        for id_val, index in zip(self.ids, indexes):
+            result[&#34;neighbors&#34;][id_val] = neighbors[index].tolist()
+    return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="emblaze" href="index.html">emblaze</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="emblaze.neighbors.NeighborSet" href="#emblaze.neighbors.NeighborSet">NeighborSet</a></code></h4>
+<ul class="">
+<li><code><a title="emblaze.neighbors.NeighborSet.from_json" href="#emblaze.neighbors.NeighborSet.from_json">from_json</a></code></li>
+<li><code><a title="emblaze.neighbors.NeighborSet.identical" href="#emblaze.neighbors.NeighborSet.identical">identical</a></code></li>
+<li><code><a title="emblaze.neighbors.NeighborSet.to_json" href="#emblaze.neighbors.NeighborSet.to_json">to_json</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="emblaze.neighbors.Neighbors" href="#emblaze.neighbors.Neighbors">Neighbors</a></code></h4>
+<ul class="two-column">
+<li><code><a title="emblaze.neighbors.Neighbors.calculate_neighbors" href="#emblaze.neighbors.Neighbors.calculate_neighbors">calculate_neighbors</a></code></li>
+<li><code><a title="emblaze.neighbors.Neighbors.compute" href="#emblaze.neighbors.Neighbors.compute">compute</a></code></li>
+<li><code><a title="emblaze.neighbors.Neighbors.concat" href="#emblaze.neighbors.Neighbors.concat">concat</a></code></li>
+<li><code><a title="emblaze.neighbors.Neighbors.from_json" href="#emblaze.neighbors.Neighbors.from_json">from_json</a></code></li>
+<li><code><a title="emblaze.neighbors.Neighbors.index" href="#emblaze.neighbors.Neighbors.index">index</a></code></li>
+<li><code><a title="emblaze.neighbors.Neighbors.to_json" href="#emblaze.neighbors.Neighbors.to_json">to_json</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

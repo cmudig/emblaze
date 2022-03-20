@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>emblaze.utils API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico"/>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>emblaze.utils</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import sys
+import numpy as np
+from affine import Affine
+from numba import jit
+import json
+import datetime
+import platform
+import os
+import base64
+
+class Field:
+    &#34;&#34;&#34;Standardized field names for embeddings and projections. These data can
+    all be versioned within a ColumnarData object.&#34;&#34;&#34;
+    POSITION = &#34;position&#34;
+    COLOR = &#34;color&#34;
+    RADIUS = &#34;r&#34;
+    ALPHA = &#34;alpha&#34;
+    
+    # Thumbnail fields
+    NAME = &#34;name&#34;
+    DESCRIPTION = &#34;description&#34;
+    
+class ProjectionTechnique:
+    &#34;&#34;&#34;Names of projection techniques.&#34;&#34;&#34;
+    UMAP = &#34;umap&#34;
+    TSNE = &#34;tsne&#34;
+    ALIGNED_UMAP = &#34;aligned-umap&#34;
+    PCA = &#34;pca&#34;
+    
+class DataType:
+    &#34;&#34;&#34;Types of data, e.g. categorical vs continuous.&#34;&#34;&#34;
+    CATEGORICAL = &#34;categorical&#34;
+    CONTINUOUS = &#34;continuous&#34;
+
+class PreviewMode:
+    &#34;&#34;&#34;Ways of calculating preview lines.&#34;&#34;&#34;
+    PROJECTION_SIMILARITY = &#34;projectionNeighborSimilarity&#34;
+    NEIGHBOR_SIMILARITY = &#34;neighborSimilarity&#34;
+    
+class SidebarPane:
+    &#34;&#34;&#34;Indexes of sidebar panes in the widget.&#34;&#34;&#34;
+    CURRENT = 1
+    SAVED = 2
+    RECENT = 3
+    SUGGESTED = 4
+
+FLIP_FACTORS = [
+    np.array([1, 1, 1]),
+    np.array([-1, 1, 1]),
+    np.array([1, -1, 1])    
+]
+
+def projection_standardizer(emb):
+    &#34;&#34;&#34;Returns an affine transformation to translate an embedding to the centroid
+    of the given set of points.&#34;&#34;&#34;
+    return Affine.translation(*(-emb.mean(axis=0)[:2]))
+
+def affine_to_matrix(t):
+    &#34;&#34;&#34;
+    Returns a 3x3 matrix representing the transformation matrix.
+    &#34;&#34;&#34;
+    return np.array([
+        [t.a, t.b, t.c],
+        [t.d, t.e, t.f],
+        [t.g, t.h, t.i]
+    ])
+    
+def matrix_to_affine(mat):
+    &#34;&#34;&#34;
+    Returns an Affine transformation object from the given 3x3 matrix.
+    &#34;&#34;&#34;
+    return Affine(*(mat.flatten()[:6]))
+
+def affine_transform(transform, points):
+    &#34;&#34;&#34;
+    Transforms a set of N x 2 points using the given Affine object.
+    &#34;&#34;&#34;
+    reshaped_points = np.vstack([points.T, np.ones((1, points.shape[0]))])
+    transformed = np.dot(affine_to_matrix(transform), reshaped_points)
+    return transformed.T[:,:2] # pylint: disable=unsubscriptable-object
+
+def standardize_json(o, round_digits=4):
+    &#34;&#34;&#34;
+    Produces a JSON-compliant object by replacing numpy types with system types
+    and rounding floats to save space.
+    &#34;&#34;&#34;
+    if isinstance(o, (float, np.float32, np.float64)): return round(float(o), round_digits)
+    if isinstance(o, (np.int64, np.int32, np.uint8)): return int(o)
+    if isinstance(o, dict): return {standardize_json(k, round_digits): standardize_json(v, round_digits) for k, v in o.items()}
+    if isinstance(o, (list, tuple)): return [standardize_json(x, round_digits) for x in o]
+    return o
+
+@jit(nopython=True)
+def inverse_intersection(seqs1, seqs2, mask_ids, outer):
+    &#34;&#34;&#34;
+    Computes the inverse intersection size of the two lists of sets.
+    
+    Args:
+        seqs1: A list of iterables
+        seqs2: Another list of iterables - must be the same length as seqs1
+        mask_ids: Iterable containing objects that should be EXCLUDED if outer
+            is True, and INCLUDED if outer is False
+        outer: Determines the behavior of mask_ids
+        
+    Returns:
+        A numpy array of inverse intersection sizes between each element in
+        seqs1 and seqs2.
+    &#34;&#34;&#34;
+    distances = np.zeros(len(seqs1))
+    mask_ids = set(mask_ids)
+    for i in range(len(seqs1)):
+        set1 = set([n for n in seqs1[i] if (n in mask_ids) != outer])
+        set2 = set([n for n in seqs2[i] if (n in mask_ids) != outer])
+        num_intersection = len(set1 &amp; set2)
+        if len(set1) or len(set2):
+            distances[i] = 1 / (1 + num_intersection)
+    return distances
+
+class LoggingHelper:
+    &#34;&#34;&#34;
+    Writes and/or updates a JSON file with interaction information.
+    &#34;&#34;&#34;
+    def __init__(self, filepath, addl_info=None):
+        super().__init__()
+        self.filepath = filepath
+        
+        if not os.path.exists(self.filepath):
+            current_data = {
+                &#34;timestamp&#34;: str(datetime.datetime.now()),
+                &#34;platform&#34;: platform.platform(),
+                &#34;version&#34;: sys.version,
+                &#34;logs&#34;: []
+            }
+            if addl_info is not None:
+                current_data.update(addl_info)
+            with open(self.filepath, &#34;w&#34;) as file:
+                json.dump(current_data, file)
+
+        
+    def add_logs(self, entries):
+        &#34;&#34;&#34;
+        Adds a list of logging entries to the log file.
+        &#34;&#34;&#34;
+        with open(self.filepath, &#34;r&#34;) as file:
+            current_data = json.load(file)
+                
+        current_data[&#34;logs&#34;] += entries
+        
+        with open(self.filepath, &#34;w&#34;) as file:
+            json.dump(current_data, file)
+            
+def choose_integer_type(values):
+    &#34;&#34;&#34;
+    Chooses the best integer type (i.e. np.(u)int(8|16|32)) for the given set
+    of values. Returns the dtype and its name.
+    &#34;&#34;&#34;
+    min_val = values.min()
+    max_val = values.max()
+    rng = max_val - min_val
+    if min_val &lt; 0:
+        if rng &gt; 2 ** 32 - 1:
+            return np.int64, &#34;i8&#34;
+        elif rng &gt; 2 ** 16 - 1:
+            return np.int32, &#34;i4&#34;
+        elif rng &gt; 2 ** 8 - 1:
+            return np.int16, &#34;i2&#34;
+        return np.int8, &#34;i1&#34;
+    elif rng &gt; 2 ** 32 - 1:
+        return np.uint64, &#34;u8&#34;
+    elif rng &gt; 2 ** 16 - 1:
+        return np.uint32, &#34;u4&#34;
+    elif rng &gt; 2 ** 8 - 1:
+        return np.uint16, &#34;u2&#34;
+    return np.uint8, &#34;u1&#34;
+    
+def _detect_numerical_sequence(arr):
+    &#34;&#34;&#34;
+    Detects a numerical sequence to compress large arrays of integer IDs when
+    they are regularly spaced. If a sequence is detected, returns the start, end,
+    and step such that using np.arange() with these three arguments yields the
+    appropriate result. If no sequence is detected, returns None.
+    &#34;&#34;&#34;
+    diffs = arr[1:] - arr[:-1]
+    if np.allclose(diffs, diffs[0]):
+        step = diffs[0]
+        return (arr[0], arr[-1] + step, step)
+    return None
+    
+def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None):
+    &#34;&#34;&#34;
+    Encodes the given numpy array into a base64 representation for fast transfer
+    to the widget frontend. The array will be encoded as a sequence of numbers
+    with type &#39;astype&#39;.
+    
+    If positions is not None, it should be a numpy array of positions at which the
+    array for each ID *ends*. For example, if there are ten IDs and ten numbers
+    in the array for each ID, the positions array would be [10, 20, ..., 90, 100].
+    
+    If interval is not None, it is passed into the result object directly (and
+    signifies the same as positions, but with a regularly spaced interval).
+    &#34;&#34;&#34;
+    # TODO support saving arrays as numerical sequence metadata
+    # sequence_info = _detect_numerical_sequence(arr)
+    # if sequence_info is not None:
+    #     result = { &#34;&#34;}
+    if not arr.flags[&#39;C_CONTIGUOUS&#39;]:
+        arr = arr.copy(order=&#39;C&#39;)
+    result = { &#34;values&#34;: base64.b64encode(arr.astype(astype)).decode(&#39;ascii&#39;) }
+    if positions is not None:
+        result[&#34;positions&#34;] = base64.b64encode(positions.astype(np.int32)).decode(&#39;ascii&#39;)
+    if interval is not None:
+        result[&#34;interval&#34;] = interval
+    return result
+
+def encode_object_array(arr):
+    &#34;&#34;&#34;
+    Encodes the given array as a base64 string of a JSON string.
+    &#34;&#34;&#34;
+    if isinstance(arr, np.ndarray):
+        arr = arr.tolist()
+        
+    return { &#34;values&#34;: base64.b64encode(json.dumps(standardize_json(arr)).encode(&#34;utf-8&#34;)).decode(&#39;ascii&#39;) }
+
+def decode_numerical_array(obj, astype=np.float32):
+    &#34;&#34;&#34;
+    Decodes the given compressed dict into an array of the given dtype. The 
+    dict should contain a &#39;values&#39; key (base64 string) and optionally a
+    &#39;positions&#39; key (base64 string to be turned into an int32 array, defining
+    the shape of a 2d matrix) or an &#39;interval&#39; key (integer defining the number
+    of columns in the 2d matrix).
+    &#34;&#34;&#34;
+    values = np.frombuffer(base64.decodebytes(obj[&#34;values&#34;].encode(&#39;ascii&#39;)), dtype=astype)
+    if &#34;positions&#34; in obj:
+        positions = np.frombuffer(base64.decodebytes(obj[&#34;positions&#34;].encode(&#39;ascii&#39;)), dtype=np.int32)
+        deltas = positions[1:] - positions[:-1]
+        assert np.allclose(deltas, deltas[0]), &#34;cannot currently decode numerical arrays with non-standard positions array&#34;
+        values = values.reshape(-1, deltas[0])
+    elif &#34;interval&#34; in obj:
+        values = values.reshape(-1, obj[&#34;interval&#34;])
+    return values
+
+def decode_object_array(obj):
+    &#34;&#34;&#34;
+    Decodes the given object&#39;s &#39;values&#39; key into a JSON object.
+    &#34;&#34;&#34;
+    return json.loads(base64.b64decode(obj[&#34;values&#34;].encode(&#39;ascii&#39;)))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="emblaze.utils.affine_to_matrix"><code class="name flex">
+<span>def <span class="ident">affine_to_matrix</span></span>(<span>t)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a 3x3 matrix representing the transformation matrix.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def affine_to_matrix(t):
+    &#34;&#34;&#34;
+    Returns a 3x3 matrix representing the transformation matrix.
+    &#34;&#34;&#34;
+    return np.array([
+        [t.a, t.b, t.c],
+        [t.d, t.e, t.f],
+        [t.g, t.h, t.i]
+    ])</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.affine_transform"><code class="name flex">
+<span>def <span class="ident">affine_transform</span></span>(<span>transform, points)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transforms a set of N x 2 points using the given Affine object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def affine_transform(transform, points):
+    &#34;&#34;&#34;
+    Transforms a set of N x 2 points using the given Affine object.
+    &#34;&#34;&#34;
+    reshaped_points = np.vstack([points.T, np.ones((1, points.shape[0]))])
+    transformed = np.dot(affine_to_matrix(transform), reshaped_points)
+    return transformed.T[:,:2] # pylint: disable=unsubscriptable-object</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.choose_integer_type"><code class="name flex">
+<span>def <span class="ident">choose_integer_type</span></span>(<span>values)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Chooses the best integer type (i.e. np.(u)int(8|16|32)) for the given set
+of values. Returns the dtype and its name.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def choose_integer_type(values):
+    &#34;&#34;&#34;
+    Chooses the best integer type (i.e. np.(u)int(8|16|32)) for the given set
+    of values. Returns the dtype and its name.
+    &#34;&#34;&#34;
+    min_val = values.min()
+    max_val = values.max()
+    rng = max_val - min_val
+    if min_val &lt; 0:
+        if rng &gt; 2 ** 32 - 1:
+            return np.int64, &#34;i8&#34;
+        elif rng &gt; 2 ** 16 - 1:
+            return np.int32, &#34;i4&#34;
+        elif rng &gt; 2 ** 8 - 1:
+            return np.int16, &#34;i2&#34;
+        return np.int8, &#34;i1&#34;
+    elif rng &gt; 2 ** 32 - 1:
+        return np.uint64, &#34;u8&#34;
+    elif rng &gt; 2 ** 16 - 1:
+        return np.uint32, &#34;u4&#34;
+    elif rng &gt; 2 ** 8 - 1:
+        return np.uint16, &#34;u2&#34;
+    return np.uint8, &#34;u1&#34;</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.decode_numerical_array"><code class="name flex">
+<span>def <span class="ident">decode_numerical_array</span></span>(<span>obj, astype=numpy.float32)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decodes the given compressed dict into an array of the given dtype. The
+dict should contain a 'values' key (base64 string) and optionally a
+'positions' key (base64 string to be turned into an int32 array, defining
+the shape of a 2d matrix) or an 'interval' key (integer defining the number
+of columns in the 2d matrix).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decode_numerical_array(obj, astype=np.float32):
+    &#34;&#34;&#34;
+    Decodes the given compressed dict into an array of the given dtype. The 
+    dict should contain a &#39;values&#39; key (base64 string) and optionally a
+    &#39;positions&#39; key (base64 string to be turned into an int32 array, defining
+    the shape of a 2d matrix) or an &#39;interval&#39; key (integer defining the number
+    of columns in the 2d matrix).
+    &#34;&#34;&#34;
+    values = np.frombuffer(base64.decodebytes(obj[&#34;values&#34;].encode(&#39;ascii&#39;)), dtype=astype)
+    if &#34;positions&#34; in obj:
+        positions = np.frombuffer(base64.decodebytes(obj[&#34;positions&#34;].encode(&#39;ascii&#39;)), dtype=np.int32)
+        deltas = positions[1:] - positions[:-1]
+        assert np.allclose(deltas, deltas[0]), &#34;cannot currently decode numerical arrays with non-standard positions array&#34;
+        values = values.reshape(-1, deltas[0])
+    elif &#34;interval&#34; in obj:
+        values = values.reshape(-1, obj[&#34;interval&#34;])
+    return values</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.decode_object_array"><code class="name flex">
+<span>def <span class="ident">decode_object_array</span></span>(<span>obj)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decodes the given object's 'values' key into a JSON object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decode_object_array(obj):
+    &#34;&#34;&#34;
+    Decodes the given object&#39;s &#39;values&#39; key into a JSON object.
+    &#34;&#34;&#34;
+    return json.loads(base64.b64decode(obj[&#34;values&#34;].encode(&#39;ascii&#39;)))</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.encode_numerical_array"><code class="name flex">
+<span>def <span class="ident">encode_numerical_array</span></span>(<span>arr, astype=numpy.float32, positions=None, interval=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Encodes the given numpy array into a base64 representation for fast transfer
+to the widget frontend. The array will be encoded as a sequence of numbers
+with type 'astype'.</p>
+<p>If positions is not None, it should be a numpy array of positions at which the
+array for each ID <em>ends</em>. For example, if there are ten IDs and ten numbers
+in the array for each ID, the positions array would be [10, 20, &hellip;, 90, 100].</p>
+<p>If interval is not None, it is passed into the result object directly (and
+signifies the same as positions, but with a regularly spaced interval).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encode_numerical_array(arr, astype=np.float32, positions=None, interval=None):
+    &#34;&#34;&#34;
+    Encodes the given numpy array into a base64 representation for fast transfer
+    to the widget frontend. The array will be encoded as a sequence of numbers
+    with type &#39;astype&#39;.
+    
+    If positions is not None, it should be a numpy array of positions at which the
+    array for each ID *ends*. For example, if there are ten IDs and ten numbers
+    in the array for each ID, the positions array would be [10, 20, ..., 90, 100].
+    
+    If interval is not None, it is passed into the result object directly (and
+    signifies the same as positions, but with a regularly spaced interval).
+    &#34;&#34;&#34;
+    # TODO support saving arrays as numerical sequence metadata
+    # sequence_info = _detect_numerical_sequence(arr)
+    # if sequence_info is not None:
+    #     result = { &#34;&#34;}
+    if not arr.flags[&#39;C_CONTIGUOUS&#39;]:
+        arr = arr.copy(order=&#39;C&#39;)
+    result = { &#34;values&#34;: base64.b64encode(arr.astype(astype)).decode(&#39;ascii&#39;) }
+    if positions is not None:
+        result[&#34;positions&#34;] = base64.b64encode(positions.astype(np.int32)).decode(&#39;ascii&#39;)
+    if interval is not None:
+        result[&#34;interval&#34;] = interval
+    return result</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.encode_object_array"><code class="name flex">
+<span>def <span class="ident">encode_object_array</span></span>(<span>arr)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Encodes the given array as a base64 string of a JSON string.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encode_object_array(arr):
+    &#34;&#34;&#34;
+    Encodes the given array as a base64 string of a JSON string.
+    &#34;&#34;&#34;
+    if isinstance(arr, np.ndarray):
+        arr = arr.tolist()
+        
+    return { &#34;values&#34;: base64.b64encode(json.dumps(standardize_json(arr)).encode(&#34;utf-8&#34;)).decode(&#39;ascii&#39;) }</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.inverse_intersection"><code class="name flex">
+<span>def <span class="ident">inverse_intersection</span></span>(<span>seqs1, seqs2, mask_ids, outer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes the inverse intersection size of the two lists of sets.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>seqs1</code></strong></dt>
+<dd>A list of iterables</dd>
+<dt><strong><code>seqs2</code></strong></dt>
+<dd>Another list of iterables - must be the same length as seqs1</dd>
+<dt><strong><code>mask_ids</code></strong></dt>
+<dd>Iterable containing objects that should be EXCLUDED if outer
+is True, and INCLUDED if outer is False</dd>
+<dt><strong><code>outer</code></strong></dt>
+<dd>Determines the behavior of mask_ids</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A numpy array of inverse intersection sizes between each element in
+seqs1 and seqs2.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@jit(nopython=True)
+def inverse_intersection(seqs1, seqs2, mask_ids, outer):
+    &#34;&#34;&#34;
+    Computes the inverse intersection size of the two lists of sets.
+    
+    Args:
+        seqs1: A list of iterables
+        seqs2: Another list of iterables - must be the same length as seqs1
+        mask_ids: Iterable containing objects that should be EXCLUDED if outer
+            is True, and INCLUDED if outer is False
+        outer: Determines the behavior of mask_ids
+        
+    Returns:
+        A numpy array of inverse intersection sizes between each element in
+        seqs1 and seqs2.
+    &#34;&#34;&#34;
+    distances = np.zeros(len(seqs1))
+    mask_ids = set(mask_ids)
+    for i in range(len(seqs1)):
+        set1 = set([n for n in seqs1[i] if (n in mask_ids) != outer])
+        set2 = set([n for n in seqs2[i] if (n in mask_ids) != outer])
+        num_intersection = len(set1 &amp; set2)
+        if len(set1) or len(set2):
+            distances[i] = 1 / (1 + num_intersection)
+    return distances</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.matrix_to_affine"><code class="name flex">
+<span>def <span class="ident">matrix_to_affine</span></span>(<span>mat)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an Affine transformation object from the given 3x3 matrix.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def matrix_to_affine(mat):
+    &#34;&#34;&#34;
+    Returns an Affine transformation object from the given 3x3 matrix.
+    &#34;&#34;&#34;
+    return Affine(*(mat.flatten()[:6]))</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.projection_standardizer"><code class="name flex">
+<span>def <span class="ident">projection_standardizer</span></span>(<span>emb)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an affine transformation to translate an embedding to the centroid
+of the given set of points.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def projection_standardizer(emb):
+    &#34;&#34;&#34;Returns an affine transformation to translate an embedding to the centroid
+    of the given set of points.&#34;&#34;&#34;
+    return Affine.translation(*(-emb.mean(axis=0)[:2]))</code></pre>
+</details>
+</dd>
+<dt id="emblaze.utils.standardize_json"><code class="name flex">
+<span>def <span class="ident">standardize_json</span></span>(<span>o, round_digits=4)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Produces a JSON-compliant object by replacing numpy types with system types
+and rounding floats to save space.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def standardize_json(o, round_digits=4):
+    &#34;&#34;&#34;
+    Produces a JSON-compliant object by replacing numpy types with system types
+    and rounding floats to save space.
+    &#34;&#34;&#34;
+    if isinstance(o, (float, np.float32, np.float64)): return round(float(o), round_digits)
+    if isinstance(o, (np.int64, np.int32, np.uint8)): return int(o)
+    if isinstance(o, dict): return {standardize_json(k, round_digits): standardize_json(v, round_digits) for k, v in o.items()}
+    if isinstance(o, (list, tuple)): return [standardize_json(x, round_digits) for x in o]
+    return o</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="emblaze.utils.DataType"><code class="flex name class">
+<span>class <span class="ident">DataType</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Types of data, e.g. categorical vs continuous.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataType:
+    &#34;&#34;&#34;Types of data, e.g. categorical vs continuous.&#34;&#34;&#34;
+    CATEGORICAL = &#34;categorical&#34;
+    CONTINUOUS = &#34;continuous&#34;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="emblaze.utils.DataType.CATEGORICAL"><code class="name">var <span class="ident">CATEGORICAL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.DataType.CONTINUOUS"><code class="name">var <span class="ident">CONTINUOUS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="emblaze.utils.Field"><code class="flex name class">
+<span>class <span class="ident">Field</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Standardized field names for embeddings and projections. These data can
+all be versioned within a ColumnarData object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Field:
+    &#34;&#34;&#34;Standardized field names for embeddings and projections. These data can
+    all be versioned within a ColumnarData object.&#34;&#34;&#34;
+    POSITION = &#34;position&#34;
+    COLOR = &#34;color&#34;
+    RADIUS = &#34;r&#34;
+    ALPHA = &#34;alpha&#34;
+    
+    # Thumbnail fields
+    NAME = &#34;name&#34;
+    DESCRIPTION = &#34;description&#34;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="emblaze.utils.Field.ALPHA"><code class="name">var <span class="ident">ALPHA</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.Field.COLOR"><code class="name">var <span class="ident">COLOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.Field.DESCRIPTION"><code class="name">var <span class="ident">DESCRIPTION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.Field.NAME"><code class="name">var <span class="ident">NAME</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.Field.POSITION"><code class="name">var <span class="ident">POSITION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.Field.RADIUS"><code class="name">var <span class="ident">RADIUS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="emblaze.utils.PreviewMode"><code class="flex name class">
+<span>class <span class="ident">PreviewMode</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ways of calculating preview lines.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PreviewMode:
+    &#34;&#34;&#34;Ways of calculating preview lines.&#34;&#34;&#34;
+    PROJECTION_SIMILARITY = &#34;projectionNeighborSimilarity&#34;
+    NEIGHBOR_SIMILARITY = &#34;neighborSimilarity&#34;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="emblaze.utils.PreviewMode.NEIGHBOR_SIMILARITY"><code class="name">var <span class="ident">NEIGHBOR_SIMILARITY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.PreviewMode.PROJECTION_SIMILARITY"><code class="name">var <span class="ident">PROJECTION_SIMILARITY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="emblaze.utils.ProjectionTechnique"><code class="flex name class">
+<span>class <span class="ident">ProjectionTechnique</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Names of projection techniques.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ProjectionTechnique:
+    &#34;&#34;&#34;Names of projection techniques.&#34;&#34;&#34;
+    UMAP = &#34;umap&#34;
+    TSNE = &#34;tsne&#34;
+    ALIGNED_UMAP = &#34;aligned-umap&#34;
+    PCA = &#34;pca&#34;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="emblaze.utils.ProjectionTechnique.ALIGNED_UMAP"><code class="name">var <span class="ident">ALIGNED_UMAP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.ProjectionTechnique.PCA"><code class="name">var <span class="ident">PCA</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.ProjectionTechnique.TSNE"><code class="name">var <span class="ident">TSNE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.ProjectionTechnique.UMAP"><code class="name">var <span class="ident">UMAP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="emblaze.utils.SidebarPane"><code class="flex name class">
+<span>class <span class="ident">SidebarPane</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indexes of sidebar panes in the widget.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SidebarPane:
+    &#34;&#34;&#34;Indexes of sidebar panes in the widget.&#34;&#34;&#34;
+    CURRENT = 1
+    SAVED = 2
+    RECENT = 3
+    SUGGESTED = 4</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="emblaze.utils.SidebarPane.CURRENT"><code class="name">var <span class="ident">CURRENT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.SidebarPane.RECENT"><code class="name">var <span class="ident">RECENT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.SidebarPane.SAVED"><code class="name">var <span class="ident">SAVED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="emblaze.utils.SidebarPane.SUGGESTED"><code class="name">var <span class="ident">SUGGESTED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="emblaze" href="index.html">emblaze</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="emblaze.utils.affine_to_matrix" href="#emblaze.utils.affine_to_matrix">affine_to_matrix</a></code></li>
+<li><code><a title="emblaze.utils.affine_transform" href="#emblaze.utils.affine_transform">affine_transform</a></code></li>
+<li><code><a title="emblaze.utils.choose_integer_type" href="#emblaze.utils.choose_integer_type">choose_integer_type</a></code></li>
+<li><code><a title="emblaze.utils.decode_numerical_array" href="#emblaze.utils.decode_numerical_array">decode_numerical_array</a></code></li>
+<li><code><a title="emblaze.utils.decode_object_array" href="#emblaze.utils.decode_object_array">decode_object_array</a></code></li>
+<li><code><a title="emblaze.utils.encode_numerical_array" href="#emblaze.utils.encode_numerical_array">encode_numerical_array</a></code></li>
+<li><code><a title="emblaze.utils.encode_object_array" href="#emblaze.utils.encode_object_array">encode_object_array</a></code></li>
+<li><code><a title="emblaze.utils.inverse_intersection" href="#emblaze.utils.inverse_intersection">inverse_intersection</a></code></li>
+<li><code><a title="emblaze.utils.matrix_to_affine" href="#emblaze.utils.matrix_to_affine">matrix_to_affine</a></code></li>
+<li><code><a title="emblaze.utils.projection_standardizer" href="#emblaze.utils.projection_standardizer">projection_standardizer</a></code></li>
+<li><code><a title="emblaze.utils.standardize_json" href="#emblaze.utils.standardize_json">standardize_json</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="emblaze.utils.DataType" href="#emblaze.utils.DataType">DataType</a></code></h4>
+<ul class="">
+<li><code><a title="emblaze.utils.DataType.CATEGORICAL" href="#emblaze.utils.DataType.CATEGORICAL">CATEGORICAL</a></code></li>
+<li><code><a title="emblaze.utils.DataType.CONTINUOUS" href="#emblaze.utils.DataType.CONTINUOUS">CONTINUOUS</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="emblaze.utils.Field" href="#emblaze.utils.Field">Field</a></code></h4>
+<ul class="two-column">
+<li><code><a title="emblaze.utils.Field.ALPHA" href="#emblaze.utils.Field.ALPHA">ALPHA</a></code></li>
+<li><code><a title="emblaze.utils.Field.COLOR" href="#emblaze.utils.Field.COLOR">COLOR</a></code></li>
+<li><code><a title="emblaze.utils.Field.DESCRIPTION" href="#emblaze.utils.Field.DESCRIPTION">DESCRIPTION</a></code></li>
+<li><code><a title="emblaze.utils.Field.NAME" href="#emblaze.utils.Field.NAME">NAME</a></code></li>
+<li><code><a title="emblaze.utils.Field.POSITION" href="#emblaze.utils.Field.POSITION">POSITION</a></code></li>
+<li><code><a title="emblaze.utils.Field.RADIUS" href="#emblaze.utils.Field.RADIUS">RADIUS</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="emblaze.utils.PreviewMode" href="#emblaze.utils.PreviewMode">PreviewMode</a></code></h4>
+<ul class="">
+<li><code><a title="emblaze.utils.PreviewMode.NEIGHBOR_SIMILARITY" href="#emblaze.utils.PreviewMode.NEIGHBOR_SIMILARITY">NEIGHBOR_SIMILARITY</a></code></li>
+<li><code><a title="emblaze.utils.PreviewMode.PROJECTION_SIMILARITY" href="#emblaze.utils.PreviewMode.PROJECTION_SIMILARITY">PROJECTION_SIMILARITY</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="emblaze.utils.ProjectionTechnique" href="#emblaze.utils.ProjectionTechnique">ProjectionTechnique</a></code></h4>
+<ul class="">
+<li><code><a title="emblaze.utils.ProjectionTechnique.ALIGNED_UMAP" href="#emblaze.utils.ProjectionTechnique.ALIGNED_UMAP">ALIGNED_UMAP</a></code></li>
+<li><code><a title="emblaze.utils.ProjectionTechnique.PCA" href="#emblaze.utils.ProjectionTechnique.PCA">PCA</a></code></li>
+<li><code><a title="emblaze.utils.ProjectionTechnique.TSNE" href="#emblaze.utils.ProjectionTechnique.TSNE">TSNE</a></code></li>
+<li><code><a title="emblaze.utils.ProjectionTechnique.UMAP" href="#emblaze.utils.ProjectionTechnique.UMAP">UMAP</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="emblaze.utils.SidebarPane" href="#emblaze.utils.SidebarPane">SidebarPane</a></code></h4>
+<ul class="">
+<li><code><a title="emblaze.utils.SidebarPane.CURRENT" href="#emblaze.utils.SidebarPane.CURRENT">CURRENT</a></code></li>
+<li><code><a title="emblaze.utils.SidebarPane.RECENT" href="#emblaze.utils.SidebarPane.RECENT">RECENT</a></code></li>
+<li><code><a title="emblaze.utils.SidebarPane.SAVED" href="#emblaze.utils.SidebarPane.SAVED">SAVED</a></code></li>
+<li><code><a title="emblaze.utils.SidebarPane.SUGGESTED" href="#emblaze.utils.SidebarPane.SUGGESTED">SUGGESTED</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

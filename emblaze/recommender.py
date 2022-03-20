@@ -1,3 +1,8 @@
+"""
+Defines a class to compute Suggested Selections, or clusters that exhibit
+consistent or noteworthy changes from one frame to another.
+"""
+
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from .utils import Field, inverse_intersection, standardize_json
@@ -140,22 +145,28 @@ class SelectionRecommender:
         Returns a list of clusters in sorted order of relevance that match the
         given filters.
         
-        ids_of_interest: A list of ID values. If there are sufficiently many clusters
-            containing at least one ID in this list, only they will be returned.
-            Otherwise, clusters containing IDs from the neighbor sets of those IDs
-            may be returned as well.
-        filter_ids: A list of IDs such that at least one point in every cluster
-            MUST be present in this list.
-        frame_idx: A base frame index to filter for. If None, clusters from any frame
-            may be returned.
-        preview_frame_idx: A preview frame index to filter for. frame_idx must be
-            provided if this is provided.
-        bounding_box: If provided, should be a tuple of four values: min x, max x, 
-            min y, and max y. At least one point in each cluster will be required to
-            be within the bounding box.
-        num_results: Maximum number of results to return.
-        id_type: The type of ID that ids_of_interest corresponds to. This goes into
-            the explanation string for clusters, e.g. "shares 3 points with <id_type>".
+        Args:
+            ids_of_interest: A list of ID values. If there are sufficiently many clusters
+                containing at least one ID in this list, only they will be returned.
+                Otherwise, clusters containing IDs from the neighbor sets of those IDs
+                may be returned as well.
+            filter_ids: A list of IDs such that at least one point in every cluster
+                MUST be present in this list.
+            frame_idx: A base frame index to filter for. If None, clusters from any frame
+                may be returned.
+            preview_frame_idx: A preview frame index to filter for. frame_idx must be
+                provided if this is provided.
+            bounding_box: If provided, should be a tuple of four values: min x, max x, 
+                min y, and max y. At least one point in each cluster will be required to
+                be within the bounding box.
+            num_results: Maximum number of results to return.
+            id_type: The type of ID that ids_of_interest corresponds to. This goes into
+                the explanation string for clusters, e.g. "shares 3 points with <id_type>".
+                
+        Returns:
+            A list of suggested selections. Each suggestion is returned as a
+            tuple of two values - a list of point IDs, and a string "reason"
+            explaining why the cluster is recommended.
         """
         
         # Determine which frames to look for clusters in

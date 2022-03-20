@@ -1,0 +1,3307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>emblaze.viewer API documentation</title>
+<meta name="description" content="Defines the main Emblaze visualization class, `emblaze.Viewer`." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico"/>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>emblaze.viewer</code></h1>
+</header>
+<section id="section-intro">
+<p>Defines the main Emblaze visualization class, <code>emblaze.Viewer</code>.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python
+# coding: utf-8
+
+# Copyright (c) venkatesh-sivaraman.
+# Distributed under the terms of the Modified BSD License.
+
+&#34;&#34;&#34;
+Defines the main Emblaze visualization class, `emblaze.Viewer`.
+&#34;&#34;&#34;
+
+from ipywidgets import DOMWidget
+from numpy.core.fromnumeric import sort
+from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, Set, observe, Any
+from ._frontend import module_name, module_version
+from .frame_colors import compute_colors
+from .datasets import EmbeddingSet, NeighborOnlyEmbedding, Embedding
+from .thumbnails import Thumbnails
+from .utils import Field, LoggingHelper, SidebarPane, matrix_to_affine, affine_to_matrix, DataType, PreviewMode
+from .recommender import SelectionRecommender
+from datetime import datetime
+import json
+import glob
+import tqdm
+import threading
+import numpy as np
+
+PERFORMANCE_SUGGESTIONS_RECOMPUTE = 1000
+PERFORMANCE_SUGGESTIONS_ENABLE = 10000
+
+def default_thread_starter(fn, args=[], kwargs={}):
+    thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
+    thread.start()
+    
+def synchronous_thread_starter(fn, args=[], kwargs={}):
+    fn(args, kwargs)
+
+class Viewer(DOMWidget):
+    &#34;&#34;&#34;
+    Represents and maintains the state of an interactive Emblaze interface to
+    display in a Jupyter notebook. The basic instantiation of an Emblaze viewer
+    proceeds as follows:
+    
+    ```python
+    embeddings = emblaze.EmbeddingSet(...)
+    thumbnails = emblaze.TextThumbnails(...)
+    w = emblaze.Viewer(embeddings=embeddings, thumbnails=thumbnails)
+    w
+    ```
+    &#34;&#34;&#34;
+    _model_name = Unicode(&#39;ViewerModel&#39;).tag(sync=True)
+    _model_module = Unicode(module_name).tag(sync=True)
+    _model_module_version = Unicode(module_version).tag(sync=True)
+    _view_name = Unicode(&#39;Viewer&#39;).tag(sync=True)
+    _view_module = Unicode(module_name).tag(sync=True)
+    _view_module_version = Unicode(module_version).tag(sync=True)
+    
+    thread_starter = Any(default_thread_starter)
+    _autogenerate_embeddings = Bool(True) # only set this if caching embedding data
+
+    #: An [`EmbeddingSet`](datasets.html#emblaze.datasets.EmbeddingSet) containing
+    #: one or more embeddings to visualize. The coordinates contained in this 
+    #: `EmbeddingSet` must be 2-dimensional.
+    embeddings = Instance(EmbeddingSet, allow_none=True)
+    #: The JSON-serializable data passed to the frontend. You should not need to modify this variable.
+    data = Dict(None, allow_none=True).tag(sync=True)
+    #: A file path or file-like object from which to read an embedding comparison (see [`save_comparison`](viewer.html#emblaze.viewer.Viewer.save_comparison)).
+    file = Any(allow_none=True).tag(sync=True)
+    #: Padding around the plot in data coordinates.
+    plotPadding = Float(10.0).tag(sync=True)
+    
+    #: `True` if the widget is currently loading a comparison from file, `False` otherwise.
+    isLoading = Bool(False).tag(sync=True)
+    
+    #: The index of the currently-viewing frame in the Viewer&#39;s [`embeddings`](#emblaze.viewer.Viewer.embeddings).
+    currentFrame = Integer(0).tag(sync=True)
+    #: The index of the previewed frame in the Viewer&#39;s [`embeddings`](#emblaze.viewer.Viewer.embeddings). The
+    #: previewed frame is the frame to which points move when the Star Trail visualization is active.
+    previewFrame = Integer(0).tag(sync=True)
+    #: The index of the aligned frame in the Viewer&#39;s [`embeddings`](#emblaze.viewer.Viewer.embeddings).
+    #: When the frames are aligned to a selection, they are anchored to the same
+    #: position as before in this frame only.
+    alignedFrame = Integer(0).tag(sync=True)
+    #: A list of integer IDs corresponding to the selected points. By default,
+    #: these are zero-indexed and span the range from zero to the number of points in each
+    #: embedding.
+    selectedIDs = List([]).tag(sync=True)
+    #: A list of integer IDs corresponding to the aligned points (points selected
+    #: to minimize motion across frames). By default, these are zero-indexed and
+    #: span the range from zero to the number of points in each embedding.    
+    alignedIDs = List([]).tag(sync=True)
+    #: A list of integer IDs corresponding to the filtered points (a subset of
+    #: points selected to be visible in the plot). By default, these are zero-indexed and
+    #: span the range from zero to the number of points in each embedding.        
+    filterIDs = List([]).tag(sync=True)
+    
+    #: The number of neighbors to show in nearest neighbor lines and the detail
+    #: sidebar. This number cannot be greater than [`storedNumNeighbors`](#emblaze.viewer.Viewer.storedNumNeighbors).
+    numNeighbors = Integer(10).tag(sync=True)
+    #: The number of nearest neighbors to store for each point in the frontend
+    #: visualization. This number cannot be greater than the number of neighbors
+    #: computed in the embeddings&#39; `Neighbors` objects. This is 100 by default,
+    #: but will be automatically reduced to improve performance and memory usage
+    #: when many points or frames are visualized. This value can be configured in the
+    #: initialization of the `Viewer` instance.
+    storedNumNeighbors = Integer(0).tag(sync=True)
+
+    #: The colors used to represent each frame in the sidebar, stored as lists
+    #: of 3 HSV components each.
+    frameColors = List([]).tag(sync=True)
+    _defaultFrameColors = List([])
+    #: Transformation matrices that result in an alignment of frames to the
+    #: viewer&#39;s current [`alignedIDs`](#emblaze.viewer.Viewer.alignedIDs). The
+    #: matrices are represented as 3x3 nested lists.
+    frameTransformations = List([]).tag(sync=True)
+    
+    #: A [`Thumbnails`](thumbnails.html#emblaze.thumbnails.Thumbnails) instance
+    #: containing text and/or image descriptions for the IDs of the points
+    #: provided in [`embeddings`](#emblaze.viewer.Viewer.embeddings).
+    thumbnails = Instance(Thumbnails, allow_none=True)
+    #: A JSON-serializable dictionary of thumbnail info. You should not need to
+    #: modify this variable.
+    thumbnailData = Dict({}).tag(sync=True)
+    
+    #: A JSON-serializable list of high-dimensional neighbors, containing one
+    #: dictionary corresponding to each `Embedding`. You should not need to
+    #: modify this variable.
+    neighborData = List([]).tag(sync=True)
+
+    #: Boolean marking that the current state of the visualization should be
+    #: saved to file. The current values of [`selectionName`](#emblaze.viewer.Viewer.selectionName)
+    #: and [`selectionDescription`](#emblaze.viewer.Viewer.selectionDescription)
+    #: will be used.
+    saveSelectionFlag = Bool(False).tag(sync=True)
+    #: The name of the selection to save.
+    selectionName = Unicode(&#34;&#34;).tag(sync=True)
+    #: A description of the selection to save.
+    selectionDescription = Unicode(&#34;&#34;).tag(sync=True)
+    #: Boolean indicating whether selection saving and restoring should be
+    #: enabled in the interface.
+    allowsSavingSelections = Bool(True).tag(sync=True)
+
+    #: The currently-visible sidebar pane, enumerated in `emblaze.utils.SidebarPane`.
+    visibleSidebarPane = Integer(SidebarPane.CURRENT).tag(sync=True)
+    #: A list of saved selections, to be displayed in the Saved sidebar pane.
+    selectionList = List([]).tag(sync=True)
+    #: The [`SelectionRecommender`](recommender.html#emblaze.recommender.SelectionRecommender)
+    #: responsible for generating suggested selections.
+    recommender = None
+    #: The current list of suggested selections. Each suggestion is represented
+    #: as a dictionary in the same format as a saved selection, including keys
+    #: for `currentFrame`, `selectedIDs`, `alignedIDs`, and `filterIDs`.
+    suggestedSelections = List([]).tag(sync=True)
+    #: `True` if the recommender is currently computing suggested selections, `False` otherwise.
+    loadingSuggestions = Bool(False).tag(sync=True)
+    #: Floating point value between 0 and 1 indicating the progress towards computing suggested selections.
+    loadingSuggestionsProgress = Float(0.0).tag(sync=True)
+    #: A flag that, when `True`, indicates that suggested selections should be recomputed.
+    recomputeSuggestionsFlag = Bool(False).tag(sync=True)
+    #: The bounding box of the screen in data coordinates, used to determine
+    #: which points are currently visible and should be included in Suggested
+    #: Selections. The bounding box is represented as a list of four values,
+    #: consisting of the minimum and maximum *x* values, followed by the minimum
+    #: and maximum *y* values.
+    suggestedSelectionWindow = List([]).tag(sync=True)
+    #: If `True`, recompute suggestions fully but only when less than `PERFORMANCE_SUGGESTIONS_RECOMPUTE`
+    #: points are visible.
+    performanceSuggestionsMode = Bool(False).tag(sync=True)
+    
+    #: A list of recent selections, represented in the same format as saved
+    #: and suggested selections (including the `selectedIDs` and `currentFrame`)
+    #: keys.
+    selectionHistory = List([]).tag(sync=True)
+    
+    #: The supported selection unit for the current embeddings. This corresponds
+    #: to the metric used by the embedding&#39;s `Neighbors` set.
+    selectionUnit = Unicode(&#34;&#34;).tag(sync=True)
+    #: A dictionary that, when populated, indicates that the `Viewer` instance
+    #: should perform a radius select. The dictionary should contain three keys:
+    #: `centerID` (int - ID of the point around which to select), `frame` (int -
+    #: the frame in which to collect nearest neighbors), and `unit` (string -
+    #: the metric to use to define nearest neighbors, such as &#34;pixels&#34; or &#34;cosine&#34;).
+    selectionOrderRequest = Dict({}).tag(sync=True)
+    #: A list of tuples representing the results of a selection order request 
+    #: (see [`selectionOrderRequest`](#emblaze.viewer.Viewer.selectionOrderRequest)).
+    #: Each tuple contains a neighbor ID and its distance to the center point.
+    selectionOrder = List([]).tag(sync=True)
+    #: The number of points to return IDs and distances for in a selection order
+    #: request (see [`selectionOrderRequest`](#emblaze.viewer.Viewer.selectionOrderRequest)).
+    selectionOrderCount = Integer(2000)
+
+    #: The name of the color scheme to use to color points in the scatter plot.
+    #: Supported color schemes are documented in `src/colorschemes.ts` and
+    #: include the following:
+    #: * `tableau` (categorical)
+    #: * `dark2` (categorical)
+    #: * `paired` (categorical)
+    #: * `set1` (categorical)
+    #: * `set2` (categorical)
+    #: * `set3` (categorical)
+    #: * `turbo` (continuous)
+    #: * `plasma` (continuous)
+    #: * `magma` (continuous)
+    #: * `viridis` (continuous)
+    #: * `RdBu` (continuous)
+    #: * `Blues` (continuous)
+    #: * `Greens` (continuous)
+    #: * `Reds` (continuous)
+    #: * `rainbow` (continuous)
+    colorScheme = Unicode(&#34;&#34;).tag(sync=True)
+    
+    #: String indicating how to compute Star Trails. Valid options are listed
+    #: in [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode).
+    previewMode = Unicode(&#34;&#34;).tag(sync=True)
+    #: Parameters for generating Star Trails. These can be adjusted in the
+    #: Emblaze interface in the Settings menu, and consist of the following keys:
+    #: * `k`: Integer indicating the number of neighbors to compare between
+    #:   frames for each point. This cannot be greater than the Viewer&#39;s
+    #:   [`storedNumNeighbors`](#emblaze.viewer.Viewer.storedNumNeighbors).
+    #: * `similarityThreshold`: Similarity value above which a Star Trail will
+    #:   *not* be shown for a point. Similarity is computed as the number of
+    #:   neighbors in common between two frames divided by `k`.
+    previewParameters = Dict({}).tag(sync=True)
+    
+    #: List of past interactions with the widget. When [`loggingEnabled`](#emblaze.viewer.Viewer.loggingEnabled)
+    #: is set to `True` by the widget, the backend will save the interaction history
+    #: to file using the `loggingHelper`.
+    interactionHistory = List([]).tag(sync=True)
+    #: Flag that, when `True`, indicates that the widget should save interaction
+    #: history to a local file. This is used by the frontend to periodically save
+    #: interactions when `loggingEnabled` is set to `True`. You should not need
+    #: to modify this variable.
+    saveInteractionsFlag = Bool(False).tag(sync=True)
+    
+    #: Flag that, when `True`, enables the widget to periodically save interaction
+    #: history and logs to a local file.
+    loggingEnabled = Bool(False).tag(sync=True)
+    #: A `utils.LoggingHelper` object that handles saving interaction history.
+    loggingHelper = None
+    
+    def __init__(self, *args, **kwargs):
+        &#34;&#34;&#34;
+        You may pass additional traitlet values to the `Viewer` constructor
+        beyond the ones listed below.
+        Args:
+            embeddings: An `EmbeddingSet` object.
+            thumbnails: A `ThumbnailSet` object.
+            file: A file path or file-like object from which to read a comparison JSON file.
+        &#34;&#34;&#34;
+        super(Viewer, self).__init__(*args, **kwargs)
+        if self.file:
+            self.load_comparison(self.file)
+        if len(self.embeddings) == 0:
+            raise ValueError(&#34;Must have at least one embedding.&#34;)
+        if not all(emb.dimension() == 2 for emb in self.embeddings):
+            raise ValueError(&#34;All Embeddings must contain 2-dimensional coordinates. Try projecting the embeddings to 2D using the .project() method.&#34;)
+        self.saveSelectionFlag = False
+        self.loadSelectionFlag = False
+        self.selectionList = []
+        if self.loggingEnabled:
+            self.loggingHelper = LoggingHelper(&#39;emblaze_logs_{}.json&#39;.format(datetime.now().strftime(&#34;%Y%m%d_%H%M%S&#34;)),
+                                               {&#39;numFrames&#39;: len(self.embeddings),
+                                                &#39;numPoints&#39;: len(self.embeddings[0])})
+
+        self._update_performance_suggestions_mode()
+        if not self.colorScheme:
+            self.colorScheme = self.detect_color_scheme()
+        if not self.previewMode:
+            self.previewMode = self.detect_preview_mode()
+        if len(self.previewParameters) == 0:
+            self.previewParameters = {&#39;k&#39;: 10, &#39;similarityThreshold&#39;: 0.5}            
+
+    @observe(&#34;saveSelectionFlag&#34;)
+    def _observe_save_selection(self, change):
+        if not self.allowsSavingSelections:
+            self.saveSelectionFlag = False
+            return
+        if change.new:
+            newSelection = { }
+            newSelection[&#34;selectedIDs&#34;] = self.selectedIDs
+            newSelection[&#34;alignedIDs&#34;] = self.alignedIDs
+            newSelection[&#34;filterIDs&#34;] = self.filterIDs
+            newSelection[&#34;selectionDescription&#34;] = self.selectionDescription
+            newSelection[&#34;currentFrame&#34;] = self.currentFrame
+            newSelection[&#34;alignedFrame&#34;] = self.alignedFrame
+            now = datetime.now()
+            dateTime = now.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+            with open(dateTime + &#39; &#39; + self.selectionName + &#39;.selection&#39;, &#39;w&#39;) as outfile:
+                json.dump(newSelection, outfile)
+            
+            self.saveSelectionFlag = False
+            self.selectionName = &#34;&#34;
+            self.selectionDescription = &#34;&#34;
+            self.refresh_saved_selections()
+
+    def refresh_saved_selections(self):
+        &#34;&#34;&#34;
+        Updates the selectionList property, which is displayed in the sidebar
+        under the Saved tab.
+        &#34;&#34;&#34;
+        tmpList = []
+        # self.selectionList = []
+        for file in glob.glob(&#34;*.selection&#34;):
+            with open(file, &#34;r&#34;) as jsonFile:
+                data = json.load(jsonFile)                            
+                data[&#34;selectionName&#34;] = file.split(&#39;.&#39;)[0]
+                tmpList.append(data)
+        self.selectionList = sorted(tmpList, key=lambda x: x[&#34;selectionName&#34;], reverse=True)
+        self.loadSelectionFlag = False
+        
+    def detect_color_scheme(self):
+        &#34;&#34;&#34;
+        Infers an appropriate color scheme for the data based on whether the
+        data type of the embeddings&#39; `Field.COLOR` field is categorical or
+        continuous.
+        
+        Returns:
+            A string name for a default color scheme for the given type of data
+            (&#34;tableau&#34; for categorical data or &#34;plasma&#34; for continuous data).
+        &#34;&#34;&#34;
+        if len(self.embeddings) == 0:
+            return &#34;tableau&#34;
+        if self.embeddings[0].guess_data_type(Field.COLOR) == DataType.CATEGORICAL:
+            return &#34;tableau&#34;
+        return &#34;plasma&#34;
+    
+    def detect_preview_mode(self):
+        &#34;&#34;&#34;
+        Infers the appropriate preview mode to use to generate Star Trails, based
+        on whether the neighbors in all the frames are mostly the same or not.
+        
+        Returns:
+            A value from [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode)
+            indicating how Star Trails should be computed.
+        &#34;&#34;&#34;
+        ancestor_neighbors = [emb.get_ancestor_neighbors() for emb in self.embeddings]
+        for n1 in ancestor_neighbors:
+            if not n1:
+                return PreviewMode.PROJECTION_SIMILARITY
+            for n2 in ancestor_neighbors:
+                if not n2:
+                    return PreviewMode.PROJECTION_SIMILARITY
+                if n1 != n2:
+                    return PreviewMode.NEIGHBOR_SIMILARITY
+        return PreviewMode.PROJECTION_SIMILARITY
+        
+    def _select_stored_num_neighbors(self, embeddings):
+        &#34;&#34;&#34;
+        Optionally reduces the number of stored neighbors in the JSON to save
+        space. Prints a warning if it does so.
+        &#34;&#34;&#34;
+        num_points = len(embeddings) * len(embeddings[0])
+        new_val = None
+        if num_points &gt; 500000:
+            new_val = 25
+        elif num_points &gt; 200000:
+            new_val = 50
+        elif num_points &gt; 100000:
+            new_val = 75
+        if new_val is not None and any(new_val &lt; emb.n_neighbors for emb in embeddings.embeddings):
+            print((&#34;WARNING: Reducing the number of nearest neighbors passed to the &#34;
+                   &#34;widget to {} to save space. You can control this by setting the &#34;
+                   &#34;storedNumNeighbors property of the widget when initializing.&#34;).format(new_val))
+        return new_val                        
+        
+    @observe(&#34;file&#34;)
+    def _observe_file(self, change):
+        if change.new is not None:
+            self.load_comparison(change.new)
+        
+    @observe(&#34;embeddings&#34;)
+    def _observe_embeddings(self, change):
+        embeddings = change.new
+        assert len(embeddings) &gt; 0, &#34;Must have at least one embedding&#34;
+        assert not any(not e.any_ancestor_has_neighbors() for e in embeddings), &#34;All embeddings must have at least one Neighbors previously computed&#34;
+        if self._autogenerate_embeddings or self.data is None:
+            if embeddings is not None:
+                self.isLoading = True
+                self.neighborData = []
+                if self.storedNumNeighbors &gt; 0:
+                    n_neighbors = self.storedNumNeighbors 
+                else:
+                    n_neighbors = self._select_stored_num_neighbors(embeddings)
+                self.data = embeddings.to_json(save_neighbors=False)
+                self.neighborData = embeddings.get_ancestor_neighbors().to_json(num_neighbors=n_neighbors)
+                self.isLoading = False
+            else:
+                self.neighborData = []
+                self.data = {}
+        self.reset_state()
+        
+        # Compute padding based on first embedding
+        base_frame = embeddings[0].field(Field.POSITION)
+        mins = np.min(base_frame, axis=0)
+        maxes = np.max(base_frame, axis=0)
+        self.plotPadding = np.min(maxes - mins) * 0.2
+        
+        self.colorScheme = self.detect_color_scheme()
+        self.previewMode = self.detect_preview_mode()
+        self._update_selection_unit(embeddings[0])
+        
+        self._update_suggested_selections()
+
+    @observe(&#34;currentFrame&#34;)
+    def _observe_current_frame(self, change):
+        self._update_selection_unit(self.embeddings[change.new])
+        self._update_suggested_selections()
+
+    @observe(&#34;previewFrame&#34;)
+    def _observe_preview_frame(self, change):
+        self._update_suggested_selections()
+
+    @observe(&#34;thumbnails&#34;)
+    def _observe_thumbnails(self, change):
+        if self._autogenerate_embeddings or self.thumbnailData is None or len(self.thumbnailData) == 0:
+            if change.new is not None:
+                self.thumbnailData = change.new.to_json()
+            else:
+                self.thumbnailData = {} 
+  
+    @observe(&#34;alignedIDs&#34;)
+    def _observe_alignment_ids(self, change):
+        &#34;&#34;&#34;Align to the currently selected points and their neighbors.&#34;&#34;&#34;
+        if not change.new:
+            self.align_to_points(None, None)
+        else:
+            ids_of_interest = change.new
+            self.thread_starter(self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
+    
+    @observe(&#34;selectedIDs&#34;)
+    def _observe_selected_ids(self, change):
+        &#34;&#34;&#34;Change the color scheme to match the arrangement of the selected IDs.&#34;&#34;&#34;
+        self.update_frame_colors()
+        self._update_suggested_selections()
+            
+    @observe(&#34;filterIDs&#34;)
+    def _observe_filter_ids(self, change):
+        &#34;&#34;&#34;Update suggestions when the filter changes.&#34;&#34;&#34;
+        self._update_suggested_selections()
+
+    def reset_state(self):
+        &#34;&#34;&#34;Resets the view state of the widget.&#34;&#34;&#34;
+        self.currentFrame = 0
+        self.previewFrame = -1
+        self.selectedIDs = []
+        self.alignedIDs = []
+        self.filterIDs = []
+        self.reset_alignment()
+
+    def reset_alignment(self):
+        &#34;&#34;&#34;Removes any transformations applied to the embedding frames.&#34;&#34;&#34;
+        self.frameTransformations = [
+            np.eye(3).tolist()
+            for i in range(len(self.embeddings))
+        ]
+        self.alignedFrame = 0
+        self.update_frame_colors()
+        
+    def align_to_points(self, point_ids, peripheral_points):
+        &#34;&#34;&#34;
+        Re-align the projections to minimize motion for the given point IDs.
+        Uses currentFrame as the base frame. Updates the 
+        self.frameTransformations traitlet.
+        
+        Args:
+            point_ids: Iterable of point IDs to use for alignment.
+            peripheral_points: Unused.
+        &#34;&#34;&#34;
+        if point_ids is None:
+            self.reset_alignment()
+            self.update_frame_colors()
+            return
+    
+        transformations = []
+        base_transform = matrix_to_affine(np.array(self.frameTransformations[self.alignedFrame]))
+
+        for emb in self.embeddings:
+            transformations.append(affine_to_matrix(emb.align_to(
+                self.embeddings[self.alignedFrame], 
+                ids=list(set(point_ids)),
+                base_transform=base_transform,
+                return_transform=True,
+                allow_flips=False)).tolist())
+
+        self.frameTransformations = transformations
+        self.update_frame_colors()
+
+    def update_frame_colors(self):
+        &#34;&#34;&#34;
+        Updates the colors of the color stripes next to each frame thumbnail in
+        the sidebar. The `selectedIDs` property is used first, followed by
+        `alignedIDs` if applicable.
+        &#34;&#34;&#34;
+        if len(self.embeddings) &lt;= 1:
+            self.frameColors = []
+        elif not self.selectedIDs:
+            if self.alignedIDs:
+                self.frameColors = compute_colors(self.embeddings, self.alignedIDs)
+            else:
+                if not self._defaultFrameColors:
+                    self._defaultFrameColors = compute_colors(self.embeddings, None)
+                self.frameColors = self._defaultFrameColors
+        else:
+            self.frameColors = compute_colors(self.embeddings, self.selectedIDs)
+
+    def _update_selection_unit(self, frame):
+        &#34;&#34;&#34;
+        Sets the selection unit if the current frame can be queried for
+        distances.
+        &#34;&#34;&#34;
+        ancestor = frame.find_ancestor_neighbor_embedding()
+        if isinstance(ancestor, NeighborOnlyEmbedding):
+            self.selectionUnit = &#39;&#39;
+        else:
+            self.selectionUnit = ancestor.metric
+        
+    @observe(&#34;selectionOrderRequest&#34;)
+    def _compute_selection_order(self, change):
+        &#34;&#34;&#34;Compute an ordering of the points by distance from the selected ID.&#34;&#34;&#34;
+        if not change.new or &#39;centerID&#39; not in change.new:
+            self.selectionOrder = []
+            return
+        
+        centerID = change.new[&#39;centerID&#39;]
+        frame = change.new[&#39;frame&#39;]
+        # metric = change.new[&#39;metric&#39;] # for now, unused
+        
+        hi_d = self.embeddings[frame].find_ancestor_neighbor_embedding()
+        order, distances = hi_d.neighbor_distances(ids=[centerID], n_neighbors=self.selectionOrderCount)
+        
+        self.selectionOrder = [(int(x), np.round(y, 4)) for x, y in np.vstack([
+            order.flatten(),
+            distances.flatten()
+        ]).T.tolist()]
+
+    @observe(&#34;visibleSidebarPane&#34;)
+    def _observe_sidebar_pane(self, change):
+        if change.new == SidebarPane.SUGGESTED:
+            self._update_suggested_selections()
+        elif change.new == SidebarPane.SAVED:
+            self.refresh_saved_selections()
+
+    def _get_filter_points(self, selection, in_frame=None):
+        &#34;&#34;&#34;Returns a list of points that should be visible if the given selection
+        is highlighted.&#34;&#34;&#34;
+        filtered_points = set()
+        for id_val in selection:
+            filtered_points.add(id_val)
+        for frame in self.embeddings.embeddings if in_frame is None else [in_frame]:
+            filtered_points |= set(frame.get_ancestor_neighbors()[selection][:,:self.numNeighbors].flatten().tolist())
+        return list(filtered_points)
+    
+    @observe(&#34;recomputeSuggestionsFlag&#34;)
+    def _observe_suggestion_flag(self, change):
+        &#34;&#34;&#34;Recomputes suggestions when recomputeSuggestionsFlag is set to True.&#34;&#34;&#34;
+        if change.new and not self.loadingSuggestions:
+            self._update_suggested_selections()
+    
+    def _update_performance_suggestions_mode(self):
+        &#34;&#34;&#34;Determines whether to use the performance mode for computing suggestions.&#34;&#34;&#34;
+        if len(self.embeddings) &lt;= 1:
+            self.performanceSuggestionsMode = False
+        else:
+            self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) &gt;= PERFORMANCE_SUGGESTIONS_ENABLE
+        
+    def precompute_suggested_selections(self):
+        &#34;&#34;&#34;
+        Computes the suggested selections for all points in the embeddings. This
+        is useful to get quick recommendations later, though it may take time to
+        generate them upfront. When this method completes, the viewer&#39;s
+        [`recommender`](#emblaze.viewer.Viewer.recommender) property will be a
+        fully loaded `SelectionRecommender` that can be queried for suggestions
+        relative to an area of the plot, selection, or set of frames.
+        &#34;&#34;&#34;
+        bar = tqdm.tqdm(total=len(self.embeddings) * (len(self.embeddings) - 1), desc=&#39;Clustering&#39;)
+        def progress_fn(progress):
+            bar.update(1)
+        self.recommender = SelectionRecommender(self.embeddings, progress_fn=progress_fn)
+        bar.close()
+        
+    def _update_suggested_selections_background(self):
+        &#34;&#34;&#34;Function that runs in the background to recompute suggested selections.&#34;&#34;&#34;
+        self.recomputeSuggestionsFlag = False
+        if self.loadingSuggestions: 
+            return
+        
+
+        filter_points = None
+        self._update_performance_suggestions_mode()
+        if len(self.embeddings) == 1:
+            # We cannot generate suggested selections when there is only one embedding
+            self.suggestedSelections = []
+            return
+        if self.performanceSuggestionsMode and (not self.recommender or self.recommender.is_restricted):
+            # Check if sufficiently few points are visible to show suggestions
+            if self.filterIDs and len(self.filterIDs) &lt;= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
+                filter_points = self.filterIDs
+            if self.suggestedSelectionWindow:
+                bbox_points = self.embeddings[self.currentFrame].within_bbox(self.suggestedSelectionWindow)
+                if filter_points:
+                    filter_points = list(set(filter_points) &amp; set(bbox_points))
+                else:
+                    filter_points = bbox_points
+            if (self.visibleSidebarPane != SidebarPane.SUGGESTED or
+                not filter_points or
+                len(filter_points) &gt; PERFORMANCE_SUGGESTIONS_RECOMPUTE):
+                self.suggestedSelections = []
+                return
+            # Add the vicinity around these points just to be safe
+            filter_points = self._get_filter_points(filter_points, in_frame=self.embeddings[self.currentFrame])
+            
+        self.loadingSuggestions = True
+        try:
+            if self.recommender is None or (self.recommender.is_restricted and self.performanceSuggestionsMode):
+                self.loadingSuggestionsProgress = 0.0
+                def progress_fn(progress):
+                    self.loadingSuggestionsProgress = progress
+                self.recommender = SelectionRecommender(
+                    self.embeddings, 
+                    progress_fn=progress_fn,
+                    frame_idx=self.currentFrame if self.performanceSuggestionsMode else None,
+                    preview_frame_idx=self.previewFrame if self.performanceSuggestionsMode and self.previewFrame &gt;= 0 and self.previewFrame != self.currentFrame else None,
+                    filter_points=filter_points if self.performanceSuggestionsMode else None)
+
+        
+            # Only compute suggestions when pane is open
+            if self.previewFrame &gt;= 0 and self.previewFrame != self.currentFrame:
+                preview_frame_idx = self.previewFrame
+            else:
+                preview_frame_idx = None
+              
+            if self.selectedIDs:
+                ids_of_interest = self.selectedIDs
+                id_type = &#34;selection&#34;  
+            elif self.filterIDs and not self.performanceSuggestionsMode:
+                ids_of_interest = self.filterIDs
+                id_type = &#34;visible points&#34;
+            else:
+                ids_of_interest = None
+                id_type = &#34;visible points&#34; if self.performanceSuggestionsMode else None
+
+            suggestions = []
+            results = self.recommender.query(ids_of_interest=ids_of_interest,
+                                             filter_ids=self.filterIDs or None,
+                                             frame_idx=self.currentFrame,
+                                             preview_frame_idx=preview_frame_idx,
+                                             bounding_box=self.suggestedSelectionWindow or None,
+                                             num_results=25,
+                                             id_type=id_type)
+            for result, reason in results:
+                ids = list(result[&#34;ids&#34;])
+                suggestions.append({
+                    &#34;selectionName&#34;: &#34;&#34;,
+                    &#34;selectionDescription&#34;: reason,
+                    &#34;currentFrame&#34;: result[&#34;frame&#34;],
+                    &#34;selectedIDs&#34;: ids,
+                    &#34;alignedIDs&#34;: ids,
+                    &#34;filterIDs&#34;: self._get_filter_points(ids),
+                    &#34;frameColors&#34;: compute_colors(self.embeddings, ids)
+                })
+            self.suggestedSelections = suggestions
+                
+            self.loadingSuggestions = False
+        except Exception as e:
+            print(e)
+            self.loadingSuggestions = False
+            raise e
+        
+    def _update_suggested_selections(self):
+        &#34;&#34;&#34;Recomputes the suggested selections.&#34;&#34;&#34;
+        self.thread_starter(self._update_suggested_selections_background)
+
+    @observe(&#34;saveInteractionsFlag&#34;)
+    def _save_interactions(self, change):
+        &#34;&#34;&#34;
+        The widget sets the flag to save interaction history periodically
+        because we can&#39;t use a timer in the backend.
+        &#34;&#34;&#34;
+        if change.new and self.loggingHelper:
+            self.loggingHelper.add_logs(self.interactionHistory)
+            self.interactionHistory = []
+            self.saveInteractionsFlag = False
+            
+    def comparison_to_json(self, compressed=True, ancestor_data=True, suggestions=False):
+        &#34;&#34;&#34;
+        Saves the data used to produce this comparison to a JSON object. This
+        includes the `EmbeddingSet` and the `Thumbnails` that are visualized, as
+        well as the immediate and ancestor neighbor data (see below). Ancestor
+        neighbors are used to display nearest neighbors in the UI.
+        
+        Args:
+            compressed: If `True`, then save the embeddings in a base-64 encoded
+                format to save space.
+            ancestor_data: If `True` (default), the full `Embedding` object that
+                produces the ancestor neighbors will be stored, including its neighbor
+                set. If `False`, only the ancestor neighbors themselves will be
+                stored. This can save space if the ancestor embedding is very
+                high-dimensional. However, the high-dimensional radius
+                select tool will not work if ancestor data is not saved.
+            suggestions: If `True` and the viewer has a `recommender` associated
+                with it, the recommender will also be serialized.
+        
+        Returns:
+            A JSON-serializable dictionary representing the comparison, including
+            all `embeddings`, `thumbnails`, and optionally ancestor data and
+            suggestions.
+        &#34;&#34;&#34;
+        result = {}
+        
+        ancestor_neighbors = self.embeddings.get_ancestor_neighbors()
+        recent_neighbors = self.embeddings.get_recent_neighbors()
+        neighbors = self.embeddings.get_neighbors()
+        
+        result[&#34;_format&#34;] = &#34;emblaze.Viewer.SaveData&#34;
+        result[&#34;embeddings&#34;] = self.embeddings.to_json(compressed=compressed,
+                                                       save_neighbors=True)
+        result[&#34;thumbnails&#34;] = self.thumbnails.to_json()
+        
+        # Save recent neighbors (those used for frame colors and recommendations)
+        # if they do not originate from the embeddings or in the ancestor embeddings
+        if neighbors != recent_neighbors and recent_neighbors != ancestor_neighbors:
+            # Save these in mock format
+            if recent_neighbors.identical():
+                result[&#34;recent_neighbors&#34;] = [NeighborOnlyEmbedding.from_embedding(recent_neighbors[0]).to_json(compressed=compressed)]
+            else:
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in recent_neighbors]
+                result[&#34;recent_neighbors&#34;] = [e.to_json(compressed=compressed) for e in mock_embs]
+        
+        # Save ancestor neighbors (and positions, if ancestor_data = True)
+        ancestors = EmbeddingSet([emb.find_ancestor_neighbor_embedding() for emb in self.embeddings], align=False)
+        if ancestor_data:
+            if ancestors.identical():
+                result[&#34;ancestor_data&#34;] = [ancestors[0].to_json(compressed=compressed)]
+            else:
+                result[&#34;ancestor_data&#34;] = [
+                    anc.to_json(compressed=compressed)
+                    for anc in ancestors
+                ]
+        elif neighbors != ancestor_neighbors:
+            # Create mock NeighborOnlyEmbeddings here to show that we are
+            # saving only the neighbor data
+            if ancestor_neighbors.identical():
+                result[&#34;ancestor_neighbors&#34;] = [NeighborOnlyEmbedding.from_embedding(ancestors[0]).to_json(compressed=compressed)]
+            else:
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in ancestors]
+                result[&#34;ancestor_neighbors&#34;] = [e.to_json(compressed=compressed) for e in mock_embs]
+            
+        if suggestions and self.recommender is not None:
+            result[&#34;suggestions&#34;] = self.recommender.to_json()
+        return result
+    
+    def load_comparison_from_json(self, data):
+        &#34;&#34;&#34;
+        Loads comparison information from a JSON object, including the
+        `EmbeddingSet`, `Thumbnails`, and `NeighborSet`.
+        
+        Args:
+            data: A JSON-serializable dictionary generated using
+                [`Viewer.comparison_to_json`](#emblaze.viewer.Viewer.comparison_to_json).
+                
+        Returns:
+            The populated `Viewer` object.
+        &#34;&#34;&#34;
+        self.isLoading = True
+        if self.embeddings is not None:
+            self.reset_state()
+            self.data = None
+            self.neighborData = []
+            self.thumbnailData = {}
+        
+        assert data[&#34;_format&#34;] == &#34;emblaze.Viewer.SaveData&#34;, &#34;Unsupported JSON _format key &#39;{}&#39;&#34;.format(data[&#34;_format&#34;])
+        # Load neighbors first, to create mock parent embeddings
+        parents = None
+        if &#34;ancestor_data&#34; in data:
+            parents = [Embedding.from_json(item) for item in data[&#34;ancestor_data&#34;]]
+        elif &#34;ancestor_neighbors&#34; in data:
+            parents = [NeighborOnlyEmbedding.from_json(item) for item in data[&#34;ancestor_neighbors&#34;]]
+            
+        if &#34;recent_neighbors&#34; in data:
+            # The neighbors to display will come from these, so put them in between
+            # the ancestor embeddings and the final ones
+            recent_parents = parents
+            if recent_parents is None:
+                recent_parents = [None for _ in range(len(self.embeddings))]
+            elif len(parents) == 1:
+                recent_parents = [recent_parents[0] for _ in range(len(self.embeddings))]
+            parents = [NeighborOnlyEmbedding.from_json(item, parent=p)
+                       for item, p in zip(data[&#34;recent_neighbors&#34;], recent_parents)]
+        
+        self.embeddings = EmbeddingSet.from_json(data[&#34;embeddings&#34;], parents=parents)
+        self.thumbnails = Thumbnails.from_json(data[&#34;thumbnails&#34;])
+        
+        if &#34;suggestions&#34; in data:
+            self.recommender = SelectionRecommender.from_json(data[&#34;suggestions&#34;], self.embeddings)
+        
+        self.isLoading = False
+        return self
+                
+    def save_comparison(self, file_path_or_buffer, **kwargs):
+        &#34;&#34;&#34;
+        Saves the comparison data (`EmbeddingSet`, `Thumbnails`, and `NeighborSet`) to
+        the given file path or file-like object. See [`Viewer.comparison_to_json()`](#emblaze.viewer.Viewer.comparison_to_json)
+        for available keyword arguments. The comparison can be loaded later by
+        specifying a `file` during initialization:
+        
+        ```python
+        w = emblaze.Viewer(file=file_path)
+        ```
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object to which to
+                write the comparison.
+        &#34;&#34;&#34;
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, &#39;w&#39;) as file:
+                json.dump(self.comparison_to_json(**kwargs), file)
+        else:
+            # File object
+            json.dump(self.comparison_to_json(**kwargs), file_path_or_buffer)
+            
+    def load_comparison(self, file_path_or_buffer):
+        &#34;&#34;&#34;
+        Load the comparison data from the given file path or
+        file-like object containing JSON data.
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object from which to
+                load the comparison.
+        &#34;&#34;&#34;
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, &#39;r&#39;) as file:
+                return self.load_comparison_from_json(json.load(file))
+        else:
+            # File object
+            return self.load_comparison_from_json(json.load(file_path_or_buffer))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="emblaze.viewer.Viewer"><code class="flex name class">
+<span>class <span class="ident">Viewer</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Represents and maintains the state of an interactive Emblaze interface to
+display in a Jupyter notebook. The basic instantiation of an Emblaze viewer
+proceeds as follows:</p>
+<pre><code class="language-python">embeddings = emblaze.EmbeddingSet(...)
+thumbnails = emblaze.TextThumbnails(...)
+w = emblaze.Viewer(embeddings=embeddings, thumbnails=thumbnails)
+w
+</code></pre>
+<p>You may pass additional traitlet values to the <code><a title="emblaze.viewer.Viewer" href="#emblaze.viewer.Viewer">Viewer</a></code> constructor
+beyond the ones listed below.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>embeddings</code></strong></dt>
+<dd>An <code>EmbeddingSet</code> object.</dd>
+<dt><strong><code>thumbnails</code></strong></dt>
+<dd>A <code>ThumbnailSet</code> object.</dd>
+<dt><strong><code>file</code></strong></dt>
+<dd>A file path or file-like object from which to read a comparison JSON file.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Viewer(DOMWidget):
+    &#34;&#34;&#34;
+    Represents and maintains the state of an interactive Emblaze interface to
+    display in a Jupyter notebook. The basic instantiation of an Emblaze viewer
+    proceeds as follows:
+    
+    ```python
+    embeddings = emblaze.EmbeddingSet(...)
+    thumbnails = emblaze.TextThumbnails(...)
+    w = emblaze.Viewer(embeddings=embeddings, thumbnails=thumbnails)
+    w
+    ```
+    &#34;&#34;&#34;
+    _model_name = Unicode(&#39;ViewerModel&#39;).tag(sync=True)
+    _model_module = Unicode(module_name).tag(sync=True)
+    _model_module_version = Unicode(module_version).tag(sync=True)
+    _view_name = Unicode(&#39;Viewer&#39;).tag(sync=True)
+    _view_module = Unicode(module_name).tag(sync=True)
+    _view_module_version = Unicode(module_version).tag(sync=True)
+    
+    thread_starter = Any(default_thread_starter)
+    _autogenerate_embeddings = Bool(True) # only set this if caching embedding data
+
+    #: An [`EmbeddingSet`](datasets.html#emblaze.datasets.EmbeddingSet) containing
+    #: one or more embeddings to visualize. The coordinates contained in this 
+    #: `EmbeddingSet` must be 2-dimensional.
+    embeddings = Instance(EmbeddingSet, allow_none=True)
+    #: The JSON-serializable data passed to the frontend. You should not need to modify this variable.
+    data = Dict(None, allow_none=True).tag(sync=True)
+    #: A file path or file-like object from which to read an embedding comparison (see [`save_comparison`](viewer.html#emblaze.viewer.Viewer.save_comparison)).
+    file = Any(allow_none=True).tag(sync=True)
+    #: Padding around the plot in data coordinates.
+    plotPadding = Float(10.0).tag(sync=True)
+    
+    #: `True` if the widget is currently loading a comparison from file, `False` otherwise.
+    isLoading = Bool(False).tag(sync=True)
+    
+    #: The index of the currently-viewing frame in the Viewer&#39;s [`embeddings`](#emblaze.viewer.Viewer.embeddings).
+    currentFrame = Integer(0).tag(sync=True)
+    #: The index of the previewed frame in the Viewer&#39;s [`embeddings`](#emblaze.viewer.Viewer.embeddings). The
+    #: previewed frame is the frame to which points move when the Star Trail visualization is active.
+    previewFrame = Integer(0).tag(sync=True)
+    #: The index of the aligned frame in the Viewer&#39;s [`embeddings`](#emblaze.viewer.Viewer.embeddings).
+    #: When the frames are aligned to a selection, they are anchored to the same
+    #: position as before in this frame only.
+    alignedFrame = Integer(0).tag(sync=True)
+    #: A list of integer IDs corresponding to the selected points. By default,
+    #: these are zero-indexed and span the range from zero to the number of points in each
+    #: embedding.
+    selectedIDs = List([]).tag(sync=True)
+    #: A list of integer IDs corresponding to the aligned points (points selected
+    #: to minimize motion across frames). By default, these are zero-indexed and
+    #: span the range from zero to the number of points in each embedding.    
+    alignedIDs = List([]).tag(sync=True)
+    #: A list of integer IDs corresponding to the filtered points (a subset of
+    #: points selected to be visible in the plot). By default, these are zero-indexed and
+    #: span the range from zero to the number of points in each embedding.        
+    filterIDs = List([]).tag(sync=True)
+    
+    #: The number of neighbors to show in nearest neighbor lines and the detail
+    #: sidebar. This number cannot be greater than [`storedNumNeighbors`](#emblaze.viewer.Viewer.storedNumNeighbors).
+    numNeighbors = Integer(10).tag(sync=True)
+    #: The number of nearest neighbors to store for each point in the frontend
+    #: visualization. This number cannot be greater than the number of neighbors
+    #: computed in the embeddings&#39; `Neighbors` objects. This is 100 by default,
+    #: but will be automatically reduced to improve performance and memory usage
+    #: when many points or frames are visualized. This value can be configured in the
+    #: initialization of the `Viewer` instance.
+    storedNumNeighbors = Integer(0).tag(sync=True)
+
+    #: The colors used to represent each frame in the sidebar, stored as lists
+    #: of 3 HSV components each.
+    frameColors = List([]).tag(sync=True)
+    _defaultFrameColors = List([])
+    #: Transformation matrices that result in an alignment of frames to the
+    #: viewer&#39;s current [`alignedIDs`](#emblaze.viewer.Viewer.alignedIDs). The
+    #: matrices are represented as 3x3 nested lists.
+    frameTransformations = List([]).tag(sync=True)
+    
+    #: A [`Thumbnails`](thumbnails.html#emblaze.thumbnails.Thumbnails) instance
+    #: containing text and/or image descriptions for the IDs of the points
+    #: provided in [`embeddings`](#emblaze.viewer.Viewer.embeddings).
+    thumbnails = Instance(Thumbnails, allow_none=True)
+    #: A JSON-serializable dictionary of thumbnail info. You should not need to
+    #: modify this variable.
+    thumbnailData = Dict({}).tag(sync=True)
+    
+    #: A JSON-serializable list of high-dimensional neighbors, containing one
+    #: dictionary corresponding to each `Embedding`. You should not need to
+    #: modify this variable.
+    neighborData = List([]).tag(sync=True)
+
+    #: Boolean marking that the current state of the visualization should be
+    #: saved to file. The current values of [`selectionName`](#emblaze.viewer.Viewer.selectionName)
+    #: and [`selectionDescription`](#emblaze.viewer.Viewer.selectionDescription)
+    #: will be used.
+    saveSelectionFlag = Bool(False).tag(sync=True)
+    #: The name of the selection to save.
+    selectionName = Unicode(&#34;&#34;).tag(sync=True)
+    #: A description of the selection to save.
+    selectionDescription = Unicode(&#34;&#34;).tag(sync=True)
+    #: Boolean indicating whether selection saving and restoring should be
+    #: enabled in the interface.
+    allowsSavingSelections = Bool(True).tag(sync=True)
+
+    #: The currently-visible sidebar pane, enumerated in `emblaze.utils.SidebarPane`.
+    visibleSidebarPane = Integer(SidebarPane.CURRENT).tag(sync=True)
+    #: A list of saved selections, to be displayed in the Saved sidebar pane.
+    selectionList = List([]).tag(sync=True)
+    #: The [`SelectionRecommender`](recommender.html#emblaze.recommender.SelectionRecommender)
+    #: responsible for generating suggested selections.
+    recommender = None
+    #: The current list of suggested selections. Each suggestion is represented
+    #: as a dictionary in the same format as a saved selection, including keys
+    #: for `currentFrame`, `selectedIDs`, `alignedIDs`, and `filterIDs`.
+    suggestedSelections = List([]).tag(sync=True)
+    #: `True` if the recommender is currently computing suggested selections, `False` otherwise.
+    loadingSuggestions = Bool(False).tag(sync=True)
+    #: Floating point value between 0 and 1 indicating the progress towards computing suggested selections.
+    loadingSuggestionsProgress = Float(0.0).tag(sync=True)
+    #: A flag that, when `True`, indicates that suggested selections should be recomputed.
+    recomputeSuggestionsFlag = Bool(False).tag(sync=True)
+    #: The bounding box of the screen in data coordinates, used to determine
+    #: which points are currently visible and should be included in Suggested
+    #: Selections. The bounding box is represented as a list of four values,
+    #: consisting of the minimum and maximum *x* values, followed by the minimum
+    #: and maximum *y* values.
+    suggestedSelectionWindow = List([]).tag(sync=True)
+    #: If `True`, recompute suggestions fully but only when less than `PERFORMANCE_SUGGESTIONS_RECOMPUTE`
+    #: points are visible.
+    performanceSuggestionsMode = Bool(False).tag(sync=True)
+    
+    #: A list of recent selections, represented in the same format as saved
+    #: and suggested selections (including the `selectedIDs` and `currentFrame`)
+    #: keys.
+    selectionHistory = List([]).tag(sync=True)
+    
+    #: The supported selection unit for the current embeddings. This corresponds
+    #: to the metric used by the embedding&#39;s `Neighbors` set.
+    selectionUnit = Unicode(&#34;&#34;).tag(sync=True)
+    #: A dictionary that, when populated, indicates that the `Viewer` instance
+    #: should perform a radius select. The dictionary should contain three keys:
+    #: `centerID` (int - ID of the point around which to select), `frame` (int -
+    #: the frame in which to collect nearest neighbors), and `unit` (string -
+    #: the metric to use to define nearest neighbors, such as &#34;pixels&#34; or &#34;cosine&#34;).
+    selectionOrderRequest = Dict({}).tag(sync=True)
+    #: A list of tuples representing the results of a selection order request 
+    #: (see [`selectionOrderRequest`](#emblaze.viewer.Viewer.selectionOrderRequest)).
+    #: Each tuple contains a neighbor ID and its distance to the center point.
+    selectionOrder = List([]).tag(sync=True)
+    #: The number of points to return IDs and distances for in a selection order
+    #: request (see [`selectionOrderRequest`](#emblaze.viewer.Viewer.selectionOrderRequest)).
+    selectionOrderCount = Integer(2000)
+
+    #: The name of the color scheme to use to color points in the scatter plot.
+    #: Supported color schemes are documented in `src/colorschemes.ts` and
+    #: include the following:
+    #: * `tableau` (categorical)
+    #: * `dark2` (categorical)
+    #: * `paired` (categorical)
+    #: * `set1` (categorical)
+    #: * `set2` (categorical)
+    #: * `set3` (categorical)
+    #: * `turbo` (continuous)
+    #: * `plasma` (continuous)
+    #: * `magma` (continuous)
+    #: * `viridis` (continuous)
+    #: * `RdBu` (continuous)
+    #: * `Blues` (continuous)
+    #: * `Greens` (continuous)
+    #: * `Reds` (continuous)
+    #: * `rainbow` (continuous)
+    colorScheme = Unicode(&#34;&#34;).tag(sync=True)
+    
+    #: String indicating how to compute Star Trails. Valid options are listed
+    #: in [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode).
+    previewMode = Unicode(&#34;&#34;).tag(sync=True)
+    #: Parameters for generating Star Trails. These can be adjusted in the
+    #: Emblaze interface in the Settings menu, and consist of the following keys:
+    #: * `k`: Integer indicating the number of neighbors to compare between
+    #:   frames for each point. This cannot be greater than the Viewer&#39;s
+    #:   [`storedNumNeighbors`](#emblaze.viewer.Viewer.storedNumNeighbors).
+    #: * `similarityThreshold`: Similarity value above which a Star Trail will
+    #:   *not* be shown for a point. Similarity is computed as the number of
+    #:   neighbors in common between two frames divided by `k`.
+    previewParameters = Dict({}).tag(sync=True)
+    
+    #: List of past interactions with the widget. When [`loggingEnabled`](#emblaze.viewer.Viewer.loggingEnabled)
+    #: is set to `True` by the widget, the backend will save the interaction history
+    #: to file using the `loggingHelper`.
+    interactionHistory = List([]).tag(sync=True)
+    #: Flag that, when `True`, indicates that the widget should save interaction
+    #: history to a local file. This is used by the frontend to periodically save
+    #: interactions when `loggingEnabled` is set to `True`. You should not need
+    #: to modify this variable.
+    saveInteractionsFlag = Bool(False).tag(sync=True)
+    
+    #: Flag that, when `True`, enables the widget to periodically save interaction
+    #: history and logs to a local file.
+    loggingEnabled = Bool(False).tag(sync=True)
+    #: A `utils.LoggingHelper` object that handles saving interaction history.
+    loggingHelper = None
+    
+    def __init__(self, *args, **kwargs):
+        &#34;&#34;&#34;
+        You may pass additional traitlet values to the `Viewer` constructor
+        beyond the ones listed below.
+        Args:
+            embeddings: An `EmbeddingSet` object.
+            thumbnails: A `ThumbnailSet` object.
+            file: A file path or file-like object from which to read a comparison JSON file.
+        &#34;&#34;&#34;
+        super(Viewer, self).__init__(*args, **kwargs)
+        if self.file:
+            self.load_comparison(self.file)
+        if len(self.embeddings) == 0:
+            raise ValueError(&#34;Must have at least one embedding.&#34;)
+        if not all(emb.dimension() == 2 for emb in self.embeddings):
+            raise ValueError(&#34;All Embeddings must contain 2-dimensional coordinates. Try projecting the embeddings to 2D using the .project() method.&#34;)
+        self.saveSelectionFlag = False
+        self.loadSelectionFlag = False
+        self.selectionList = []
+        if self.loggingEnabled:
+            self.loggingHelper = LoggingHelper(&#39;emblaze_logs_{}.json&#39;.format(datetime.now().strftime(&#34;%Y%m%d_%H%M%S&#34;)),
+                                               {&#39;numFrames&#39;: len(self.embeddings),
+                                                &#39;numPoints&#39;: len(self.embeddings[0])})
+
+        self._update_performance_suggestions_mode()
+        if not self.colorScheme:
+            self.colorScheme = self.detect_color_scheme()
+        if not self.previewMode:
+            self.previewMode = self.detect_preview_mode()
+        if len(self.previewParameters) == 0:
+            self.previewParameters = {&#39;k&#39;: 10, &#39;similarityThreshold&#39;: 0.5}            
+
+    @observe(&#34;saveSelectionFlag&#34;)
+    def _observe_save_selection(self, change):
+        if not self.allowsSavingSelections:
+            self.saveSelectionFlag = False
+            return
+        if change.new:
+            newSelection = { }
+            newSelection[&#34;selectedIDs&#34;] = self.selectedIDs
+            newSelection[&#34;alignedIDs&#34;] = self.alignedIDs
+            newSelection[&#34;filterIDs&#34;] = self.filterIDs
+            newSelection[&#34;selectionDescription&#34;] = self.selectionDescription
+            newSelection[&#34;currentFrame&#34;] = self.currentFrame
+            newSelection[&#34;alignedFrame&#34;] = self.alignedFrame
+            now = datetime.now()
+            dateTime = now.strftime(&#34;%Y-%m-%d %H:%M:%S&#34;)
+            with open(dateTime + &#39; &#39; + self.selectionName + &#39;.selection&#39;, &#39;w&#39;) as outfile:
+                json.dump(newSelection, outfile)
+            
+            self.saveSelectionFlag = False
+            self.selectionName = &#34;&#34;
+            self.selectionDescription = &#34;&#34;
+            self.refresh_saved_selections()
+
+    def refresh_saved_selections(self):
+        &#34;&#34;&#34;
+        Updates the selectionList property, which is displayed in the sidebar
+        under the Saved tab.
+        &#34;&#34;&#34;
+        tmpList = []
+        # self.selectionList = []
+        for file in glob.glob(&#34;*.selection&#34;):
+            with open(file, &#34;r&#34;) as jsonFile:
+                data = json.load(jsonFile)                            
+                data[&#34;selectionName&#34;] = file.split(&#39;.&#39;)[0]
+                tmpList.append(data)
+        self.selectionList = sorted(tmpList, key=lambda x: x[&#34;selectionName&#34;], reverse=True)
+        self.loadSelectionFlag = False
+        
+    def detect_color_scheme(self):
+        &#34;&#34;&#34;
+        Infers an appropriate color scheme for the data based on whether the
+        data type of the embeddings&#39; `Field.COLOR` field is categorical or
+        continuous.
+        
+        Returns:
+            A string name for a default color scheme for the given type of data
+            (&#34;tableau&#34; for categorical data or &#34;plasma&#34; for continuous data).
+        &#34;&#34;&#34;
+        if len(self.embeddings) == 0:
+            return &#34;tableau&#34;
+        if self.embeddings[0].guess_data_type(Field.COLOR) == DataType.CATEGORICAL:
+            return &#34;tableau&#34;
+        return &#34;plasma&#34;
+    
+    def detect_preview_mode(self):
+        &#34;&#34;&#34;
+        Infers the appropriate preview mode to use to generate Star Trails, based
+        on whether the neighbors in all the frames are mostly the same or not.
+        
+        Returns:
+            A value from [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode)
+            indicating how Star Trails should be computed.
+        &#34;&#34;&#34;
+        ancestor_neighbors = [emb.get_ancestor_neighbors() for emb in self.embeddings]
+        for n1 in ancestor_neighbors:
+            if not n1:
+                return PreviewMode.PROJECTION_SIMILARITY
+            for n2 in ancestor_neighbors:
+                if not n2:
+                    return PreviewMode.PROJECTION_SIMILARITY
+                if n1 != n2:
+                    return PreviewMode.NEIGHBOR_SIMILARITY
+        return PreviewMode.PROJECTION_SIMILARITY
+        
+    def _select_stored_num_neighbors(self, embeddings):
+        &#34;&#34;&#34;
+        Optionally reduces the number of stored neighbors in the JSON to save
+        space. Prints a warning if it does so.
+        &#34;&#34;&#34;
+        num_points = len(embeddings) * len(embeddings[0])
+        new_val = None
+        if num_points &gt; 500000:
+            new_val = 25
+        elif num_points &gt; 200000:
+            new_val = 50
+        elif num_points &gt; 100000:
+            new_val = 75
+        if new_val is not None and any(new_val &lt; emb.n_neighbors for emb in embeddings.embeddings):
+            print((&#34;WARNING: Reducing the number of nearest neighbors passed to the &#34;
+                   &#34;widget to {} to save space. You can control this by setting the &#34;
+                   &#34;storedNumNeighbors property of the widget when initializing.&#34;).format(new_val))
+        return new_val                        
+        
+    @observe(&#34;file&#34;)
+    def _observe_file(self, change):
+        if change.new is not None:
+            self.load_comparison(change.new)
+        
+    @observe(&#34;embeddings&#34;)
+    def _observe_embeddings(self, change):
+        embeddings = change.new
+        assert len(embeddings) &gt; 0, &#34;Must have at least one embedding&#34;
+        assert not any(not e.any_ancestor_has_neighbors() for e in embeddings), &#34;All embeddings must have at least one Neighbors previously computed&#34;
+        if self._autogenerate_embeddings or self.data is None:
+            if embeddings is not None:
+                self.isLoading = True
+                self.neighborData = []
+                if self.storedNumNeighbors &gt; 0:
+                    n_neighbors = self.storedNumNeighbors 
+                else:
+                    n_neighbors = self._select_stored_num_neighbors(embeddings)
+                self.data = embeddings.to_json(save_neighbors=False)
+                self.neighborData = embeddings.get_ancestor_neighbors().to_json(num_neighbors=n_neighbors)
+                self.isLoading = False
+            else:
+                self.neighborData = []
+                self.data = {}
+        self.reset_state()
+        
+        # Compute padding based on first embedding
+        base_frame = embeddings[0].field(Field.POSITION)
+        mins = np.min(base_frame, axis=0)
+        maxes = np.max(base_frame, axis=0)
+        self.plotPadding = np.min(maxes - mins) * 0.2
+        
+        self.colorScheme = self.detect_color_scheme()
+        self.previewMode = self.detect_preview_mode()
+        self._update_selection_unit(embeddings[0])
+        
+        self._update_suggested_selections()
+
+    @observe(&#34;currentFrame&#34;)
+    def _observe_current_frame(self, change):
+        self._update_selection_unit(self.embeddings[change.new])
+        self._update_suggested_selections()
+
+    @observe(&#34;previewFrame&#34;)
+    def _observe_preview_frame(self, change):
+        self._update_suggested_selections()
+
+    @observe(&#34;thumbnails&#34;)
+    def _observe_thumbnails(self, change):
+        if self._autogenerate_embeddings or self.thumbnailData is None or len(self.thumbnailData) == 0:
+            if change.new is not None:
+                self.thumbnailData = change.new.to_json()
+            else:
+                self.thumbnailData = {} 
+  
+    @observe(&#34;alignedIDs&#34;)
+    def _observe_alignment_ids(self, change):
+        &#34;&#34;&#34;Align to the currently selected points and their neighbors.&#34;&#34;&#34;
+        if not change.new:
+            self.align_to_points(None, None)
+        else:
+            ids_of_interest = change.new
+            self.thread_starter(self.align_to_points, args=(change.new, list(set(ids_of_interest)),))
+    
+    @observe(&#34;selectedIDs&#34;)
+    def _observe_selected_ids(self, change):
+        &#34;&#34;&#34;Change the color scheme to match the arrangement of the selected IDs.&#34;&#34;&#34;
+        self.update_frame_colors()
+        self._update_suggested_selections()
+            
+    @observe(&#34;filterIDs&#34;)
+    def _observe_filter_ids(self, change):
+        &#34;&#34;&#34;Update suggestions when the filter changes.&#34;&#34;&#34;
+        self._update_suggested_selections()
+
+    def reset_state(self):
+        &#34;&#34;&#34;Resets the view state of the widget.&#34;&#34;&#34;
+        self.currentFrame = 0
+        self.previewFrame = -1
+        self.selectedIDs = []
+        self.alignedIDs = []
+        self.filterIDs = []
+        self.reset_alignment()
+
+    def reset_alignment(self):
+        &#34;&#34;&#34;Removes any transformations applied to the embedding frames.&#34;&#34;&#34;
+        self.frameTransformations = [
+            np.eye(3).tolist()
+            for i in range(len(self.embeddings))
+        ]
+        self.alignedFrame = 0
+        self.update_frame_colors()
+        
+    def align_to_points(self, point_ids, peripheral_points):
+        &#34;&#34;&#34;
+        Re-align the projections to minimize motion for the given point IDs.
+        Uses currentFrame as the base frame. Updates the 
+        self.frameTransformations traitlet.
+        
+        Args:
+            point_ids: Iterable of point IDs to use for alignment.
+            peripheral_points: Unused.
+        &#34;&#34;&#34;
+        if point_ids is None:
+            self.reset_alignment()
+            self.update_frame_colors()
+            return
+    
+        transformations = []
+        base_transform = matrix_to_affine(np.array(self.frameTransformations[self.alignedFrame]))
+
+        for emb in self.embeddings:
+            transformations.append(affine_to_matrix(emb.align_to(
+                self.embeddings[self.alignedFrame], 
+                ids=list(set(point_ids)),
+                base_transform=base_transform,
+                return_transform=True,
+                allow_flips=False)).tolist())
+
+        self.frameTransformations = transformations
+        self.update_frame_colors()
+
+    def update_frame_colors(self):
+        &#34;&#34;&#34;
+        Updates the colors of the color stripes next to each frame thumbnail in
+        the sidebar. The `selectedIDs` property is used first, followed by
+        `alignedIDs` if applicable.
+        &#34;&#34;&#34;
+        if len(self.embeddings) &lt;= 1:
+            self.frameColors = []
+        elif not self.selectedIDs:
+            if self.alignedIDs:
+                self.frameColors = compute_colors(self.embeddings, self.alignedIDs)
+            else:
+                if not self._defaultFrameColors:
+                    self._defaultFrameColors = compute_colors(self.embeddings, None)
+                self.frameColors = self._defaultFrameColors
+        else:
+            self.frameColors = compute_colors(self.embeddings, self.selectedIDs)
+
+    def _update_selection_unit(self, frame):
+        &#34;&#34;&#34;
+        Sets the selection unit if the current frame can be queried for
+        distances.
+        &#34;&#34;&#34;
+        ancestor = frame.find_ancestor_neighbor_embedding()
+        if isinstance(ancestor, NeighborOnlyEmbedding):
+            self.selectionUnit = &#39;&#39;
+        else:
+            self.selectionUnit = ancestor.metric
+        
+    @observe(&#34;selectionOrderRequest&#34;)
+    def _compute_selection_order(self, change):
+        &#34;&#34;&#34;Compute an ordering of the points by distance from the selected ID.&#34;&#34;&#34;
+        if not change.new or &#39;centerID&#39; not in change.new:
+            self.selectionOrder = []
+            return
+        
+        centerID = change.new[&#39;centerID&#39;]
+        frame = change.new[&#39;frame&#39;]
+        # metric = change.new[&#39;metric&#39;] # for now, unused
+        
+        hi_d = self.embeddings[frame].find_ancestor_neighbor_embedding()
+        order, distances = hi_d.neighbor_distances(ids=[centerID], n_neighbors=self.selectionOrderCount)
+        
+        self.selectionOrder = [(int(x), np.round(y, 4)) for x, y in np.vstack([
+            order.flatten(),
+            distances.flatten()
+        ]).T.tolist()]
+
+    @observe(&#34;visibleSidebarPane&#34;)
+    def _observe_sidebar_pane(self, change):
+        if change.new == SidebarPane.SUGGESTED:
+            self._update_suggested_selections()
+        elif change.new == SidebarPane.SAVED:
+            self.refresh_saved_selections()
+
+    def _get_filter_points(self, selection, in_frame=None):
+        &#34;&#34;&#34;Returns a list of points that should be visible if the given selection
+        is highlighted.&#34;&#34;&#34;
+        filtered_points = set()
+        for id_val in selection:
+            filtered_points.add(id_val)
+        for frame in self.embeddings.embeddings if in_frame is None else [in_frame]:
+            filtered_points |= set(frame.get_ancestor_neighbors()[selection][:,:self.numNeighbors].flatten().tolist())
+        return list(filtered_points)
+    
+    @observe(&#34;recomputeSuggestionsFlag&#34;)
+    def _observe_suggestion_flag(self, change):
+        &#34;&#34;&#34;Recomputes suggestions when recomputeSuggestionsFlag is set to True.&#34;&#34;&#34;
+        if change.new and not self.loadingSuggestions:
+            self._update_suggested_selections()
+    
+    def _update_performance_suggestions_mode(self):
+        &#34;&#34;&#34;Determines whether to use the performance mode for computing suggestions.&#34;&#34;&#34;
+        if len(self.embeddings) &lt;= 1:
+            self.performanceSuggestionsMode = False
+        else:
+            self.performanceSuggestionsMode = len(self.embeddings[0]) * len(self.embeddings) &gt;= PERFORMANCE_SUGGESTIONS_ENABLE
+        
+    def precompute_suggested_selections(self):
+        &#34;&#34;&#34;
+        Computes the suggested selections for all points in the embeddings. This
+        is useful to get quick recommendations later, though it may take time to
+        generate them upfront. When this method completes, the viewer&#39;s
+        [`recommender`](#emblaze.viewer.Viewer.recommender) property will be a
+        fully loaded `SelectionRecommender` that can be queried for suggestions
+        relative to an area of the plot, selection, or set of frames.
+        &#34;&#34;&#34;
+        bar = tqdm.tqdm(total=len(self.embeddings) * (len(self.embeddings) - 1), desc=&#39;Clustering&#39;)
+        def progress_fn(progress):
+            bar.update(1)
+        self.recommender = SelectionRecommender(self.embeddings, progress_fn=progress_fn)
+        bar.close()
+        
+    def _update_suggested_selections_background(self):
+        &#34;&#34;&#34;Function that runs in the background to recompute suggested selections.&#34;&#34;&#34;
+        self.recomputeSuggestionsFlag = False
+        if self.loadingSuggestions: 
+            return
+        
+
+        filter_points = None
+        self._update_performance_suggestions_mode()
+        if len(self.embeddings) == 1:
+            # We cannot generate suggested selections when there is only one embedding
+            self.suggestedSelections = []
+            return
+        if self.performanceSuggestionsMode and (not self.recommender or self.recommender.is_restricted):
+            # Check if sufficiently few points are visible to show suggestions
+            if self.filterIDs and len(self.filterIDs) &lt;= PERFORMANCE_SUGGESTIONS_RECOMPUTE:
+                filter_points = self.filterIDs
+            if self.suggestedSelectionWindow:
+                bbox_points = self.embeddings[self.currentFrame].within_bbox(self.suggestedSelectionWindow)
+                if filter_points:
+                    filter_points = list(set(filter_points) &amp; set(bbox_points))
+                else:
+                    filter_points = bbox_points
+            if (self.visibleSidebarPane != SidebarPane.SUGGESTED or
+                not filter_points or
+                len(filter_points) &gt; PERFORMANCE_SUGGESTIONS_RECOMPUTE):
+                self.suggestedSelections = []
+                return
+            # Add the vicinity around these points just to be safe
+            filter_points = self._get_filter_points(filter_points, in_frame=self.embeddings[self.currentFrame])
+            
+        self.loadingSuggestions = True
+        try:
+            if self.recommender is None or (self.recommender.is_restricted and self.performanceSuggestionsMode):
+                self.loadingSuggestionsProgress = 0.0
+                def progress_fn(progress):
+                    self.loadingSuggestionsProgress = progress
+                self.recommender = SelectionRecommender(
+                    self.embeddings, 
+                    progress_fn=progress_fn,
+                    frame_idx=self.currentFrame if self.performanceSuggestionsMode else None,
+                    preview_frame_idx=self.previewFrame if self.performanceSuggestionsMode and self.previewFrame &gt;= 0 and self.previewFrame != self.currentFrame else None,
+                    filter_points=filter_points if self.performanceSuggestionsMode else None)
+
+        
+            # Only compute suggestions when pane is open
+            if self.previewFrame &gt;= 0 and self.previewFrame != self.currentFrame:
+                preview_frame_idx = self.previewFrame
+            else:
+                preview_frame_idx = None
+              
+            if self.selectedIDs:
+                ids_of_interest = self.selectedIDs
+                id_type = &#34;selection&#34;  
+            elif self.filterIDs and not self.performanceSuggestionsMode:
+                ids_of_interest = self.filterIDs
+                id_type = &#34;visible points&#34;
+            else:
+                ids_of_interest = None
+                id_type = &#34;visible points&#34; if self.performanceSuggestionsMode else None
+
+            suggestions = []
+            results = self.recommender.query(ids_of_interest=ids_of_interest,
+                                             filter_ids=self.filterIDs or None,
+                                             frame_idx=self.currentFrame,
+                                             preview_frame_idx=preview_frame_idx,
+                                             bounding_box=self.suggestedSelectionWindow or None,
+                                             num_results=25,
+                                             id_type=id_type)
+            for result, reason in results:
+                ids = list(result[&#34;ids&#34;])
+                suggestions.append({
+                    &#34;selectionName&#34;: &#34;&#34;,
+                    &#34;selectionDescription&#34;: reason,
+                    &#34;currentFrame&#34;: result[&#34;frame&#34;],
+                    &#34;selectedIDs&#34;: ids,
+                    &#34;alignedIDs&#34;: ids,
+                    &#34;filterIDs&#34;: self._get_filter_points(ids),
+                    &#34;frameColors&#34;: compute_colors(self.embeddings, ids)
+                })
+            self.suggestedSelections = suggestions
+                
+            self.loadingSuggestions = False
+        except Exception as e:
+            print(e)
+            self.loadingSuggestions = False
+            raise e
+        
+    def _update_suggested_selections(self):
+        &#34;&#34;&#34;Recomputes the suggested selections.&#34;&#34;&#34;
+        self.thread_starter(self._update_suggested_selections_background)
+
+    @observe(&#34;saveInteractionsFlag&#34;)
+    def _save_interactions(self, change):
+        &#34;&#34;&#34;
+        The widget sets the flag to save interaction history periodically
+        because we can&#39;t use a timer in the backend.
+        &#34;&#34;&#34;
+        if change.new and self.loggingHelper:
+            self.loggingHelper.add_logs(self.interactionHistory)
+            self.interactionHistory = []
+            self.saveInteractionsFlag = False
+            
+    def comparison_to_json(self, compressed=True, ancestor_data=True, suggestions=False):
+        &#34;&#34;&#34;
+        Saves the data used to produce this comparison to a JSON object. This
+        includes the `EmbeddingSet` and the `Thumbnails` that are visualized, as
+        well as the immediate and ancestor neighbor data (see below). Ancestor
+        neighbors are used to display nearest neighbors in the UI.
+        
+        Args:
+            compressed: If `True`, then save the embeddings in a base-64 encoded
+                format to save space.
+            ancestor_data: If `True` (default), the full `Embedding` object that
+                produces the ancestor neighbors will be stored, including its neighbor
+                set. If `False`, only the ancestor neighbors themselves will be
+                stored. This can save space if the ancestor embedding is very
+                high-dimensional. However, the high-dimensional radius
+                select tool will not work if ancestor data is not saved.
+            suggestions: If `True` and the viewer has a `recommender` associated
+                with it, the recommender will also be serialized.
+        
+        Returns:
+            A JSON-serializable dictionary representing the comparison, including
+            all `embeddings`, `thumbnails`, and optionally ancestor data and
+            suggestions.
+        &#34;&#34;&#34;
+        result = {}
+        
+        ancestor_neighbors = self.embeddings.get_ancestor_neighbors()
+        recent_neighbors = self.embeddings.get_recent_neighbors()
+        neighbors = self.embeddings.get_neighbors()
+        
+        result[&#34;_format&#34;] = &#34;emblaze.Viewer.SaveData&#34;
+        result[&#34;embeddings&#34;] = self.embeddings.to_json(compressed=compressed,
+                                                       save_neighbors=True)
+        result[&#34;thumbnails&#34;] = self.thumbnails.to_json()
+        
+        # Save recent neighbors (those used for frame colors and recommendations)
+        # if they do not originate from the embeddings or in the ancestor embeddings
+        if neighbors != recent_neighbors and recent_neighbors != ancestor_neighbors:
+            # Save these in mock format
+            if recent_neighbors.identical():
+                result[&#34;recent_neighbors&#34;] = [NeighborOnlyEmbedding.from_embedding(recent_neighbors[0]).to_json(compressed=compressed)]
+            else:
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in recent_neighbors]
+                result[&#34;recent_neighbors&#34;] = [e.to_json(compressed=compressed) for e in mock_embs]
+        
+        # Save ancestor neighbors (and positions, if ancestor_data = True)
+        ancestors = EmbeddingSet([emb.find_ancestor_neighbor_embedding() for emb in self.embeddings], align=False)
+        if ancestor_data:
+            if ancestors.identical():
+                result[&#34;ancestor_data&#34;] = [ancestors[0].to_json(compressed=compressed)]
+            else:
+                result[&#34;ancestor_data&#34;] = [
+                    anc.to_json(compressed=compressed)
+                    for anc in ancestors
+                ]
+        elif neighbors != ancestor_neighbors:
+            # Create mock NeighborOnlyEmbeddings here to show that we are
+            # saving only the neighbor data
+            if ancestor_neighbors.identical():
+                result[&#34;ancestor_neighbors&#34;] = [NeighborOnlyEmbedding.from_embedding(ancestors[0]).to_json(compressed=compressed)]
+            else:
+                mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in ancestors]
+                result[&#34;ancestor_neighbors&#34;] = [e.to_json(compressed=compressed) for e in mock_embs]
+            
+        if suggestions and self.recommender is not None:
+            result[&#34;suggestions&#34;] = self.recommender.to_json()
+        return result
+    
+    def load_comparison_from_json(self, data):
+        &#34;&#34;&#34;
+        Loads comparison information from a JSON object, including the
+        `EmbeddingSet`, `Thumbnails`, and `NeighborSet`.
+        
+        Args:
+            data: A JSON-serializable dictionary generated using
+                [`Viewer.comparison_to_json`](#emblaze.viewer.Viewer.comparison_to_json).
+                
+        Returns:
+            The populated `Viewer` object.
+        &#34;&#34;&#34;
+        self.isLoading = True
+        if self.embeddings is not None:
+            self.reset_state()
+            self.data = None
+            self.neighborData = []
+            self.thumbnailData = {}
+        
+        assert data[&#34;_format&#34;] == &#34;emblaze.Viewer.SaveData&#34;, &#34;Unsupported JSON _format key &#39;{}&#39;&#34;.format(data[&#34;_format&#34;])
+        # Load neighbors first, to create mock parent embeddings
+        parents = None
+        if &#34;ancestor_data&#34; in data:
+            parents = [Embedding.from_json(item) for item in data[&#34;ancestor_data&#34;]]
+        elif &#34;ancestor_neighbors&#34; in data:
+            parents = [NeighborOnlyEmbedding.from_json(item) for item in data[&#34;ancestor_neighbors&#34;]]
+            
+        if &#34;recent_neighbors&#34; in data:
+            # The neighbors to display will come from these, so put them in between
+            # the ancestor embeddings and the final ones
+            recent_parents = parents
+            if recent_parents is None:
+                recent_parents = [None for _ in range(len(self.embeddings))]
+            elif len(parents) == 1:
+                recent_parents = [recent_parents[0] for _ in range(len(self.embeddings))]
+            parents = [NeighborOnlyEmbedding.from_json(item, parent=p)
+                       for item, p in zip(data[&#34;recent_neighbors&#34;], recent_parents)]
+        
+        self.embeddings = EmbeddingSet.from_json(data[&#34;embeddings&#34;], parents=parents)
+        self.thumbnails = Thumbnails.from_json(data[&#34;thumbnails&#34;])
+        
+        if &#34;suggestions&#34; in data:
+            self.recommender = SelectionRecommender.from_json(data[&#34;suggestions&#34;], self.embeddings)
+        
+        self.isLoading = False
+        return self
+                
+    def save_comparison(self, file_path_or_buffer, **kwargs):
+        &#34;&#34;&#34;
+        Saves the comparison data (`EmbeddingSet`, `Thumbnails`, and `NeighborSet`) to
+        the given file path or file-like object. See [`Viewer.comparison_to_json()`](#emblaze.viewer.Viewer.comparison_to_json)
+        for available keyword arguments. The comparison can be loaded later by
+        specifying a `file` during initialization:
+        
+        ```python
+        w = emblaze.Viewer(file=file_path)
+        ```
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object to which to
+                write the comparison.
+        &#34;&#34;&#34;
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, &#39;w&#39;) as file:
+                json.dump(self.comparison_to_json(**kwargs), file)
+        else:
+            # File object
+            json.dump(self.comparison_to_json(**kwargs), file_path_or_buffer)
+            
+    def load_comparison(self, file_path_or_buffer):
+        &#34;&#34;&#34;
+        Load the comparison data from the given file path or
+        file-like object containing JSON data.
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object from which to
+                load the comparison.
+        &#34;&#34;&#34;
+        if isinstance(file_path_or_buffer, str):
+            # File path
+            with open(file_path_or_buffer, &#39;r&#39;) as file:
+                return self.load_comparison_from_json(json.load(file))
+        else:
+            # File object
+            return self.load_comparison_from_json(json.load(file_path_or_buffer))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>ipywidgets.widgets.domwidget.DOMWidget</li>
+<li>ipywidgets.widgets.widget.Widget</li>
+<li>ipywidgets.widgets.widget.LoggingHasTraits</li>
+<li>traitlets.traitlets.HasTraits</li>
+<li>traitlets.traitlets.HasDescriptors</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="emblaze.viewer.Viewer.loggingHelper"><code class="name">var <span class="ident">loggingHelper</span></code></dt>
+<dd>
+<div class="desc"><p>A <code>utils.LoggingHelper</code> object that handles saving interaction history.</p></div>
+</dd>
+<dt id="emblaze.viewer.Viewer.recommender"><code class="name">var <span class="ident">recommender</span></code></dt>
+<dd>
+<div class="desc"><p>The <a href="recommender.html#emblaze.recommender.SelectionRecommender"><code>SelectionRecommender</code></a>
+responsible for generating suggested selections.</p></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="emblaze.viewer.Viewer.alignedFrame"><code class="name">var <span class="ident">alignedFrame</span></code></dt>
+<dd>
+<div class="desc"><p>The index of the aligned frame in the Viewer's <a href="#emblaze.viewer.Viewer.embeddings"><code>embeddings</code></a>.
+When the frames are aligned to a selection, they are anchored to the same
+position as before in this frame only.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.alignedIDs"><code class="name">var <span class="ident">alignedIDs</span></code></dt>
+<dd>
+<div class="desc"><p>A list of integer IDs corresponding to the aligned points (points selected
+to minimize motion across frames). By default, these are zero-indexed and
+span the range from zero to the number of points in each embedding.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.allowsSavingSelections"><code class="name">var <span class="ident">allowsSavingSelections</span></code></dt>
+<dd>
+<div class="desc"><p>Boolean indicating whether selection saving and restoring should be
+enabled in the interface.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.colorScheme"><code class="name">var <span class="ident">colorScheme</span></code></dt>
+<dd>
+<div class="desc"><p>The name of the color scheme to use to color points in the scatter plot.
+Supported color schemes are documented in <code>src/colorschemes.ts</code> and
+include the following:
+* <code>tableau</code> (categorical)
+* <code>dark2</code> (categorical)
+* <code>paired</code> (categorical)
+* <code>set1</code> (categorical)
+* <code>set2</code> (categorical)
+* <code>set3</code> (categorical)
+* <code>turbo</code> (continuous)
+* <code>plasma</code> (continuous)
+* <code>magma</code> (continuous)
+* <code>viridis</code> (continuous)
+* <code>RdBu</code> (continuous)
+* <code>Blues</code> (continuous)
+* <code>Greens</code> (continuous)
+* <code>Reds</code> (continuous)
+* <code>rainbow</code> (continuous)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.currentFrame"><code class="name">var <span class="ident">currentFrame</span></code></dt>
+<dd>
+<div class="desc"><p>The index of the currently-viewing frame in the Viewer's <a href="#emblaze.viewer.Viewer.embeddings"><code>embeddings</code></a>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.data"><code class="name">var <span class="ident">data</span></code></dt>
+<dd>
+<div class="desc"><p>The JSON-serializable data passed to the frontend. You should not need to modify this variable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.embeddings"><code class="name">var <span class="ident">embeddings</span></code></dt>
+<dd>
+<div class="desc"><p>An <a href="datasets.html#emblaze.datasets.EmbeddingSet"><code>EmbeddingSet</code></a> containing
+one or more embeddings to visualize. The coordinates contained in this
+<code>EmbeddingSet</code> must be 2-dimensional.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.file"><code class="name">var <span class="ident">file</span></code></dt>
+<dd>
+<div class="desc"><p>A file path or file-like object from which to read an embedding comparison (see <a href="viewer.html#emblaze.viewer.Viewer.save_comparison"><code>save_comparison</code></a>).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.filterIDs"><code class="name">var <span class="ident">filterIDs</span></code></dt>
+<dd>
+<div class="desc"><p>A list of integer IDs corresponding to the filtered points (a subset of
+points selected to be visible in the plot). By default, these are zero-indexed and
+span the range from zero to the number of points in each embedding.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.frameColors"><code class="name">var <span class="ident">frameColors</span></code></dt>
+<dd>
+<div class="desc"><p>The colors used to represent each frame in the sidebar, stored as lists
+of 3 HSV components each.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.frameTransformations"><code class="name">var <span class="ident">frameTransformations</span></code></dt>
+<dd>
+<div class="desc"><p>Transformation matrices that result in an alignment of frames to the
+viewer's current <a href="#emblaze.viewer.Viewer.alignedIDs"><code>alignedIDs</code></a>. The
+matrices are represented as 3x3 nested lists.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.interactionHistory"><code class="name">var <span class="ident">interactionHistory</span></code></dt>
+<dd>
+<div class="desc"><p>List of past interactions with the widget. When <a href="#emblaze.viewer.Viewer.loggingEnabled"><code>loggingEnabled</code></a>
+is set to <code>True</code> by the widget, the backend will save the interaction history
+to file using the <code>loggingHelper</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.isLoading"><code class="name">var <span class="ident">isLoading</span></code></dt>
+<dd>
+<div class="desc"><p><code>True</code> if the widget is currently loading a comparison from file, <code>False</code> otherwise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.loadingSuggestions"><code class="name">var <span class="ident">loadingSuggestions</span></code></dt>
+<dd>
+<div class="desc"><p><code>True</code> if the recommender is currently computing suggested selections, <code>False</code> otherwise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.loadingSuggestionsProgress"><code class="name">var <span class="ident">loadingSuggestionsProgress</span></code></dt>
+<dd>
+<div class="desc"><p>Floating point value between 0 and 1 indicating the progress towards computing suggested selections.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.loggingEnabled"><code class="name">var <span class="ident">loggingEnabled</span></code></dt>
+<dd>
+<div class="desc"><p>Flag that, when <code>True</code>, enables the widget to periodically save interaction
+history and logs to a local file.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.neighborData"><code class="name">var <span class="ident">neighborData</span></code></dt>
+<dd>
+<div class="desc"><p>A JSON-serializable list of high-dimensional neighbors, containing one
+dictionary corresponding to each <code>Embedding</code>. You should not need to
+modify this variable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.numNeighbors"><code class="name">var <span class="ident">numNeighbors</span></code></dt>
+<dd>
+<div class="desc"><p>The number of neighbors to show in nearest neighbor lines and the detail
+sidebar. This number cannot be greater than <a href="#emblaze.viewer.Viewer.storedNumNeighbors"><code>storedNumNeighbors</code></a>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.performanceSuggestionsMode"><code class="name">var <span class="ident">performanceSuggestionsMode</span></code></dt>
+<dd>
+<div class="desc"><p>If <code>True</code>, recompute suggestions fully but only when less than <code>PERFORMANCE_SUGGESTIONS_RECOMPUTE</code>
+points are visible.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.plotPadding"><code class="name">var <span class="ident">plotPadding</span></code></dt>
+<dd>
+<div class="desc"><p>Padding around the plot in data coordinates.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.previewFrame"><code class="name">var <span class="ident">previewFrame</span></code></dt>
+<dd>
+<div class="desc"><p>The index of the previewed frame in the Viewer's <a href="#emblaze.viewer.Viewer.embeddings"><code>embeddings</code></a>. The
+previewed frame is the frame to which points move when the Star Trail visualization is active.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.previewMode"><code class="name">var <span class="ident">previewMode</span></code></dt>
+<dd>
+<div class="desc"><p>String indicating how to compute Star Trails. Valid options are listed
+in <a href="utils.html#emblaze.utils.PreviewMode"><code>utils.PreviewMode</code></a>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.previewParameters"><code class="name">var <span class="ident">previewParameters</span></code></dt>
+<dd>
+<div class="desc"><p>Parameters for generating Star Trails. These can be adjusted in the
+Emblaze interface in the Settings menu, and consist of the following keys:
+* <code>k</code>: Integer indicating the number of neighbors to compare between
+frames for each point. This cannot be greater than the Viewer's
+<a href="#emblaze.viewer.Viewer.storedNumNeighbors"><code>storedNumNeighbors</code></a>.
+* <code>similarityThreshold</code>: Similarity value above which a Star Trail will
+<em>not</em> be shown for a point. Similarity is computed as the number of
+neighbors in common between two frames divided by <code>k</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.recomputeSuggestionsFlag"><code class="name">var <span class="ident">recomputeSuggestionsFlag</span></code></dt>
+<dd>
+<div class="desc"><p>A flag that, when <code>True</code>, indicates that suggested selections should be recomputed.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.saveInteractionsFlag"><code class="name">var <span class="ident">saveInteractionsFlag</span></code></dt>
+<dd>
+<div class="desc"><p>Flag that, when <code>True</code>, indicates that the widget should save interaction
+history to a local file. This is used by the frontend to periodically save
+interactions when <code>loggingEnabled</code> is set to <code>True</code>. You should not need
+to modify this variable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.saveSelectionFlag"><code class="name">var <span class="ident">saveSelectionFlag</span></code></dt>
+<dd>
+<div class="desc"><p>Boolean marking that the current state of the visualization should be
+saved to file. The current values of <a href="#emblaze.viewer.Viewer.selectionName"><code>selectionName</code></a>
+and <a href="#emblaze.viewer.Viewer.selectionDescription"><code>selectionDescription</code></a>
+will be used.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectedIDs"><code class="name">var <span class="ident">selectedIDs</span></code></dt>
+<dd>
+<div class="desc"><p>A list of integer IDs corresponding to the selected points. By default,
+these are zero-indexed and span the range from zero to the number of points in each
+embedding.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionDescription"><code class="name">var <span class="ident">selectionDescription</span></code></dt>
+<dd>
+<div class="desc"><p>A description of the selection to save.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionHistory"><code class="name">var <span class="ident">selectionHistory</span></code></dt>
+<dd>
+<div class="desc"><p>A list of recent selections, represented in the same format as saved
+and suggested selections (including the <code>selectedIDs</code> and <code>currentFrame</code>)
+keys.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionList"><code class="name">var <span class="ident">selectionList</span></code></dt>
+<dd>
+<div class="desc"><p>A list of saved selections, to be displayed in the Saved sidebar pane.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionName"><code class="name">var <span class="ident">selectionName</span></code></dt>
+<dd>
+<div class="desc"><p>The name of the selection to save.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionOrder"><code class="name">var <span class="ident">selectionOrder</span></code></dt>
+<dd>
+<div class="desc"><p>A list of tuples representing the results of a selection order request
+(see <a href="#emblaze.viewer.Viewer.selectionOrderRequest"><code>selectionOrderRequest</code></a>).
+Each tuple contains a neighbor ID and its distance to the center point.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionOrderCount"><code class="name">var <span class="ident">selectionOrderCount</span></code></dt>
+<dd>
+<div class="desc"><p>The number of points to return IDs and distances for in a selection order
+request (see <a href="#emblaze.viewer.Viewer.selectionOrderRequest"><code>selectionOrderRequest</code></a>).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionOrderRequest"><code class="name">var <span class="ident">selectionOrderRequest</span></code></dt>
+<dd>
+<div class="desc"><p>A dictionary that, when populated, indicates that the <code><a title="emblaze.viewer.Viewer" href="#emblaze.viewer.Viewer">Viewer</a></code> instance
+should perform a radius select. The dictionary should contain three keys:
+<code>centerID</code> (int - ID of the point around which to select), <code>frame</code> (int -
+the frame in which to collect nearest neighbors), and <code>unit</code> (string -
+the metric to use to define nearest neighbors, such as "pixels" or "cosine").</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.selectionUnit"><code class="name">var <span class="ident">selectionUnit</span></code></dt>
+<dd>
+<div class="desc"><p>The supported selection unit for the current embeddings. This corresponds
+to the metric used by the embedding's <code>Neighbors</code> set.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.storedNumNeighbors"><code class="name">var <span class="ident">storedNumNeighbors</span></code></dt>
+<dd>
+<div class="desc"><p>The number of nearest neighbors to store for each point in the frontend
+visualization. This number cannot be greater than the number of neighbors
+computed in the embeddings' <code>Neighbors</code> objects. This is 100 by default,
+but will be automatically reduced to improve performance and memory usage
+when many points or frames are visualized. This value can be configured in the
+initialization of the <code><a title="emblaze.viewer.Viewer" href="#emblaze.viewer.Viewer">Viewer</a></code> instance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.suggestedSelectionWindow"><code class="name">var <span class="ident">suggestedSelectionWindow</span></code></dt>
+<dd>
+<div class="desc"><p>The bounding box of the screen in data coordinates, used to determine
+which points are currently visible and should be included in Suggested
+Selections. The bounding box is represented as a list of four values,
+consisting of the minimum and maximum <em>x</em> values, followed by the minimum
+and maximum <em>y</em> values.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.suggestedSelections"><code class="name">var <span class="ident">suggestedSelections</span></code></dt>
+<dd>
+<div class="desc"><p>The current list of suggested selections. Each suggestion is represented
+as a dictionary in the same format as a saved selection, including keys
+for <code>currentFrame</code>, <code>selectedIDs</code>, <code>alignedIDs</code>, and <code>filterIDs</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.thread_starter"><code class="name">var <span class="ident">thread_starter</span></code></dt>
+<dd>
+<div class="desc"><p>A trait which allows any value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.thumbnailData"><code class="name">var <span class="ident">thumbnailData</span></code></dt>
+<dd>
+<div class="desc"><p>A JSON-serializable dictionary of thumbnail info. You should not need to
+modify this variable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.thumbnails"><code class="name">var <span class="ident">thumbnails</span></code></dt>
+<dd>
+<div class="desc"><p>A <a href="thumbnails.html#emblaze.thumbnails.Thumbnails"><code>Thumbnails</code></a> instance
+containing text and/or image descriptions for the IDs of the points
+provided in <a href="#emblaze.viewer.Viewer.embeddings"><code>embeddings</code></a>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.visibleSidebarPane"><code class="name">var <span class="ident">visibleSidebarPane</span></code></dt>
+<dd>
+<div class="desc"><p>The currently-visible sidebar pane, enumerated in <code><a title="emblaze.utils.SidebarPane" href="utils.html#emblaze.utils.SidebarPane">SidebarPane</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, obj, cls=None):
+    &#34;&#34;&#34;Get the value of the trait by self.name for the instance.
+
+    Default values are instantiated when :meth:`HasTraits.__new__`
+    is called.  Thus by the time this method gets called either the
+    default value or a user defined value (they called :meth:`__set__`)
+    is in the :class:`HasTraits` instance.
+    &#34;&#34;&#34;
+    if obj is None:
+        return self
+    else:
+        return self.get(obj, cls)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="emblaze.viewer.Viewer.align_to_points"><code class="name flex">
+<span>def <span class="ident">align_to_points</span></span>(<span>self, point_ids, peripheral_points)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Re-align the projections to minimize motion for the given point IDs.
+Uses currentFrame as the base frame. Updates the
+self.frameTransformations traitlet.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>point_ids</code></strong></dt>
+<dd>Iterable of point IDs to use for alignment.</dd>
+<dt><strong><code>peripheral_points</code></strong></dt>
+<dd>Unused.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def align_to_points(self, point_ids, peripheral_points):
+    &#34;&#34;&#34;
+    Re-align the projections to minimize motion for the given point IDs.
+    Uses currentFrame as the base frame. Updates the 
+    self.frameTransformations traitlet.
+    
+    Args:
+        point_ids: Iterable of point IDs to use for alignment.
+        peripheral_points: Unused.
+    &#34;&#34;&#34;
+    if point_ids is None:
+        self.reset_alignment()
+        self.update_frame_colors()
+        return
+
+    transformations = []
+    base_transform = matrix_to_affine(np.array(self.frameTransformations[self.alignedFrame]))
+
+    for emb in self.embeddings:
+        transformations.append(affine_to_matrix(emb.align_to(
+            self.embeddings[self.alignedFrame], 
+            ids=list(set(point_ids)),
+            base_transform=base_transform,
+            return_transform=True,
+            allow_flips=False)).tolist())
+
+    self.frameTransformations = transformations
+    self.update_frame_colors()</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.comparison_to_json"><code class="name flex">
+<span>def <span class="ident">comparison_to_json</span></span>(<span>self, compressed=True, ancestor_data=True, suggestions=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves the data used to produce this comparison to a JSON object. This
+includes the <code>EmbeddingSet</code> and the <code>Thumbnails</code> that are visualized, as
+well as the immediate and ancestor neighbor data (see below). Ancestor
+neighbors are used to display nearest neighbors in the UI.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>compressed</code></strong></dt>
+<dd>If <code>True</code>, then save the embeddings in a base-64 encoded
+format to save space.</dd>
+<dt><strong><code>ancestor_data</code></strong></dt>
+<dd>If <code>True</code> (default), the full <code>Embedding</code> object that
+produces the ancestor neighbors will be stored, including its neighbor
+set. If <code>False</code>, only the ancestor neighbors themselves will be
+stored. This can save space if the ancestor embedding is very
+high-dimensional. However, the high-dimensional radius
+select tool will not work if ancestor data is not saved.</dd>
+<dt><strong><code>suggestions</code></strong></dt>
+<dd>If <code>True</code> and the viewer has a <code>recommender</code> associated
+with it, the recommender will also be serialized.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A JSON-serializable dictionary representing the comparison, including
+all <code>embeddings</code>, <code>thumbnails</code>, and optionally ancestor data and
+suggestions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def comparison_to_json(self, compressed=True, ancestor_data=True, suggestions=False):
+    &#34;&#34;&#34;
+    Saves the data used to produce this comparison to a JSON object. This
+    includes the `EmbeddingSet` and the `Thumbnails` that are visualized, as
+    well as the immediate and ancestor neighbor data (see below). Ancestor
+    neighbors are used to display nearest neighbors in the UI.
+    
+    Args:
+        compressed: If `True`, then save the embeddings in a base-64 encoded
+            format to save space.
+        ancestor_data: If `True` (default), the full `Embedding` object that
+            produces the ancestor neighbors will be stored, including its neighbor
+            set. If `False`, only the ancestor neighbors themselves will be
+            stored. This can save space if the ancestor embedding is very
+            high-dimensional. However, the high-dimensional radius
+            select tool will not work if ancestor data is not saved.
+        suggestions: If `True` and the viewer has a `recommender` associated
+            with it, the recommender will also be serialized.
+    
+    Returns:
+        A JSON-serializable dictionary representing the comparison, including
+        all `embeddings`, `thumbnails`, and optionally ancestor data and
+        suggestions.
+    &#34;&#34;&#34;
+    result = {}
+    
+    ancestor_neighbors = self.embeddings.get_ancestor_neighbors()
+    recent_neighbors = self.embeddings.get_recent_neighbors()
+    neighbors = self.embeddings.get_neighbors()
+    
+    result[&#34;_format&#34;] = &#34;emblaze.Viewer.SaveData&#34;
+    result[&#34;embeddings&#34;] = self.embeddings.to_json(compressed=compressed,
+                                                   save_neighbors=True)
+    result[&#34;thumbnails&#34;] = self.thumbnails.to_json()
+    
+    # Save recent neighbors (those used for frame colors and recommendations)
+    # if they do not originate from the embeddings or in the ancestor embeddings
+    if neighbors != recent_neighbors and recent_neighbors != ancestor_neighbors:
+        # Save these in mock format
+        if recent_neighbors.identical():
+            result[&#34;recent_neighbors&#34;] = [NeighborOnlyEmbedding.from_embedding(recent_neighbors[0]).to_json(compressed=compressed)]
+        else:
+            mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in recent_neighbors]
+            result[&#34;recent_neighbors&#34;] = [e.to_json(compressed=compressed) for e in mock_embs]
+    
+    # Save ancestor neighbors (and positions, if ancestor_data = True)
+    ancestors = EmbeddingSet([emb.find_ancestor_neighbor_embedding() for emb in self.embeddings], align=False)
+    if ancestor_data:
+        if ancestors.identical():
+            result[&#34;ancestor_data&#34;] = [ancestors[0].to_json(compressed=compressed)]
+        else:
+            result[&#34;ancestor_data&#34;] = [
+                anc.to_json(compressed=compressed)
+                for anc in ancestors
+            ]
+    elif neighbors != ancestor_neighbors:
+        # Create mock NeighborOnlyEmbeddings here to show that we are
+        # saving only the neighbor data
+        if ancestor_neighbors.identical():
+            result[&#34;ancestor_neighbors&#34;] = [NeighborOnlyEmbedding.from_embedding(ancestors[0]).to_json(compressed=compressed)]
+        else:
+            mock_embs = [NeighborOnlyEmbedding.from_embedding(a) for a in ancestors]
+            result[&#34;ancestor_neighbors&#34;] = [e.to_json(compressed=compressed) for e in mock_embs]
+        
+    if suggestions and self.recommender is not None:
+        result[&#34;suggestions&#34;] = self.recommender.to_json()
+    return result</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.detect_color_scheme"><code class="name flex">
+<span>def <span class="ident">detect_color_scheme</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Infers an appropriate color scheme for the data based on whether the
+data type of the embeddings' <code>Field.COLOR</code> field is categorical or
+continuous.</p>
+<h2 id="returns">Returns</h2>
+<p>A string name for a default color scheme for the given type of data
+("tableau" for categorical data or "plasma" for continuous data).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def detect_color_scheme(self):
+    &#34;&#34;&#34;
+    Infers an appropriate color scheme for the data based on whether the
+    data type of the embeddings&#39; `Field.COLOR` field is categorical or
+    continuous.
+    
+    Returns:
+        A string name for a default color scheme for the given type of data
+        (&#34;tableau&#34; for categorical data or &#34;plasma&#34; for continuous data).
+    &#34;&#34;&#34;
+    if len(self.embeddings) == 0:
+        return &#34;tableau&#34;
+    if self.embeddings[0].guess_data_type(Field.COLOR) == DataType.CATEGORICAL:
+        return &#34;tableau&#34;
+    return &#34;plasma&#34;</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.detect_preview_mode"><code class="name flex">
+<span>def <span class="ident">detect_preview_mode</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Infers the appropriate preview mode to use to generate Star Trails, based
+on whether the neighbors in all the frames are mostly the same or not.</p>
+<h2 id="returns">Returns</h2>
+<p>A value from <a href="utils.html#emblaze.utils.PreviewMode"><code>utils.PreviewMode</code></a>
+indicating how Star Trails should be computed.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def detect_preview_mode(self):
+    &#34;&#34;&#34;
+    Infers the appropriate preview mode to use to generate Star Trails, based
+    on whether the neighbors in all the frames are mostly the same or not.
+    
+    Returns:
+        A value from [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode)
+        indicating how Star Trails should be computed.
+    &#34;&#34;&#34;
+    ancestor_neighbors = [emb.get_ancestor_neighbors() for emb in self.embeddings]
+    for n1 in ancestor_neighbors:
+        if not n1:
+            return PreviewMode.PROJECTION_SIMILARITY
+        for n2 in ancestor_neighbors:
+            if not n2:
+                return PreviewMode.PROJECTION_SIMILARITY
+            if n1 != n2:
+                return PreviewMode.NEIGHBOR_SIMILARITY
+    return PreviewMode.PROJECTION_SIMILARITY</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.load_comparison"><code class="name flex">
+<span>def <span class="ident">load_comparison</span></span>(<span>self, file_path_or_buffer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load the comparison data from the given file path or
+file-like object containing JSON data.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_path_or_buffer</code></strong></dt>
+<dd>A file path or file-like object from which to
+load the comparison.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_comparison(self, file_path_or_buffer):
+    &#34;&#34;&#34;
+    Load the comparison data from the given file path or
+    file-like object containing JSON data.
+    
+    Args:
+        file_path_or_buffer: A file path or file-like object from which to
+            load the comparison.
+    &#34;&#34;&#34;
+    if isinstance(file_path_or_buffer, str):
+        # File path
+        with open(file_path_or_buffer, &#39;r&#39;) as file:
+            return self.load_comparison_from_json(json.load(file))
+    else:
+        # File object
+        return self.load_comparison_from_json(json.load(file_path_or_buffer))</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.load_comparison_from_json"><code class="name flex">
+<span>def <span class="ident">load_comparison_from_json</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Loads comparison information from a JSON object, including the
+<code>EmbeddingSet</code>, <code>Thumbnails</code>, and <code>NeighborSet</code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong></dt>
+<dd>A JSON-serializable dictionary generated using
+<a href="#emblaze.viewer.Viewer.comparison_to_json"><code>Viewer.comparison_to_json</code></a>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The populated <code><a title="emblaze.viewer.Viewer" href="#emblaze.viewer.Viewer">Viewer</a></code> object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_comparison_from_json(self, data):
+    &#34;&#34;&#34;
+    Loads comparison information from a JSON object, including the
+    `EmbeddingSet`, `Thumbnails`, and `NeighborSet`.
+    
+    Args:
+        data: A JSON-serializable dictionary generated using
+            [`Viewer.comparison_to_json`](#emblaze.viewer.Viewer.comparison_to_json).
+            
+    Returns:
+        The populated `Viewer` object.
+    &#34;&#34;&#34;
+    self.isLoading = True
+    if self.embeddings is not None:
+        self.reset_state()
+        self.data = None
+        self.neighborData = []
+        self.thumbnailData = {}
+    
+    assert data[&#34;_format&#34;] == &#34;emblaze.Viewer.SaveData&#34;, &#34;Unsupported JSON _format key &#39;{}&#39;&#34;.format(data[&#34;_format&#34;])
+    # Load neighbors first, to create mock parent embeddings
+    parents = None
+    if &#34;ancestor_data&#34; in data:
+        parents = [Embedding.from_json(item) for item in data[&#34;ancestor_data&#34;]]
+    elif &#34;ancestor_neighbors&#34; in data:
+        parents = [NeighborOnlyEmbedding.from_json(item) for item in data[&#34;ancestor_neighbors&#34;]]
+        
+    if &#34;recent_neighbors&#34; in data:
+        # The neighbors to display will come from these, so put them in between
+        # the ancestor embeddings and the final ones
+        recent_parents = parents
+        if recent_parents is None:
+            recent_parents = [None for _ in range(len(self.embeddings))]
+        elif len(parents) == 1:
+            recent_parents = [recent_parents[0] for _ in range(len(self.embeddings))]
+        parents = [NeighborOnlyEmbedding.from_json(item, parent=p)
+                   for item, p in zip(data[&#34;recent_neighbors&#34;], recent_parents)]
+    
+    self.embeddings = EmbeddingSet.from_json(data[&#34;embeddings&#34;], parents=parents)
+    self.thumbnails = Thumbnails.from_json(data[&#34;thumbnails&#34;])
+    
+    if &#34;suggestions&#34; in data:
+        self.recommender = SelectionRecommender.from_json(data[&#34;suggestions&#34;], self.embeddings)
+    
+    self.isLoading = False
+    return self</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.precompute_suggested_selections"><code class="name flex">
+<span>def <span class="ident">precompute_suggested_selections</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes the suggested selections for all points in the embeddings. This
+is useful to get quick recommendations later, though it may take time to
+generate them upfront. When this method completes, the viewer's
+<a href="#emblaze.viewer.Viewer.recommender"><code>recommender</code></a> property will be a
+fully loaded <code>SelectionRecommender</code> that can be queried for suggestions
+relative to an area of the plot, selection, or set of frames.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def precompute_suggested_selections(self):
+    &#34;&#34;&#34;
+    Computes the suggested selections for all points in the embeddings. This
+    is useful to get quick recommendations later, though it may take time to
+    generate them upfront. When this method completes, the viewer&#39;s
+    [`recommender`](#emblaze.viewer.Viewer.recommender) property will be a
+    fully loaded `SelectionRecommender` that can be queried for suggestions
+    relative to an area of the plot, selection, or set of frames.
+    &#34;&#34;&#34;
+    bar = tqdm.tqdm(total=len(self.embeddings) * (len(self.embeddings) - 1), desc=&#39;Clustering&#39;)
+    def progress_fn(progress):
+        bar.update(1)
+    self.recommender = SelectionRecommender(self.embeddings, progress_fn=progress_fn)
+    bar.close()</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.refresh_saved_selections"><code class="name flex">
+<span>def <span class="ident">refresh_saved_selections</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Updates the selectionList property, which is displayed in the sidebar
+under the Saved tab.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def refresh_saved_selections(self):
+    &#34;&#34;&#34;
+    Updates the selectionList property, which is displayed in the sidebar
+    under the Saved tab.
+    &#34;&#34;&#34;
+    tmpList = []
+    # self.selectionList = []
+    for file in glob.glob(&#34;*.selection&#34;):
+        with open(file, &#34;r&#34;) as jsonFile:
+            data = json.load(jsonFile)                            
+            data[&#34;selectionName&#34;] = file.split(&#39;.&#39;)[0]
+            tmpList.append(data)
+    self.selectionList = sorted(tmpList, key=lambda x: x[&#34;selectionName&#34;], reverse=True)
+    self.loadSelectionFlag = False</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.reset_alignment"><code class="name flex">
+<span>def <span class="ident">reset_alignment</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Removes any transformations applied to the embedding frames.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset_alignment(self):
+    &#34;&#34;&#34;Removes any transformations applied to the embedding frames.&#34;&#34;&#34;
+    self.frameTransformations = [
+        np.eye(3).tolist()
+        for i in range(len(self.embeddings))
+    ]
+    self.alignedFrame = 0
+    self.update_frame_colors()</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.reset_state"><code class="name flex">
+<span>def <span class="ident">reset_state</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Resets the view state of the widget.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset_state(self):
+    &#34;&#34;&#34;Resets the view state of the widget.&#34;&#34;&#34;
+    self.currentFrame = 0
+    self.previewFrame = -1
+    self.selectedIDs = []
+    self.alignedIDs = []
+    self.filterIDs = []
+    self.reset_alignment()</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.save_comparison"><code class="name flex">
+<span>def <span class="ident">save_comparison</span></span>(<span>self, file_path_or_buffer, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves the comparison data (<code>EmbeddingSet</code>, <code>Thumbnails</code>, and <code>NeighborSet</code>) to
+the given file path or file-like object. See <a href="#emblaze.viewer.Viewer.comparison_to_json"><code>Viewer.comparison_to_json()</code></a>
+for available keyword arguments. The comparison can be loaded later by
+specifying a <code>file</code> during initialization:</p>
+<pre><code class="language-python">w = emblaze.Viewer(file=file_path)
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_path_or_buffer</code></strong></dt>
+<dd>A file path or file-like object to which to
+write the comparison.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_comparison(self, file_path_or_buffer, **kwargs):
+    &#34;&#34;&#34;
+    Saves the comparison data (`EmbeddingSet`, `Thumbnails`, and `NeighborSet`) to
+    the given file path or file-like object. See [`Viewer.comparison_to_json()`](#emblaze.viewer.Viewer.comparison_to_json)
+    for available keyword arguments. The comparison can be loaded later by
+    specifying a `file` during initialization:
+    
+    ```python
+    w = emblaze.Viewer(file=file_path)
+    ```
+    
+    Args:
+        file_path_or_buffer: A file path or file-like object to which to
+            write the comparison.
+    &#34;&#34;&#34;
+    if isinstance(file_path_or_buffer, str):
+        # File path
+        with open(file_path_or_buffer, &#39;w&#39;) as file:
+            json.dump(self.comparison_to_json(**kwargs), file)
+    else:
+        # File object
+        json.dump(self.comparison_to_json(**kwargs), file_path_or_buffer)</code></pre>
+</details>
+</dd>
+<dt id="emblaze.viewer.Viewer.update_frame_colors"><code class="name flex">
+<span>def <span class="ident">update_frame_colors</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Updates the colors of the color stripes next to each frame thumbnail in
+the sidebar. The <code>selectedIDs</code> property is used first, followed by
+<code>alignedIDs</code> if applicable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_frame_colors(self):
+    &#34;&#34;&#34;
+    Updates the colors of the color stripes next to each frame thumbnail in
+    the sidebar. The `selectedIDs` property is used first, followed by
+    `alignedIDs` if applicable.
+    &#34;&#34;&#34;
+    if len(self.embeddings) &lt;= 1:
+        self.frameColors = []
+    elif not self.selectedIDs:
+        if self.alignedIDs:
+            self.frameColors = compute_colors(self.embeddings, self.alignedIDs)
+        else:
+            if not self._defaultFrameColors:
+                self._defaultFrameColors = compute_colors(self.embeddings, None)
+            self.frameColors = self._defaultFrameColors
+    else:
+        self.frameColors = compute_colors(self.embeddings, self.selectedIDs)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="emblaze" href="index.html">emblaze</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="emblaze.viewer.Viewer" href="#emblaze.viewer.Viewer">Viewer</a></code></h4>
+<ul class="">
+<li><code><a title="emblaze.viewer.Viewer.align_to_points" href="#emblaze.viewer.Viewer.align_to_points">align_to_points</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.alignedFrame" href="#emblaze.viewer.Viewer.alignedFrame">alignedFrame</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.alignedIDs" href="#emblaze.viewer.Viewer.alignedIDs">alignedIDs</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.allowsSavingSelections" href="#emblaze.viewer.Viewer.allowsSavingSelections">allowsSavingSelections</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.colorScheme" href="#emblaze.viewer.Viewer.colorScheme">colorScheme</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.comparison_to_json" href="#emblaze.viewer.Viewer.comparison_to_json">comparison_to_json</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.currentFrame" href="#emblaze.viewer.Viewer.currentFrame">currentFrame</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.data" href="#emblaze.viewer.Viewer.data">data</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.detect_color_scheme" href="#emblaze.viewer.Viewer.detect_color_scheme">detect_color_scheme</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.detect_preview_mode" href="#emblaze.viewer.Viewer.detect_preview_mode">detect_preview_mode</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.embeddings" href="#emblaze.viewer.Viewer.embeddings">embeddings</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.file" href="#emblaze.viewer.Viewer.file">file</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.filterIDs" href="#emblaze.viewer.Viewer.filterIDs">filterIDs</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.frameColors" href="#emblaze.viewer.Viewer.frameColors">frameColors</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.frameTransformations" href="#emblaze.viewer.Viewer.frameTransformations">frameTransformations</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.interactionHistory" href="#emblaze.viewer.Viewer.interactionHistory">interactionHistory</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.isLoading" href="#emblaze.viewer.Viewer.isLoading">isLoading</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.load_comparison" href="#emblaze.viewer.Viewer.load_comparison">load_comparison</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.load_comparison_from_json" href="#emblaze.viewer.Viewer.load_comparison_from_json">load_comparison_from_json</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.loadingSuggestions" href="#emblaze.viewer.Viewer.loadingSuggestions">loadingSuggestions</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.loadingSuggestionsProgress" href="#emblaze.viewer.Viewer.loadingSuggestionsProgress">loadingSuggestionsProgress</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.loggingEnabled" href="#emblaze.viewer.Viewer.loggingEnabled">loggingEnabled</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.loggingHelper" href="#emblaze.viewer.Viewer.loggingHelper">loggingHelper</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.neighborData" href="#emblaze.viewer.Viewer.neighborData">neighborData</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.numNeighbors" href="#emblaze.viewer.Viewer.numNeighbors">numNeighbors</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.performanceSuggestionsMode" href="#emblaze.viewer.Viewer.performanceSuggestionsMode">performanceSuggestionsMode</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.plotPadding" href="#emblaze.viewer.Viewer.plotPadding">plotPadding</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.precompute_suggested_selections" href="#emblaze.viewer.Viewer.precompute_suggested_selections">precompute_suggested_selections</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.previewFrame" href="#emblaze.viewer.Viewer.previewFrame">previewFrame</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.previewMode" href="#emblaze.viewer.Viewer.previewMode">previewMode</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.previewParameters" href="#emblaze.viewer.Viewer.previewParameters">previewParameters</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.recommender" href="#emblaze.viewer.Viewer.recommender">recommender</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.recomputeSuggestionsFlag" href="#emblaze.viewer.Viewer.recomputeSuggestionsFlag">recomputeSuggestionsFlag</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.refresh_saved_selections" href="#emblaze.viewer.Viewer.refresh_saved_selections">refresh_saved_selections</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.reset_alignment" href="#emblaze.viewer.Viewer.reset_alignment">reset_alignment</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.reset_state" href="#emblaze.viewer.Viewer.reset_state">reset_state</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.saveInteractionsFlag" href="#emblaze.viewer.Viewer.saveInteractionsFlag">saveInteractionsFlag</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.saveSelectionFlag" href="#emblaze.viewer.Viewer.saveSelectionFlag">saveSelectionFlag</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.save_comparison" href="#emblaze.viewer.Viewer.save_comparison">save_comparison</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectedIDs" href="#emblaze.viewer.Viewer.selectedIDs">selectedIDs</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionDescription" href="#emblaze.viewer.Viewer.selectionDescription">selectionDescription</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionHistory" href="#emblaze.viewer.Viewer.selectionHistory">selectionHistory</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionList" href="#emblaze.viewer.Viewer.selectionList">selectionList</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionName" href="#emblaze.viewer.Viewer.selectionName">selectionName</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionOrder" href="#emblaze.viewer.Viewer.selectionOrder">selectionOrder</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionOrderCount" href="#emblaze.viewer.Viewer.selectionOrderCount">selectionOrderCount</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionOrderRequest" href="#emblaze.viewer.Viewer.selectionOrderRequest">selectionOrderRequest</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.selectionUnit" href="#emblaze.viewer.Viewer.selectionUnit">selectionUnit</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.storedNumNeighbors" href="#emblaze.viewer.Viewer.storedNumNeighbors">storedNumNeighbors</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.suggestedSelectionWindow" href="#emblaze.viewer.Viewer.suggestedSelectionWindow">suggestedSelectionWindow</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.suggestedSelections" href="#emblaze.viewer.Viewer.suggestedSelections">suggestedSelections</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.thread_starter" href="#emblaze.viewer.Viewer.thread_starter">thread_starter</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.thumbnailData" href="#emblaze.viewer.Viewer.thumbnailData">thumbnailData</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.thumbnails" href="#emblaze.viewer.Viewer.thumbnails">thumbnails</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.update_frame_colors" href="#emblaze.viewer.Viewer.update_frame_colors">update_frame_colors</a></code></li>
+<li><code><a title="emblaze.viewer.Viewer.visibleSidebarPane" href="#emblaze.viewer.Viewer.visibleSidebarPane">visibleSidebarPane</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

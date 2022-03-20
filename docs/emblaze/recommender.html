@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>emblaze.recommender API documentation</title>
+<meta name="description" content="Defines a class to compute Suggested Selections, or clusters that exhibit
+consistent or noteworthy changes from one frame to another." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico"/>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>emblaze.recommender</code></h1>
+</header>
+<section id="section-intro">
+<p>Defines a class to compute Suggested Selections, or clusters that exhibit
+consistent or noteworthy changes from one frame to another.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Defines a class to compute Suggested Selections, or clusters that exhibit
+consistent or noteworthy changes from one frame to another.
+&#34;&#34;&#34;
+
+import numpy as np
+from sklearn.cluster import AgglomerativeClustering
+from .utils import Field, inverse_intersection, standardize_json
+from numba.typed import List
+from scipy.sparse import csr_matrix
+import collections
+
+NUM_NEIGHBORS_FOR_SEARCH = 10
+
+class SelectionRecommender:
+    &#34;&#34;&#34;
+    Generates recommended selections based on a variety of inputs. The
+    recommender works by pre-generating a list of clusters at various
+    granularities, then sorting them by relevance to a given query.
+    &#34;&#34;&#34;
+    def __init__(self, embeddings, clusters=None, progress_fn=None, frame_idx=None, preview_frame_idx=None, filter_points=None):
+        super().__init__()
+        self.embeddings = embeddings
+        self.clusters = clusters if clusters is not None else {}
+        self.is_restricted = frame_idx is not None or preview_frame_idx is not None or filter_points is not None
+        embs_first = [frame_idx] if frame_idx is not None else range(len(self.embeddings))
+        embs_second = [preview_frame_idx] if preview_frame_idx is not None else range(len(self.embeddings))
+        total_num_embs = sum(1 for x in embs_first for y in embs_second if x != y)
+        for i in embs_first:
+            for j in embs_second:
+                if i == j or (i, j) in self.clusters: continue
+                self.clusters[(i, j)] = self._make_clusters(i, j, np.log10(len(self.embeddings[i])), filter_points=filter_points)
+                if progress_fn is not None:
+                    progress_fn(len(self.clusters) / total_num_embs)
+        
+    def _make_neighbor_mat(self, neighbors, num_columns):
+        &#34;&#34;&#34;Converts a list of neighbor indexes into a one-hot encoded matrix.&#34;&#34;&#34;
+        neighbor_mat = np.zeros((len(neighbors), num_columns + 1), dtype=np.uint8)
+        if isinstance(neighbors, list):
+            max_len = max(len(n) for n in neighbors)
+            neighbors_padded = -np.ones((len(neighbors), max_len), dtype=int)
+            for i, n in enumerate(neighbors):
+                neighbors_padded[i,:len(n)] = list(n)
+            neighbors = neighbors_padded
+
+        for i in range(neighbors.shape[1]):
+            neighbor_mat[np.arange(len(neighbors)), neighbors[:,i] + 1] = 1
+        return csr_matrix(neighbor_mat[:,1:])
+
+    def _pairwise_jaccard_distances(self, neighbors):
+        &#34;&#34;&#34;Computes the jaccard distance between each row of the given set of neighbors.&#34;&#34;&#34;
+        lengths = np.array([len(n) for n in neighbors], dtype=np.uint16)
+        if np.sum(lengths) == 0:
+            return np.zeros((len(neighbors), len(neighbors)))
+
+        # Make a one-hot matrix of neighbors
+        neighbor_mat = self._make_neighbor_mat(neighbors, max(np.max([n for x in neighbors for n in x]) + 1, len(neighbors)))
+        # Calculate intersection of sets using dot product
+        intersection = np.dot(neighbor_mat, neighbor_mat.T)
+        del neighbor_mat
+        
+        # Use set trick: len(x | y) = len(x) + len(y) - len(x &amp; y)
+        length_sums = lengths[:,np.newaxis] + lengths[np.newaxis,:]
+        union = np.maximum(length_sums - intersection, np.array([1], dtype=np.uint16), casting=&#39;no&#39;)
+        del length_sums
+        result = np.zeros((len(neighbors), len(neighbors)), dtype=np.float16)
+        np.true_divide(intersection.todense(), union, out=result)
+        return np.array([1.0], dtype=np.float16) - result
+
+    def _make_neighbor_changes(self, idx_1, idx_2, filter_points=None):
+        &#34;&#34;&#34;
+        Computes the sets of gained IDs and lost IDs for the given pair of frames.
+        &#34;&#34;&#34;
+        frame_1 = self.embeddings[idx_1]
+        frame_2 = self.embeddings[idx_2]
+        frame_1_neighbors = frame_1.get_recent_neighbors()[filter_points or None]
+        frame_2_neighbors = frame_2.get_recent_neighbors()[filter_points or None]
+        gained_ids = [set(frame_2_neighbors[i]) - set(frame_1_neighbors[i]) for i in range(len(filter_points or frame_1))]
+        lost_ids = [set(frame_1_neighbors[i]) - set(frame_2_neighbors[i]) for i in range(len(filter_points or frame_1))]
+
+        return gained_ids, lost_ids
+        
+    def _consistency_score(self, ids, frame):
+        &#34;&#34;&#34;
+        Computes the consistency between the neighbors for the given set of IDs 
+        in the given frame.
+        &#34;&#34;&#34;
+        return (np.sum(1 - self._pairwise_jaccard_distances(frame.get_recent_neighbors()[ids])) - len(ids)) / (len(ids) * (len(ids) - 1))
+        
+    def _inner_change_score(self, ids, frame_1, frame_2):
+        &#34;&#34;&#34;
+        Computes the inverse intersection of the neighbor sets in the given
+        two frames.
+        &#34;&#34;&#34;
+        return np.mean(inverse_intersection(frame_1.get_recent_neighbors()[ids],
+                                            frame_2.get_recent_neighbors()[ids],
+                                            List(ids),
+                                            False))
+        
+    def _change_score(self, change_set, ids, num_neighbors=10):
+        &#34;&#34;&#34;
+        Computes a score estimating the consistency in the changes for the given
+        set of IDs
+        &#34;&#34;&#34;
+        counter = collections.Counter([x for s in change_set for x in s if x not in ids])
+        return np.mean([x[1] / len(ids) for x in sorted(counter.items(), key=lambda x: x[1], reverse=True)[:num_neighbors]])
+        
+    def _make_clusters(self, idx_1, idx_2, min_cluster_size=1, filter_points=None):
+        &#34;&#34;&#34;
+        Produces clusters based on the pairwise distances between the given pair of frames.
+        &#34;&#34;&#34;
+        filter_points = list(filter_points) if filter_points is not None else None
+        all_ids = np.array(filter_points) if filter_points is not None else self.embeddings[idx_1].ids
+        
+        gained_ids, lost_ids = self._make_neighbor_changes(idx_1, idx_2, filter_points=filter_points)
+        distances = (self._pairwise_jaccard_distances(gained_ids) + self._pairwise_jaccard_distances(lost_ids)) / 2
+        clusters = []
+        
+        for threshold in np.arange(0.7, 0.91, 0.1):
+            clusterer = AgglomerativeClustering(n_clusters=None,
+                                                distance_threshold=threshold,
+                                                affinity=&#39;precomputed&#39;,
+                                                linkage=&#39;average&#39;)
+            clusterer.fit(distances)
+            cluster_labels = clusterer.labels_
+            
+            for label, count in zip(*np.unique(cluster_labels, return_counts=True)):
+                if count &lt; min_cluster_size: continue
+                indexes = np.arange(len(cluster_labels))[cluster_labels == label]
+                ids = all_ids[cluster_labels == label].tolist()
+
+                clusters.append({
+                    &#39;ids&#39;: set(ids),
+                    &#39;frame&#39;: idx_1,
+                    &#39;previewFrame&#39;: idx_2,
+                    &#39;consistency&#39;: self._consistency_score(ids, self.embeddings[idx_1]), 
+                    &#39;innerChange&#39;: self._inner_change_score(ids, self.embeddings[idx_1], self.embeddings[idx_2]),
+                    &#39;gain&#39;: self._change_score([gained_ids[i] for i in indexes], ids), 
+                    &#39;loss&#39;: self._change_score([lost_ids[i] for i in indexes], ids)
+                })
+        return clusters
+    
+    def query(self, ids_of_interest=None, filter_ids=None, frame_idx=None, preview_frame_idx=None, bounding_box=None, num_results=10, id_type=&#34;selection&#34;):
+        &#34;&#34;&#34;
+        Returns a list of clusters in sorted order of relevance that match the
+        given filters.
+        
+        Args:
+            ids_of_interest: A list of ID values. If there are sufficiently many clusters
+                containing at least one ID in this list, only they will be returned.
+                Otherwise, clusters containing IDs from the neighbor sets of those IDs
+                may be returned as well.
+            filter_ids: A list of IDs such that at least one point in every cluster
+                MUST be present in this list.
+            frame_idx: A base frame index to filter for. If None, clusters from any frame
+                may be returned.
+            preview_frame_idx: A preview frame index to filter for. frame_idx must be
+                provided if this is provided.
+            bounding_box: If provided, should be a tuple of four values: min x, max x, 
+                min y, and max y. At least one point in each cluster will be required to
+                be within the bounding box.
+            num_results: Maximum number of results to return.
+            id_type: The type of ID that ids_of_interest corresponds to. This goes into
+                the explanation string for clusters, e.g. &#34;shares 3 points with &lt;id_type&gt;&#34;.
+                
+        Returns:
+            A list of suggested selections. Each suggestion is returned as a
+            tuple of two values - a list of point IDs, and a string &#34;reason&#34;
+            explaining why the cluster is recommended.
+        &#34;&#34;&#34;
+        
+        # Determine which frames to look for clusters in
+        frames_to_check = []
+        if frame_idx is not None:
+            if preview_frame_idx is not None:
+                frames_to_check.append((frame_idx, preview_frame_idx))
+            else:
+                frames_to_check = [(frame_idx, j) for j in range(len(self.embeddings)) if frame_idx != j]
+        else:
+            frames_to_check = [(i, j) for i in range(len(self.embeddings)) for j in range(len(self.embeddings)) if i != j]
+            
+        interest_set = set(ids_of_interest) if ids_of_interest is not None else None
+        filter_set = set(filter_ids) if filter_ids is not None else None
+        
+        candidates = []
+        for frame_key in frames_to_check:
+            base_frame = self.embeddings[frame_key[0]]
+            if bounding_box is not None:
+                positions = base_frame.field(Field.POSITION)
+            else:
+                positions = None
+                
+            # Assemble a list of candidates
+            if ids_of_interest is not None:
+                neighbor_ids = set([n for n in self.embeddings[frame_key[0]].get_recent_neighbors()[ids_of_interest][:,:NUM_NEIGHBORS_FOR_SEARCH].flatten()])
+            else:
+                neighbor_ids = None    
+
+            for cluster in self.clusters[frame_key]:
+                frame_labels = &#34;{} &amp;rarr; {}&#34;.format(self.embeddings[cluster[&#39;frame&#39;]].label or &#34;Frame &#34; + str(cluster[&#39;frame&#39;]),
+                                                     self.embeddings[cluster[&#39;previewFrame&#39;]].label or &#34;Frame &#34; + str(cluster[&#39;previewFrame&#39;]))
+                base_score = (cluster[&#39;consistency&#39;] + cluster[&#39;innerChange&#39;] + cluster[&#39;gain&#39;] + cluster[&#39;loss&#39;]) * np.log(len(cluster[&#39;ids&#39;]))
+                if filter_set is not None:
+                    if not cluster[&#39;ids&#39;] &amp; filter_set:
+                        continue
+                    base_score *= len(cluster[&#39;ids&#39;] &amp; filter_set) / len(cluster[&#39;ids&#39;])
+                
+                if interest_set is not None and cluster[&#39;ids&#39;] &amp; interest_set:
+                    candidates.append((cluster, 
+                                       base_score * len(cluster[&#39;ids&#39;] &amp; interest_set) / len(cluster[&#39;ids&#39;]),
+                                       &#34;shares {} points with {} ({})&#34;.format(len(cluster[&#39;ids&#39;] &amp; interest_set), id_type, frame_labels)))
+                elif neighbor_ids is not None and cluster[&#39;ids&#39;] &amp; neighbor_ids:
+                    candidates.append((cluster,
+                                       base_score * 0.5 * len(cluster[&#39;ids&#39;] &amp; neighbor_ids) / len(cluster[&#39;ids&#39;]),
+                                      &#34;shares {} points with neighbors of {} ({})&#34;.format(len(cluster[&#39;ids&#39;] &amp; neighbor_ids), id_type, frame_labels)))
+                elif bounding_box is not None:
+                    point_positions = positions[base_frame.index(np.array(list(cluster[&#39;ids&#39;])))]
+                    num_within = np.sum((point_positions[:,0] &gt;= bounding_box[0]) *
+                              (point_positions[:,0] &lt;= bounding_box[1]) *
+                              (point_positions[:,1] &gt;= bounding_box[2]) *
+                              (point_positions[:,1] &lt;= bounding_box[3]))
+                    if num_within &gt; 0:
+                        candidates.append((cluster, base_score * np.log(num_within), frame_labels))
+                elif ids_of_interest is None:
+                    if frame_idx is not None and preview_frame_idx is not None:
+                        reason = &#34;matches frames &#34;
+                    elif preview_frame_idx is not None:
+                        reason = &#34;matches preview frame &#34;
+                    else:
+                        reason = &#34;&#34;
+                    candidates.append((cluster,
+                                       base_score,
+                                       &#34;{}{}&#34;.format(reason, (&#34;(&#34; + frame_labels + &#34;)&#34;) if reason else frame_labels)))
+        
+        # Sort candidates and make sure they don&#39;t include overlapping IDs
+        seen_ids = set()
+        results = []
+        for cluster, _, reason in sorted(candidates, key=lambda x: x[1], reverse=True):
+            if cluster[&#39;ids&#39;] &amp; seen_ids: continue
+            results.append((cluster, reason))
+            seen_ids |= cluster[&#39;ids&#39;]
+            if len(results) &gt;= num_results: break
+                
+        return results
+    
+    def to_json(self):
+        &#34;&#34;&#34;
+        Converts the clusters stored in this Recommender object to JSON.
+        &#34;&#34;&#34;
+        def _convert_cluster(cluster):
+            return {k: list(v) if isinstance(v, set) else v for k, v in cluster.items()}
+        return standardize_json({
+            &#34;,&#34;.join((str(i), str(j))): [_convert_cluster(c) for c in clusters]
+            for (i, j), clusters in self.clusters.items()
+        })
+        
+    @classmethod
+    def from_json(cls, data, embeddings):
+        &#34;&#34;&#34;
+        Reads the clusters stored in the given JSON object to a Recommender.
+        &#34;&#34;&#34;
+        def _convert_cluster(cluster):
+            return {k: set(v) if k == &#39;ids&#39; else v for k, v in cluster.items()}
+        def _convert_key(key):
+            i, j = key.split(&#34;,&#34;)
+            return (int(i), int(j))
+        return cls(embeddings, {_convert_key(k): [_convert_cluster(c) for c in clusters]
+                                for k, clusters in data.items()})</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="emblaze.recommender.SelectionRecommender"><code class="flex name class">
+<span>class <span class="ident">SelectionRecommender</span></span>
+<span>(</span><span>embeddings, clusters=None, progress_fn=None, frame_idx=None, preview_frame_idx=None, filter_points=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates recommended selections based on a variety of inputs. The
+recommender works by pre-generating a list of clusters at various
+granularities, then sorting them by relevance to a given query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SelectionRecommender:
+    &#34;&#34;&#34;
+    Generates recommended selections based on a variety of inputs. The
+    recommender works by pre-generating a list of clusters at various
+    granularities, then sorting them by relevance to a given query.
+    &#34;&#34;&#34;
+    def __init__(self, embeddings, clusters=None, progress_fn=None, frame_idx=None, preview_frame_idx=None, filter_points=None):
+        super().__init__()
+        self.embeddings = embeddings
+        self.clusters = clusters if clusters is not None else {}
+        self.is_restricted = frame_idx is not None or preview_frame_idx is not None or filter_points is not None
+        embs_first = [frame_idx] if frame_idx is not None else range(len(self.embeddings))
+        embs_second = [preview_frame_idx] if preview_frame_idx is not None else range(len(self.embeddings))
+        total_num_embs = sum(1 for x in embs_first for y in embs_second if x != y)
+        for i in embs_first:
+            for j in embs_second:
+                if i == j or (i, j) in self.clusters: continue
+                self.clusters[(i, j)] = self._make_clusters(i, j, np.log10(len(self.embeddings[i])), filter_points=filter_points)
+                if progress_fn is not None:
+                    progress_fn(len(self.clusters) / total_num_embs)
+        
+    def _make_neighbor_mat(self, neighbors, num_columns):
+        &#34;&#34;&#34;Converts a list of neighbor indexes into a one-hot encoded matrix.&#34;&#34;&#34;
+        neighbor_mat = np.zeros((len(neighbors), num_columns + 1), dtype=np.uint8)
+        if isinstance(neighbors, list):
+            max_len = max(len(n) for n in neighbors)
+            neighbors_padded = -np.ones((len(neighbors), max_len), dtype=int)
+            for i, n in enumerate(neighbors):
+                neighbors_padded[i,:len(n)] = list(n)
+            neighbors = neighbors_padded
+
+        for i in range(neighbors.shape[1]):
+            neighbor_mat[np.arange(len(neighbors)), neighbors[:,i] + 1] = 1
+        return csr_matrix(neighbor_mat[:,1:])
+
+    def _pairwise_jaccard_distances(self, neighbors):
+        &#34;&#34;&#34;Computes the jaccard distance between each row of the given set of neighbors.&#34;&#34;&#34;
+        lengths = np.array([len(n) for n in neighbors], dtype=np.uint16)
+        if np.sum(lengths) == 0:
+            return np.zeros((len(neighbors), len(neighbors)))
+
+        # Make a one-hot matrix of neighbors
+        neighbor_mat = self._make_neighbor_mat(neighbors, max(np.max([n for x in neighbors for n in x]) + 1, len(neighbors)))
+        # Calculate intersection of sets using dot product
+        intersection = np.dot(neighbor_mat, neighbor_mat.T)
+        del neighbor_mat
+        
+        # Use set trick: len(x | y) = len(x) + len(y) - len(x &amp; y)
+        length_sums = lengths[:,np.newaxis] + lengths[np.newaxis,:]
+        union = np.maximum(length_sums - intersection, np.array([1], dtype=np.uint16), casting=&#39;no&#39;)
+        del length_sums
+        result = np.zeros((len(neighbors), len(neighbors)), dtype=np.float16)
+        np.true_divide(intersection.todense(), union, out=result)
+        return np.array([1.0], dtype=np.float16) - result
+
+    def _make_neighbor_changes(self, idx_1, idx_2, filter_points=None):
+        &#34;&#34;&#34;
+        Computes the sets of gained IDs and lost IDs for the given pair of frames.
+        &#34;&#34;&#34;
+        frame_1 = self.embeddings[idx_1]
+        frame_2 = self.embeddings[idx_2]
+        frame_1_neighbors = frame_1.get_recent_neighbors()[filter_points or None]
+        frame_2_neighbors = frame_2.get_recent_neighbors()[filter_points or None]
+        gained_ids = [set(frame_2_neighbors[i]) - set(frame_1_neighbors[i]) for i in range(len(filter_points or frame_1))]
+        lost_ids = [set(frame_1_neighbors[i]) - set(frame_2_neighbors[i]) for i in range(len(filter_points or frame_1))]
+
+        return gained_ids, lost_ids
+        
+    def _consistency_score(self, ids, frame):
+        &#34;&#34;&#34;
+        Computes the consistency between the neighbors for the given set of IDs 
+        in the given frame.
+        &#34;&#34;&#34;
+        return (np.sum(1 - self._pairwise_jaccard_distances(frame.get_recent_neighbors()[ids])) - len(ids)) / (len(ids) * (len(ids) - 1))
+        
+    def _inner_change_score(self, ids, frame_1, frame_2):
+        &#34;&#34;&#34;
+        Computes the inverse intersection of the neighbor sets in the given
+        two frames.
+        &#34;&#34;&#34;
+        return np.mean(inverse_intersection(frame_1.get_recent_neighbors()[ids],
+                                            frame_2.get_recent_neighbors()[ids],
+                                            List(ids),
+                                            False))
+        
+    def _change_score(self, change_set, ids, num_neighbors=10):
+        &#34;&#34;&#34;
+        Computes a score estimating the consistency in the changes for the given
+        set of IDs
+        &#34;&#34;&#34;
+        counter = collections.Counter([x for s in change_set for x in s if x not in ids])
+        return np.mean([x[1] / len(ids) for x in sorted(counter.items(), key=lambda x: x[1], reverse=True)[:num_neighbors]])
+        
+    def _make_clusters(self, idx_1, idx_2, min_cluster_size=1, filter_points=None):
+        &#34;&#34;&#34;
+        Produces clusters based on the pairwise distances between the given pair of frames.
+        &#34;&#34;&#34;
+        filter_points = list(filter_points) if filter_points is not None else None
+        all_ids = np.array(filter_points) if filter_points is not None else self.embeddings[idx_1].ids
+        
+        gained_ids, lost_ids = self._make_neighbor_changes(idx_1, idx_2, filter_points=filter_points)
+        distances = (self._pairwise_jaccard_distances(gained_ids) + self._pairwise_jaccard_distances(lost_ids)) / 2
+        clusters = []
+        
+        for threshold in np.arange(0.7, 0.91, 0.1):
+            clusterer = AgglomerativeClustering(n_clusters=None,
+                                                distance_threshold=threshold,
+                                                affinity=&#39;precomputed&#39;,
+                                                linkage=&#39;average&#39;)
+            clusterer.fit(distances)
+            cluster_labels = clusterer.labels_
+            
+            for label, count in zip(*np.unique(cluster_labels, return_counts=True)):
+                if count &lt; min_cluster_size: continue
+                indexes = np.arange(len(cluster_labels))[cluster_labels == label]
+                ids = all_ids[cluster_labels == label].tolist()
+
+                clusters.append({
+                    &#39;ids&#39;: set(ids),
+                    &#39;frame&#39;: idx_1,
+                    &#39;previewFrame&#39;: idx_2,
+                    &#39;consistency&#39;: self._consistency_score(ids, self.embeddings[idx_1]), 
+                    &#39;innerChange&#39;: self._inner_change_score(ids, self.embeddings[idx_1], self.embeddings[idx_2]),
+                    &#39;gain&#39;: self._change_score([gained_ids[i] for i in indexes], ids), 
+                    &#39;loss&#39;: self._change_score([lost_ids[i] for i in indexes], ids)
+                })
+        return clusters
+    
+    def query(self, ids_of_interest=None, filter_ids=None, frame_idx=None, preview_frame_idx=None, bounding_box=None, num_results=10, id_type=&#34;selection&#34;):
+        &#34;&#34;&#34;
+        Returns a list of clusters in sorted order of relevance that match the
+        given filters.
+        
+        Args:
+            ids_of_interest: A list of ID values. If there are sufficiently many clusters
+                containing at least one ID in this list, only they will be returned.
+                Otherwise, clusters containing IDs from the neighbor sets of those IDs
+                may be returned as well.
+            filter_ids: A list of IDs such that at least one point in every cluster
+                MUST be present in this list.
+            frame_idx: A base frame index to filter for. If None, clusters from any frame
+                may be returned.
+            preview_frame_idx: A preview frame index to filter for. frame_idx must be
+                provided if this is provided.
+            bounding_box: If provided, should be a tuple of four values: min x, max x, 
+                min y, and max y. At least one point in each cluster will be required to
+                be within the bounding box.
+            num_results: Maximum number of results to return.
+            id_type: The type of ID that ids_of_interest corresponds to. This goes into
+                the explanation string for clusters, e.g. &#34;shares 3 points with &lt;id_type&gt;&#34;.
+                
+        Returns:
+            A list of suggested selections. Each suggestion is returned as a
+            tuple of two values - a list of point IDs, and a string &#34;reason&#34;
+            explaining why the cluster is recommended.
+        &#34;&#34;&#34;
+        
+        # Determine which frames to look for clusters in
+        frames_to_check = []
+        if frame_idx is not None:
+            if preview_frame_idx is not None:
+                frames_to_check.append((frame_idx, preview_frame_idx))
+            else:
+                frames_to_check = [(frame_idx, j) for j in range(len(self.embeddings)) if frame_idx != j]
+        else:
+            frames_to_check = [(i, j) for i in range(len(self.embeddings)) for j in range(len(self.embeddings)) if i != j]
+            
+        interest_set = set(ids_of_interest) if ids_of_interest is not None else None
+        filter_set = set(filter_ids) if filter_ids is not None else None
+        
+        candidates = []
+        for frame_key in frames_to_check:
+            base_frame = self.embeddings[frame_key[0]]
+            if bounding_box is not None:
+                positions = base_frame.field(Field.POSITION)
+            else:
+                positions = None
+                
+            # Assemble a list of candidates
+            if ids_of_interest is not None:
+                neighbor_ids = set([n for n in self.embeddings[frame_key[0]].get_recent_neighbors()[ids_of_interest][:,:NUM_NEIGHBORS_FOR_SEARCH].flatten()])
+            else:
+                neighbor_ids = None    
+
+            for cluster in self.clusters[frame_key]:
+                frame_labels = &#34;{} &amp;rarr; {}&#34;.format(self.embeddings[cluster[&#39;frame&#39;]].label or &#34;Frame &#34; + str(cluster[&#39;frame&#39;]),
+                                                     self.embeddings[cluster[&#39;previewFrame&#39;]].label or &#34;Frame &#34; + str(cluster[&#39;previewFrame&#39;]))
+                base_score = (cluster[&#39;consistency&#39;] + cluster[&#39;innerChange&#39;] + cluster[&#39;gain&#39;] + cluster[&#39;loss&#39;]) * np.log(len(cluster[&#39;ids&#39;]))
+                if filter_set is not None:
+                    if not cluster[&#39;ids&#39;] &amp; filter_set:
+                        continue
+                    base_score *= len(cluster[&#39;ids&#39;] &amp; filter_set) / len(cluster[&#39;ids&#39;])
+                
+                if interest_set is not None and cluster[&#39;ids&#39;] &amp; interest_set:
+                    candidates.append((cluster, 
+                                       base_score * len(cluster[&#39;ids&#39;] &amp; interest_set) / len(cluster[&#39;ids&#39;]),
+                                       &#34;shares {} points with {} ({})&#34;.format(len(cluster[&#39;ids&#39;] &amp; interest_set), id_type, frame_labels)))
+                elif neighbor_ids is not None and cluster[&#39;ids&#39;] &amp; neighbor_ids:
+                    candidates.append((cluster,
+                                       base_score * 0.5 * len(cluster[&#39;ids&#39;] &amp; neighbor_ids) / len(cluster[&#39;ids&#39;]),
+                                      &#34;shares {} points with neighbors of {} ({})&#34;.format(len(cluster[&#39;ids&#39;] &amp; neighbor_ids), id_type, frame_labels)))
+                elif bounding_box is not None:
+                    point_positions = positions[base_frame.index(np.array(list(cluster[&#39;ids&#39;])))]
+                    num_within = np.sum((point_positions[:,0] &gt;= bounding_box[0]) *
+                              (point_positions[:,0] &lt;= bounding_box[1]) *
+                              (point_positions[:,1] &gt;= bounding_box[2]) *
+                              (point_positions[:,1] &lt;= bounding_box[3]))
+                    if num_within &gt; 0:
+                        candidates.append((cluster, base_score * np.log(num_within), frame_labels))
+                elif ids_of_interest is None:
+                    if frame_idx is not None and preview_frame_idx is not None:
+                        reason = &#34;matches frames &#34;
+                    elif preview_frame_idx is not None:
+                        reason = &#34;matches preview frame &#34;
+                    else:
+                        reason = &#34;&#34;
+                    candidates.append((cluster,
+                                       base_score,
+                                       &#34;{}{}&#34;.format(reason, (&#34;(&#34; + frame_labels + &#34;)&#34;) if reason else frame_labels)))
+        
+        # Sort candidates and make sure they don&#39;t include overlapping IDs
+        seen_ids = set()
+        results = []
+        for cluster, _, reason in sorted(candidates, key=lambda x: x[1], reverse=True):
+            if cluster[&#39;ids&#39;] &amp; seen_ids: continue
+            results.append((cluster, reason))
+            seen_ids |= cluster[&#39;ids&#39;]
+            if len(results) &gt;= num_results: break
+                
+        return results
+    
+    def to_json(self):
+        &#34;&#34;&#34;
+        Converts the clusters stored in this Recommender object to JSON.
+        &#34;&#34;&#34;
+        def _convert_cluster(cluster):
+            return {k: list(v) if isinstance(v, set) else v for k, v in cluster.items()}
+        return standardize_json({
+            &#34;,&#34;.join((str(i), str(j))): [_convert_cluster(c) for c in clusters]
+            for (i, j), clusters in self.clusters.items()
+        })
+        
+    @classmethod
+    def from_json(cls, data, embeddings):
+        &#34;&#34;&#34;
+        Reads the clusters stored in the given JSON object to a Recommender.
+        &#34;&#34;&#34;
+        def _convert_cluster(cluster):
+            return {k: set(v) if k == &#39;ids&#39; else v for k, v in cluster.items()}
+        def _convert_key(key):
+            i, j = key.split(&#34;,&#34;)
+            return (int(i), int(j))
+        return cls(embeddings, {_convert_key(k): [_convert_cluster(c) for c in clusters]
+                                for k, clusters in data.items()})</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="emblaze.recommender.SelectionRecommender.from_json"><code class="name flex">
+<span>def <span class="ident">from_json</span></span>(<span>data, embeddings)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads the clusters stored in the given JSON object to a Recommender.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_json(cls, data, embeddings):
+    &#34;&#34;&#34;
+    Reads the clusters stored in the given JSON object to a Recommender.
+    &#34;&#34;&#34;
+    def _convert_cluster(cluster):
+        return {k: set(v) if k == &#39;ids&#39; else v for k, v in cluster.items()}
+    def _convert_key(key):
+        i, j = key.split(&#34;,&#34;)
+        return (int(i), int(j))
+    return cls(embeddings, {_convert_key(k): [_convert_cluster(c) for c in clusters]
+                            for k, clusters in data.items()})</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="emblaze.recommender.SelectionRecommender.query"><code class="name flex">
+<span>def <span class="ident">query</span></span>(<span>self, ids_of_interest=None, filter_ids=None, frame_idx=None, preview_frame_idx=None, bounding_box=None, num_results=10, id_type='selection')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a list of clusters in sorted order of relevance that match the
+given filters.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ids_of_interest</code></strong></dt>
+<dd>A list of ID values. If there are sufficiently many clusters
+containing at least one ID in this list, only they will be returned.
+Otherwise, clusters containing IDs from the neighbor sets of those IDs
+may be returned as well.</dd>
+<dt><strong><code>filter_ids</code></strong></dt>
+<dd>A list of IDs such that at least one point in every cluster
+MUST be present in this list.</dd>
+<dt><strong><code>frame_idx</code></strong></dt>
+<dd>A base frame index to filter for. If None, clusters from any frame
+may be returned.</dd>
+<dt><strong><code>preview_frame_idx</code></strong></dt>
+<dd>A preview frame index to filter for. frame_idx must be
+provided if this is provided.</dd>
+<dt><strong><code>bounding_box</code></strong></dt>
+<dd>If provided, should be a tuple of four values: min x, max x,
+min y, and max y. At least one point in each cluster will be required to
+be within the bounding box.</dd>
+<dt><strong><code>num_results</code></strong></dt>
+<dd>Maximum number of results to return.</dd>
+<dt><strong><code>id_type</code></strong></dt>
+<dd>The type of ID that ids_of_interest corresponds to. This goes into
+the explanation string for clusters, e.g. "shares 3 points with <id_type>".</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list of suggested selections. Each suggestion is returned as a
+tuple of two values - a list of point IDs, and a string "reason"
+explaining why the cluster is recommended.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def query(self, ids_of_interest=None, filter_ids=None, frame_idx=None, preview_frame_idx=None, bounding_box=None, num_results=10, id_type=&#34;selection&#34;):
+    &#34;&#34;&#34;
+    Returns a list of clusters in sorted order of relevance that match the
+    given filters.
+    
+    Args:
+        ids_of_interest: A list of ID values. If there are sufficiently many clusters
+            containing at least one ID in this list, only they will be returned.
+            Otherwise, clusters containing IDs from the neighbor sets of those IDs
+            may be returned as well.
+        filter_ids: A list of IDs such that at least one point in every cluster
+            MUST be present in this list.
+        frame_idx: A base frame index to filter for. If None, clusters from any frame
+            may be returned.
+        preview_frame_idx: A preview frame index to filter for. frame_idx must be
+            provided if this is provided.
+        bounding_box: If provided, should be a tuple of four values: min x, max x, 
+            min y, and max y. At least one point in each cluster will be required to
+            be within the bounding box.
+        num_results: Maximum number of results to return.
+        id_type: The type of ID that ids_of_interest corresponds to. This goes into
+            the explanation string for clusters, e.g. &#34;shares 3 points with &lt;id_type&gt;&#34;.
+            
+    Returns:
+        A list of suggested selections. Each suggestion is returned as a
+        tuple of two values - a list of point IDs, and a string &#34;reason&#34;
+        explaining why the cluster is recommended.
+    &#34;&#34;&#34;
+    
+    # Determine which frames to look for clusters in
+    frames_to_check = []
+    if frame_idx is not None:
+        if preview_frame_idx is not None:
+            frames_to_check.append((frame_idx, preview_frame_idx))
+        else:
+            frames_to_check = [(frame_idx, j) for j in range(len(self.embeddings)) if frame_idx != j]
+    else:
+        frames_to_check = [(i, j) for i in range(len(self.embeddings)) for j in range(len(self.embeddings)) if i != j]
+        
+    interest_set = set(ids_of_interest) if ids_of_interest is not None else None
+    filter_set = set(filter_ids) if filter_ids is not None else None
+    
+    candidates = []
+    for frame_key in frames_to_check:
+        base_frame = self.embeddings[frame_key[0]]
+        if bounding_box is not None:
+            positions = base_frame.field(Field.POSITION)
+        else:
+            positions = None
+            
+        # Assemble a list of candidates
+        if ids_of_interest is not None:
+            neighbor_ids = set([n for n in self.embeddings[frame_key[0]].get_recent_neighbors()[ids_of_interest][:,:NUM_NEIGHBORS_FOR_SEARCH].flatten()])
+        else:
+            neighbor_ids = None    
+
+        for cluster in self.clusters[frame_key]:
+            frame_labels = &#34;{} &amp;rarr; {}&#34;.format(self.embeddings[cluster[&#39;frame&#39;]].label or &#34;Frame &#34; + str(cluster[&#39;frame&#39;]),
+                                                 self.embeddings[cluster[&#39;previewFrame&#39;]].label or &#34;Frame &#34; + str(cluster[&#39;previewFrame&#39;]))
+            base_score = (cluster[&#39;consistency&#39;] + cluster[&#39;innerChange&#39;] + cluster[&#39;gain&#39;] + cluster[&#39;loss&#39;]) * np.log(len(cluster[&#39;ids&#39;]))
+            if filter_set is not None:
+                if not cluster[&#39;ids&#39;] &amp; filter_set:
+                    continue
+                base_score *= len(cluster[&#39;ids&#39;] &amp; filter_set) / len(cluster[&#39;ids&#39;])
+            
+            if interest_set is not None and cluster[&#39;ids&#39;] &amp; interest_set:
+                candidates.append((cluster, 
+                                   base_score * len(cluster[&#39;ids&#39;] &amp; interest_set) / len(cluster[&#39;ids&#39;]),
+                                   &#34;shares {} points with {} ({})&#34;.format(len(cluster[&#39;ids&#39;] &amp; interest_set), id_type, frame_labels)))
+            elif neighbor_ids is not None and cluster[&#39;ids&#39;] &amp; neighbor_ids:
+                candidates.append((cluster,
+                                   base_score * 0.5 * len(cluster[&#39;ids&#39;] &amp; neighbor_ids) / len(cluster[&#39;ids&#39;]),
+                                  &#34;shares {} points with neighbors of {} ({})&#34;.format(len(cluster[&#39;ids&#39;] &amp; neighbor_ids), id_type, frame_labels)))
+            elif bounding_box is not None:
+                point_positions = positions[base_frame.index(np.array(list(cluster[&#39;ids&#39;])))]
+                num_within = np.sum((point_positions[:,0] &gt;= bounding_box[0]) *
+                          (point_positions[:,0] &lt;= bounding_box[1]) *
+                          (point_positions[:,1] &gt;= bounding_box[2]) *
+                          (point_positions[:,1] &lt;= bounding_box[3]))
+                if num_within &gt; 0:
+                    candidates.append((cluster, base_score * np.log(num_within), frame_labels))
+            elif ids_of_interest is None:
+                if frame_idx is not None and preview_frame_idx is not None:
+                    reason = &#34;matches frames &#34;
+                elif preview_frame_idx is not None:
+                    reason = &#34;matches preview frame &#34;
+                else:
+                    reason = &#34;&#34;
+                candidates.append((cluster,
+                                   base_score,
+                                   &#34;{}{}&#34;.format(reason, (&#34;(&#34; + frame_labels + &#34;)&#34;) if reason else frame_labels)))
+    
+    # Sort candidates and make sure they don&#39;t include overlapping IDs
+    seen_ids = set()
+    results = []
+    for cluster, _, reason in sorted(candidates, key=lambda x: x[1], reverse=True):
+        if cluster[&#39;ids&#39;] &amp; seen_ids: continue
+        results.append((cluster, reason))
+        seen_ids |= cluster[&#39;ids&#39;]
+        if len(results) &gt;= num_results: break
+            
+    return results</code></pre>
+</details>
+</dd>
+<dt id="emblaze.recommender.SelectionRecommender.to_json"><code class="name flex">
+<span>def <span class="ident">to_json</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Converts the clusters stored in this Recommender object to JSON.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_json(self):
+    &#34;&#34;&#34;
+    Converts the clusters stored in this Recommender object to JSON.
+    &#34;&#34;&#34;
+    def _convert_cluster(cluster):
+        return {k: list(v) if isinstance(v, set) else v for k, v in cluster.items()}
+    return standardize_json({
+        &#34;,&#34;.join((str(i), str(j))): [_convert_cluster(c) for c in clusters]
+        for (i, j), clusters in self.clusters.items()
+    })</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="emblaze" href="index.html">emblaze</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="emblaze.recommender.SelectionRecommender" href="#emblaze.recommender.SelectionRecommender">SelectionRecommender</a></code></h4>
+<ul class="">
+<li><code><a title="emblaze.recommender.SelectionRecommender.from_json" href="#emblaze.recommender.SelectionRecommender.from_json">from_json</a></code></li>
+<li><code><a title="emblaze.recommender.SelectionRecommender.query" href="#emblaze.recommender.SelectionRecommender.query">query</a></code></li>
+<li><code><a title="emblaze.recommender.SelectionRecommender.to_json" href="#emblaze.recommender.SelectionRecommender.to_json">to_json</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Emblaze - Interactive Embedding Comparison
 
-Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using animated scatter plots. It bundles an easy-to-use Python API for performing dimensionality reduction on multiple sets of embedding data (including aligning the results for easier comparison), and a full-featured interactive platform for probing and comparing embeddings that runs within a Jupyter notebook cell.
+Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using animated scatter plots. It bundles an easy-to-use Python API for performing dimensionality reduction on multiple sets of embedding data (including aligning the results for easier comparison), and a full-featured interactive platform for probing and comparing embeddings that runs within a Jupyter notebook cell. [Read the documentation >](https://dig.cmu.edu/emblaze/emblaze)
 
 ![](https://raw.githubusercontent.com/cmudig/emblaze/main/examples/screenshots/cover_art.png)
 
@@ -21,20 +21,6 @@ the nbextension:
 
 ```bash
 jupyter nbextension enable --py --sys-prefix emblaze
-```
-
-## Standalone Demo
-
-Although the full application is designed to work as a Jupyter widget, you can run a standalone version with most of the available features directly in your browser. To do so, simply run the following command after pip-installing the package (note: you do _not_ need to clone the repository to run the standalone app):
-
-```bash
-python -m emblaze.server
-```
-
-Visit `localhost:5000` to see the running application. This will allow you to view two demo datasets: one showing five different t-SNE projections of a subset of MNIST digits, and one showing embeddings of the same 5,000 words according to three different data sources (Google News, Wikipedia, and Twitter). To add your own datasets to the standalone app, you can create a directory containing your saved comparison JSON files (see Saving and Loading below), then pass it as a command-line argument:
-
-```bash
-python -m emblaze.server /path/to/comparisons
 ```
 
 ## Examples
@@ -103,29 +89,7 @@ w
 
 You can also visualize embeddings with multimodal labels (i.e. where some points have text labels and others have image labels) by initializing an `emblaze.CombinedThumbnails` instance with a list of other `Thumbnails` objects to combine.
 
-### Interactive Analysis
-
-Once you have loaded a `Viewer` instance in the notebook, you can read and write its properties to dynamically work with the visualization. The following properties are reactive:
-
-- `embeddings` (`EmbeddingSet`) Modify this to change the entire dataset that is displayed.
-- `thumbnails` (`Thumbnails`) Represents the image or text thumbnails displayed on hover and click.
-- `currentFrame` (`int`) The current frame or embedding space that is being viewed (from `0` to `len(embeddings)`).
-- `selectedIDs` (`List[int]`) The selected ID numbers. Unless you provide custom IDs when constructing the `EmbeddingSet`, these are simply zero-indexed integers.
-- `alignedIDs` (`List[int]`) The IDs of the points to which the embedding spaces are aligned (same format as `selectedIDs`). Alignment is computed relative to the positions of the points in the current frame.
-- `colorScheme` (`string`) The name of a color scheme to use to render the points. A variety of color schemes are available, listed in `src/colorschemes.ts`. This property can also be changed in the Settings panel of the widget.
-- `previewMode` (`string`) The method to use to generate preview lines, which should be one of the values in `utils.
-
-### Saving and Loading
-
-You can save the data used to make comparisons to JSON, so that it is easy to load them again in Jupyter or the standalone application without re-running the embedding/projection code. Comparisons consist of an `EmbeddingSet` (containing the positions of the points in each 2D projection), a `Thumbnails` object (dictating how to display each point), and one or more `NeighborSet`s (which contain the nearest-neighbor sets used for comparison and display).
-
-To save a comparison, call the `save_comparison()` method on the `Viewer`. Note that if you are using high-dimensional nearest neighbors (most use cases), this method by default saves both the high-dimensional coordinates and the nearest-neighbor IDs. This can create files ranging from hundreds of MB to GBs. To store only the nearest neighbor IDs, pass `ancestor_data=False` as a keyword argument. Note that if you disable storing the high-dimensional coordinates, you will be unable to use tools that depend on _distances_ in hi-D space (such as the high-dimensional radius select).
-
-To load a comparison, simply initialize the `Viewer` as follows:
-
-```python
-w = emblaze.Viewer(file="/path/to/comparison.json")
-```
+See the [documentation](https://dig.cmu.edu/emblaze/emblaze) for more details on defining and configuring comparisons with Emblaze.
 
 ---
 
@@ -186,6 +150,16 @@ with open(os.path.join(data_dir, dataset_name, "data.json"), "w") as file:
     json.dump(embeddings.to_json(), file)
 with open(os.path.join(data_dir, dataset_name, "thumbnails.json"), "w") as file:
     json.dump(thumbnails.to_json(), file)
+```
+
+### Building Documentation
+
+Install pdoc3: `pip install pdoc3`
+
+Build documentation:
+
+```bash
+pdoc --html --force --output-dir docs --template-dir docs/templates emblaze
 ```
 
 ### Deployment

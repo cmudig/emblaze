@@ -1,3 +1,8 @@
+"""
+Defines model classes to store embedding data in both high-dimensional and
+dimensionally-reduced spaces.
+"""
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_distances, euclidean_distances
@@ -16,8 +21,12 @@ class ColumnarData:
     """
     def __init__(self, data, ids=None):
         """
-        data: A dictionary where the keys are members from the Field class and
-            the values are numpy or regular arrays.
+        Args:
+            data: A dictionary where the keys are members from the Field class and
+                the values are numpy or regular arrays.
+            ids: An optional array of ID numbers of the same length of each
+                array in the `data` argument. If not provided, the IDs are set
+                to a zero-indexed range of integers.
         """
         self.data = {}
         length = None
@@ -80,6 +89,18 @@ class ColumnarData:
         return field in self.data
     
     def field(self, field, ids=None):
+        """
+        Return the contents of the given field for the given IDs.
+        
+        Args:
+            field: The field to retrieve data from.
+            ids: The IDs for which to retrieve data. If `None`, data for all
+                points are returned.
+            
+        Returns:
+            A numpy array representing the contents of the given field forr the
+            given IDs. If `field` is not present in the data, returns `None`.
+        """
         if field not in self.data:
             return None
         if ids is not None:
@@ -123,6 +144,30 @@ class Embedding(ColumnarData):
     n x k 2D numpy array (n = number of points, k = dimensionality).
     """
     def __init__(self, data, ids=None, label=None, metric='euclidean', n_neighbors=100, neighbors=None, parent=None):
+        """        
+        Args:
+            data: Dictionary of data fields. Must contain two fields: [`emblaze.Field.POSITION`](utils.html#emblaze.utils.Field.POSITION)
+                (an n x k numpy array of coordinates), and [`emblaze.Field.COLOR`](utils.html#emblaze.utils.Field.COLOR) (a
+                length-n vector of 'color' values, which can be either continuous
+                quantitative values or string labels to assign categorical colors to).
+            ids: An optional array of ID numbers corresponding to each of the n points
+                in data. If not provided, the point IDs will simply be assigned as
+                `np.arange(n)`.
+            label: A string label describing this embedding. In an `emblaze.Viewer`
+                instance, this will be displayed as the name of this embedding frame
+                in the thumbnail sidebar.
+            metric: The distance metric used to compute distances and nearest
+                neighbors. Most high-dimensional embeddings should use 'cosine', but
+                this can be set to any distance metric supported by scikit-learn.
+            n_neighbors: The number of neighbors to precompute and save when
+                compute_neighbors() is called.
+            neighbors: an optional Neighbors object to initialize with, if the
+                nearest neighbors for the embedding have already previously been
+                computed.
+            parent: The parent Embedding of this Embedding object. This is
+                automatically assigned when creating new Embedding objects with
+                the `project()` method.
+        """
         super().__init__(data, ids)
         assert Field.POSITION in data, "Field.POSITION is required"
         assert Field.COLOR in data, "Field.COLOR is required"
@@ -152,7 +197,7 @@ class Embedding(ColumnarData):
 
     def concat(self, other):
         """
-        Returns a new Embedding with this Embedding and the given one
+        Returns a new `Embedding` with this `Embedding` and the given one
         stacked together. Must have the same set of fields, and a disjoint set of
         IDs.
         """
@@ -177,7 +222,7 @@ class Embedding(ColumnarData):
     
     def any_ancestor_has_neighbors(self):
         """
-        Returns True if any of the Embeddings in the parent tree have embeddings
+        Returns `True` if any of the Embeddings in the parent tree have embeddings
         computed.
         """
         return self.find_recent_neighbor_embedding() is not None
@@ -187,7 +232,7 @@ class Embedding(ColumnarData):
     
     def find_ancestor_neighbor_embedding(self):
         """
-        Returns the Embedding that is furthest along this Embedding's parent
+        Returns the `Embedding` that is furthest along this `Embedding`'s parent
         tree and has a neighbor set.
         """
         ancestor = None
@@ -199,8 +244,8 @@ class Embedding(ColumnarData):
                 
     def get_ancestor_neighbors(self):
         """
-        Gets the neighbor set of the Embedding that is furthest along this
-        Embedding's ancestry tree and has a neighbor set.
+        Gets the neighbor set of the `Embedding` that is furthest along this
+        `Embedding`'s ancestry tree and has a neighbor set.
         """
         ancestor = self.find_ancestor_neighbor_embedding()
         if ancestor:
@@ -208,8 +253,8 @@ class Embedding(ColumnarData):
     
     def find_recent_neighbor_embedding(self):
         """
-        Returns the Embedding that is closest to this Embedding in the parent
-        tree (including this Embedding) that has a neighbor set.
+        Returns the `Embedding` that is closest to this `Embedding` in the parent
+        tree (including this `Embedding`) that has a neighbor set.
         """
         curr = self
         while curr is not None and not curr.has_neighbors():
@@ -218,7 +263,7 @@ class Embedding(ColumnarData):
     
     def get_recent_neighbors(self):
         """
-        Gets the neighbor set of the Embedding that is closest to this Embedding
+        Gets the neighbor set of the `Embedding` that is closest to this `Embedding`
         in the parent tree (including itself) and that has a neighbor set.
         """
         recent = self.find_recent_neighbor_embedding()
@@ -226,7 +271,7 @@ class Embedding(ColumnarData):
             return recent.get_neighbors()
     
     def dimension(self):
-        """Returns the dimensionality of the Field.POSITION field."""
+        """Returns the dimensionality of the `Field.POSITION` field."""
         return self.field(Field.POSITION).shape[1]
 
     def project(self, method=ProjectionTechnique.UMAP, **params):
@@ -238,7 +283,7 @@ class Embedding(ColumnarData):
         method, and returns a dimension-reduced matrix. If no metric is provided
         in the keyword params, the default metric of this Embedding is used.
         
-        Returns: A new Embedding object with the Field.POSITION value set to the
+        Returns: A new `Embedding` object with the `Field.POSITION` value set to the
             result of the projection.
         """
         hi_d = self.field(Field.POSITION)
@@ -263,7 +308,7 @@ class Embedding(ColumnarData):
     def get_relations(self, other_emb):
         """
         Computes a mapping from the IDs in this embedding to the positions
-        in the other embedding (used for AlignedUMAP).
+        in the other embedding (used for `AlignedUMAP`).
         """
         return {self.index(id_val): other_emb.index(id_val)
                 for id_val in self.ids if id_val in other_emb}
@@ -271,13 +316,17 @@ class Embedding(ColumnarData):
     def compute_neighbors(self, n_neighbors=None, metric=None):
         """
         Computes and saves a set of nearest neighbors in this embedding according
-        to the Field.POSITION values. This can be accessed after completing this
-        step through the neighbors property. If the metric or n_neighbors
-        is not provided, the default metric and n_neighobrs for this Embedding
-        object is used.
+        to the `Field.POSITION` values. This can be accessed after completing this
+        step through the `neighbors` property.
         
-        If this Embedding is copied or projected, it will inherit the same
-        Neighbors.
+        If this `Embedding` is copied or projected, it will inherit the same
+        `Neighbors`.
+        
+        Args:
+            n_neighbors: The number of neighbors to compute for each point. If
+                not provided, the default `n_neighbors` for this `Embedding` is used.
+            metric: The distance metric to use to compute neighbors. If
+                not provided, the default `metric` for this `Embedding` is used.
         """
         pos = self.field(Field.POSITION)
         # Save the metric and n_neighbors here so that they can be used to
@@ -291,15 +340,15 @@ class Embedding(ColumnarData):
         
     def clear_neighbors(self):
         """
-        Removes the saved Neighbors associated with this Embedding. This can
-        be used to determine which Neighbors is returned by get_ancestor_neighbors().
+        Removes the saved `Neighbors` associated with this `Embedding`. This can
+        be used to determine which Neighbors is returned by `get_ancestor_neighbors()`.
         """
         self.neighbors = None
         
     def clear_upstream_neighbors(self):
         """
-        Clears the neighbor sets for all Embeddings in the parent tree of this
-        Embedding (but not this one).
+        Clears the neighbor sets for all `Embedding`s in the parent tree of this
+        `Embedding` (but not this one).
         """
         curr = self.parent
         while curr is not None:
@@ -309,9 +358,9 @@ class Embedding(ColumnarData):
     def neighbor_distances(self, ids=None, n_neighbors=100, metric=None):
         """
         Returns the list of nearest neighbors for each of the given IDs and the
-        distances to each of those points. This does NOT use the Neighbors
+        distances to each of those points. This does NOT use the `Neighbors`
         object, and is therefore based only on the locations of the points in 
-        this Embedding (not potentially on its parents).
+        this `Embedding` (not potentially on its parents).
         """
         pos = self.field(Field.POSITION, ids=ids)
         neighbor_clf = NearestNeighbors(metric=metric or self.metric).fit(self.field(Field.POSITION))
@@ -322,7 +371,7 @@ class Embedding(ColumnarData):
         """
         Returns the pairwise distances from the given IDs to each other (or all
         points to each other, if ids is None). If the metric is not provided,
-        the default metric for this Embedding object is used.
+        the default metric for this `Embedding` object is used.
         """
         metric = metric or self.metric
         
@@ -365,9 +414,15 @@ class Embedding(ColumnarData):
 
     def within_bbox(self, bbox):
         """
-        Returns the list of IDs whose points are within the given bounding box,
-        where bbox is specified as (xmin, xmax, ymin, ymax). Only supports
-        2D embeddings.
+        Returns the list of IDs whose points are within the given bounding box.
+        Only supports 2D embeddings.
+        
+        Args:
+            bbox: The bounding box within which to retrieve points, specified as
+                (xmin, xmax, ymin, ymax).
+                
+        Returns:
+            A list of ID values corresponding to points within the bounding box.
         """
         assert self.dimension() == 2, "Non-2D embeddings are not supported by within_bbox()"
         positions = self.field(Field.POSITION)
@@ -381,8 +436,14 @@ class Embedding(ColumnarData):
         coordinates as separate x and y fields; otherwise, saves coordinates as
         n x d arrays.
         
-        compressed: whether to format JSON objects using base64 strings
-            instead of as human-readable float arrays
+        Args:
+            compressed: whether to format JSON objects using base64 strings
+                instead of as human-readable float arrays
+            save_neighbors: If `True`, serialize the `Neighbors` object within
+                the embedding JSON.
+                
+        Returns:
+            A JSON-serializable dictionary representing the embedding.
         """
         result = {}
         indexes = self.index(self.ids)
@@ -440,6 +501,14 @@ class Embedding(ColumnarData):
     def from_json(cls, data, label=None, parent=None):
         """
         Builds an Embedding object from the given JSON object.
+        
+        Args:
+            data: The JSON-serializable dictionary representing the embedding.
+            label: A string label to use to represent this embedding.
+            parent: An `Embedding` to record as the new `Embedding`'s parent.
+            
+        Returns:
+            An `Embedding` instance loaded with the specified data.
         """
         mats = {}
         if data.get("_format", "expanded") == "compressed":
@@ -490,7 +559,12 @@ class Embedding(ColumnarData):
     def save(self, file_path_or_buffer, **kwargs):
         """
         Save this Embedding object to the given file path or file-like object
-        (in JSON format).
+        (in JSON format). See [`Embedding.to_json`](#emblaze.datasets.Embedding.to_json)
+        for acceptable keyword arguments.
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object to write the
+                embedding to.
         """
         if isinstance(file_path_or_buffer, str):
             # File path
@@ -505,6 +579,10 @@ class Embedding(ColumnarData):
         """
         Load the Embedding object from the given file path or
         file-like object containing JSON data.
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object to read the
+                embedding from.
         """
         if isinstance(file_path_or_buffer, str):
             # File path
@@ -532,9 +610,9 @@ class Embedding(ColumnarData):
             allow_flips: If true, test inversions as possible candidates for alignment.
             
         Returns:
-            A new Embedding object representing the second input frame (the first
-            input frame is assumed to stay the same). Or, if return_transform is
-            True, returns the optimal transformation as an Affine object.
+            A new `Embedding` object representing the second input frame (the first
+            input frame is assumed to stay the same). Or, if `return_transform` is
+            `True`, returns the optimal transformation as an `Affine` object.
         """
         # Determine a set of points to use for comparison
         ids_to_compare = list(ids) if ids is not None else list(set(self.ids) & set(base_frame.ids))
@@ -580,7 +658,7 @@ class Embedding(ColumnarData):
 
 class NeighborOnlyEmbedding(Embedding):
     """
-    An Embedding object that contains no point locations, just neighbor IDs.
+    An `Embedding` object that contains no point locations, just neighbor IDs.
     """
     def __init__(self, neighbors, label=None, metric='euclidean', n_neighbors=100, parent=None):
         super().__init__({Field.POSITION: np.zeros((len(neighbors), 1)),
@@ -677,7 +755,7 @@ class NeighborOnlyEmbedding(Embedding):
     
 class EmbeddingSet:
     """
-    A set of high-dimensional embeddings, composed of a series of Embedding
+    A set of high-dimensional embeddings, composed of a series of `Embedding`
     objects.
     """
     def __init__(self, embs, align=True):
@@ -720,7 +798,7 @@ class EmbeddingSet:
         well as any keyword arguments given to the params argument of this
         method, and returns a list of dimension-reduced arrays.
         
-        Returns: A new EmbeddingSet object with (optionally aligned) projected
+        Returns: A new `EmbeddingSet` object with (optionally aligned) projected
             data.
         """
         params = params or {}
@@ -749,41 +827,41 @@ class EmbeddingSet:
     def compute_neighbors(self, n_neighbors=100, metric=None):
         """
         Computes and saves a set of nearest neighbors in each embedding set according
-        to the Field.POSITION values. This can be accessed after completing this
-        step by inspecting the neighbors property of the embedding.
+        to the `Field.POSITION` values. This can be accessed after completing this
+        step by inspecting the `neighbors` property of the embedding.
         """
         for emb in self.embeddings:
             emb.compute_neighbors(n_neighbors=n_neighbors, metric=metric)
 
     def clear_neighbors(self):
         """
-        Removes the saved Neighbors associated with this Embedding. This can
-        be used to determine which Neighbors is returned by get_ancestor_neighbors().
+        Removes the saved `Neighbors` associated with each `Embedding`. This can
+        be used to determine which `Neighbors` is returned by `get_ancestor_neighbors()`.
         """
         for emb in self.embeddings:
             emb.clear_neighbors()
                 
     def get_neighbors(self):
         """
-        Returns a NeighborSet object corresponding to the nearest neighbors
-        of each embedding in the EmbeddingSet.
+        Returns a `NeighborSet` object corresponding to the nearest neighbors
+        of each embedding in the `EmbeddingSet`.
         """
         return NeighborSet([emb.get_neighbors() for emb in self.embeddings])
 
     def get_recent_neighbors(self):
         """
-        Returns a NeighborSet containing ancestor Neighbors for each embedding in the
-        EmbeddingSet. This corresponds to the lowest-level Embedding in each
-        Embedding's parent tree (including the Embedding itself) that has a
+        Returns a `NeighborSet` containing ancestor `Neighbors` for each embedding in the
+        `EmbeddingSet`. This corresponds to the lowest-level `Embedding` in each
+        `Embedding`'s parent tree (including the `Embedding` itself) that has a
         neighbor set associated with it.
         """
         return NeighborSet([emb.get_recent_neighbors() for emb in self.embeddings])
                 
     def get_ancestor_neighbors(self):
         """
-        Returns a NeighborSet containing ancestor Neighbors for each embedding in the
-        EmbeddingSet. This corresponds to the highest-level Embedding in each
-        Embedding's parent tree that has a neighbor set associated with it.
+        Returns a `NeighborSet` containing ancestor `Neighbors` for each embedding in the
+        `EmbeddingSet`. This corresponds to the highest-level `Embedding` in each
+        `Embedding`'s parent tree that has a neighbor set associated with it.
         """
         return NeighborSet([emb.get_ancestor_neighbors() for emb in self.embeddings])
             
@@ -791,12 +869,13 @@ class EmbeddingSet:
         """
         Converts this set of embeddings into a JSON object.
         
-        compressed: whether to format Embedding JSON objects using base64 strings
-            instead of as human-readable float arrays
-        save_neighbors: If True, save the Neighbors into the "neighbors" key
-            of each individual embedding
-        num_neighbors: number of neighbors to write for each point (can considerably
-            save memory)
+        Args:
+            compressed: whether to format `Embedding` JSON objects using base64 strings
+                instead of as human-readable float arrays
+            save_neighbors: If `True`, save the `Neighbors` into the "neighbors" key
+                of each individual embedding
+            num_neighbors: number of neighbors to write for each point (can considerably
+                save memory)
         """
         return {
             "data": [emb.to_json(compressed=compressed,
@@ -808,9 +887,16 @@ class EmbeddingSet:
     @classmethod
     def from_json(cls, data, parents=None):
         """
-        Builds an EmbeddingSet from a JSON object. The provided object should
-        contain a "data" field containing frames, and optionally a "frameLabels"
-        field containing a list of string names for each field.
+        Builds an `EmbeddingSet` from a JSON object.
+        
+        Args:
+            data: A JSON-serializable dictionary representing the `EmbeddingSet`,
+                such as that generated by [`EmbeddingSet.to_json`](#emblaze.datasets.EmbeddingSet.to_json).
+            parents: An optional list of `Embedding` objects to use as parents
+                for each of the created embeddings.
+                
+        Returns:
+            An initialized `EmbeddingSet` object.
         """
         assert "data" in data, "JSON object must contain a 'data' field"
         embs = data["data"]
@@ -825,7 +911,12 @@ class EmbeddingSet:
     def save(self, file_path_or_buffer, **kwargs):
         """
         Save this EmbeddingSet object to the given file path or file-like object
-        (in JSON format).
+        (in JSON format). See [`EmbeddingSet.to_json`](#emblaze.datasets.EmbeddingSet.to_json)
+        for acceptable keyword arguments.
+        
+        Args:
+            file_path_or_buffer: A file path or file-like object to write the
+                embedding to.
         """
         if isinstance(file_path_or_buffer, str):
             # File path
@@ -840,6 +931,10 @@ class EmbeddingSet:
         """
         Load the EmbeddingSet object from the given file path or
         file-like object containing JSON data.
+
+        Args:
+            file_path_or_buffer: A file path or file-like object to read the
+                embedding from.
         """
         if isinstance(file_path_or_buffer, str):
             # File path

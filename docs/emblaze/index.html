@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>emblaze API documentation</title>
+<meta name="description" content="Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using
+animated scatter plots. It bundles an easy-to-use Python API for …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}#lunr-search{width:100%;font-size:1em;padding:6px 9px 5px 9px;border:1px solid silver}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico"/>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Package <code>emblaze</code></h1>
+</header>
+<section id="section-intro">
+<p>Emblaze is a Jupyter notebook widget for <strong>visually comparing embeddings</strong> using
+animated scatter plots. It bundles an easy-to-use Python API for performing
+dimensionality reduction on multiple sets of embedding data (including aligning
+the results for easier comparison), and a full-featured interactive platform for
+probing and comparing embeddings that runs within a Jupyter notebook cell.</p>
+<p><img alt="" src="assets/cover_art.png"></p>
+<h1 id="installation">Installation</h1>
+<p><strong>Compatibility Note:</strong> Note that this widget has been tested using Python &gt;= 3.7.
+If you are using JupyterLab, please make sure you are running version 3.0 or
+higher. The widget currently does not support displaying in the VS Code
+interactive notebook environment.</p>
+<p>Install Emblaze using <code>pip</code>:</p>
+<pre><code class="language-bash">pip install emblaze
+</code></pre>
+<p>The widget should work out of the box when you run <code>jupyter lab</code> (see
+"Quickstart" below).</p>
+<p><em>Jupyter Notebook note:</em> If you are using Jupyter Notebook 5.2 or earlier, you
+may also need to enable
+the nbextension:</p>
+<pre><code class="language-bash">jupyter nbextension enable --py --sys-prefix emblaze
+</code></pre>
+<h2 id="standalone-demo">Standalone Demo</h2>
+<p>Although the full application is designed to work as a Jupyter widget, you can
+run a standalone version with most of the available features directly in your
+browser. To do so, simply run the following command after pip-installing the
+package (note: you do <em>not</em> need to clone the repository to run the standalone
+app):</p>
+<pre><code class="language-bash">python -m emblaze.server
+</code></pre>
+<p>Visit <code>localhost:5000</code> to see the running application. This will allow you to
+view two demo datasets: one showing five different t-SNE projections of a subset
+of MNIST digits, and one showing embeddings of the same 5,000 words according to
+three different data sources (Google News, Wikipedia, and Twitter). </p>
+<p>To add your own datasets to the standalone app, you can create a directory
+containing your saved comparison JSON files (see Saving and Loading below),
+then pass it as a command-line argument:</p>
+<pre><code class="language-bash">python -m emblaze.server /path/to/comparisons
+</code></pre>
+<hr>
+<h1 id="quickstart">Quickstart</h1>
+<p>Let's demonstrate the use of Emblaze to compare dimensionality
+reduction plots of the MNIST dataset. In a Jupyter notebook, use the following
+code to retrieve the MNIST dataset (or load your own feature and label data as
+variables <code>X</code> and <code>Y</code>):</p>
+<pre><code class="language-python">from tensorflow.keras.datasets import mnist
+import numpy as np
+
+_, (x_test, y_test) = mnist.load_data()
+# Get a random subset of the data
+indexes = np.random.choice(x_test.shape[0], size=2000, replace=False)
+X = x_test[indexes].reshape(-1, 28*28)
+Y = y_test[indexes]
+</code></pre>
+<p>The Emblaze viewer takes two basic objects as input for visualization: an
+<a href="datasets.html#emblaze.datasets.EmbeddingSet"><strong><code>EmbeddingSet</code></strong></a>, which contains
+one or more coordinate matrices as well as color-coding information, and a
+<a href="thumbnails.html#emblaze.thumbnails.Thumbnails"><strong><code>Thumbnails</code></strong></a> object, which describes how
+each point in the visualization should be described (typically using a
+combination of text and/or images).</p>
+<p>First, let's construct the <code>EmbeddingSet</code>. To do so, we first create a high-dimensional
+<code>Embedding</code> to contain the <code>X</code> and <code>Y</code> matrices we defined above. We will also
+compute the nearest neighbors for each point, which will be displayed in the
+sidebar of the visualization.</p>
+<pre><code class="language-python">import emblaze
+
+emb = emblaze.Embedding({emblaze.Field.POSITION: X, emblaze.Field.COLOR: Y}, metric='cosine')
+emb.compute_neighbors()
+</code></pre>
+<p>Next, we can project this embedding five times using random initializations
+of UMAP (a common dimensionality reduction technique). We compute neighbors here
+again, as we would like to study neighborhood differences in the DR plots. (If
+we were comparing multiple high-dimensional coordinate sets, such as different
+word embedding models, we would not compute neighbors again here. See the
+<a href="#defining-comparisons">Defining Comparisons</a> section below for more details.)</p>
+<pre><code class="language-python">variants = emblaze.EmbeddingSet([
+    emb.project(method=emblaze.ProjectionTechnique.UMAP) for _ in range(5)
+])
+variants.compute_neighbors(metric='euclidean')
+</code></pre>
+<p>Now, let's create some <strong>thumbnails</strong> to represent these points visually. Since
+MNIST consists of images, we will use the <code>ImageThumbnails</code> class:</p>
+<pre><code class="language-python">thumbnails = emblaze.ImageThumbnails(X.reshape(-1, 28, 28, 1))
+</code></pre>
+<p>Finally, we can initialize an <a href="viewer.html#emblaze.viewer.Viewer"><code>emblaze.Viewer</code></a>
+object, which renders the visualization when printed:</p>
+<pre><code class="language-python">w = emblaze.Viewer(embeddings=variants, thumbnails=thumbnails)
+w
+</code></pre>
+<p>You should see the Emblaze visualization appear in the cell output:</p>
+<p><img alt="" src="assets/mnist.png"></p>
+<hr>
+<h1 id="using-emblaze">Using Emblaze</h1>
+<p>Once you've loaded the Emblaze viewer, you can interact with the plot to start
+making comparisons of points and clusters. Emblaze offers the following features
+to support comparative analysis:</p>
+<h2 id="star-trail-visualization">Star Trail visualization</h2>
+<p>When you click a <strong>frame</strong> thumbnail in the browser
+to the left of the main scatter plot, widening lines appear on the plot
+radiating out from particular points. This visualization, which we call a
+Star Trail visualization, highlights points whose neighbor sets change the
+most from one frame to another. When you click the frame thumbnail again, the
+points will smoothly animate along their Star Trails to arrive at their
+positions in the new frame.</p>
+<h2 id="controllable-animation">Controllable animation</h2>
+<p>When in the comparison view (and the Star Trail
+plot is visible), you can manually control the interpolation of the plot from
+one frame to the other. Simply drag the slider in the bottom right corner of
+the plot. The plot remains interactive while in this interpolated state, so
+you can drag the slider halfway and then find points of interest.</p>
+<h2 id="selections">Selections</h2>
+<p>You can make selections in Emblaze by clicking points in the
+scatter plot. You can add to the selection by holding Cmd (Mac) or Ctrl (other
+operating systems) and clicking. Additionally, you can select multiple points
+at once by holding Cmd/Ctrl and click-and-dragging to define a lasso region.
+To select points within a <em>high-dimensional radius</em> of a point, select the
+central point, then click Start Radius Select.</p>
+<p>You can also read and write the selection programmatically by accessing the
+Viewer's <a href="viewer.html#emblaze.viewer.Viewer.selectedIDs"><code>selectedIDs</code></a> property.</p>
+<h2 id="nearest-neighbor-lines">Nearest neighbor lines</h2>
+<p>When a single point is selected, blue lines radiate from the selected point to
+its nearest neighbors in the high-dimensional space (see <a href="#recent-and-ancestor-neighbors">Ancestor Neighbors</a>
+for more details). You can configure how many of these neighbors are highlighted
+by changing the Viewer's <a href="viewer.html#emblaze.viewer.Viewer.numNeighbors"><code>numNeighbors</code></a>
+property, or by going to the Settings menu in the lower-right corner of the widget
+interface.</p>
+<h2 id="selection-info">Selection info</h2>
+<p>As you define selections, information about the selected
+points and their nearest neighborhoods is shown in the sidebar to the right of
+the plot under the <em>Current</em> tab. At the top, you can see the names, descriptions,
+and/or images defined by the <a href="thumbnails.html#emblaze.thumbnails.Thumbnails"><code>Thumbnails</code></a>
+object for the selected points. In the Neighbors section, you can see the top
+10 nearest neighbors of the selection, which are weighted by their total rank
+with respect to each selected point. When you are comparing two frames (see
+above), the Current sidebar pane also updates to show you Common Changes in
+the nearest neighborhood of the selection between the two frames.</p>
+<h2 id="aligning-and-isolating">Aligning and Isolating</h2>
+<p>For large datasets, it may be helpful to reduce the number of points visible in
+the scatter plot in order to focus on a selection of interest. To do so, select
+a set of points and then click the <strong>Isolate</strong> button. This will limit the visible
+points to the selected points and their high-dimensional nearest neighbors in
+all frames. You can also set the visible points programmatically by accessing
+the Viewer's <a href="viewer.html#emblaze.viewer.Viewer.filterIDs"><code>filterIDs</code></a> property.</p>
+<p>Relatedly, when animating between frames you may wish to minimize unnecessary
+motion of a set of points (for example, if a cluster rotates in a DR plot due to
+random initialization effects). To minimize the motion of a set of points with
+respect to the rest of the plot, select the points and click <strong>Align</strong>. You can
+also do this programmatically by setting the Viewer's
+<a href="viewer.html#emblaze.viewer.Viewer.alignedIDs"><code>alignedIDs</code></a> property.</p>
+<h2 id="suggested-selections">Suggested Selections</h2>
+<p>Emblaze includes a novel clustering algorithm designed
+to surface groups of points that change meaningfully from one frame to another.
+Check out the Suggested pane of the sidebar to see clustering recommendations
+relevant to the area of the plot you are currently looking at.</p>
+<h2 id="color-stripes">Color Stripes</h2>
+<p>To highlight variation between different frames, each
+frame thumbnail in the browser to the left of the visualization has a color
+associated with it. These colors are dynamically chosen to reflect <em>differences
+between the frames</em> with respect to the <em>current selection.</em> In other words,
+frames in which the selected points are arranged similarly will have similar
+colors, while frames that have highly divergent arrangements of the points
+will have starkly different colors. See the <a href="frame_colors.html#emblaze.frame_colors.compute_colors"><code>compute_colors</code></a>
+function for more information.</p>
+<h2 id="interactive-notebook-analysis">Interactive Notebook Analysis</h2>
+<p>Once you have loaded a <code>Viewer</code> instance in the notebook, you can read and write
+its properties to dynamically work with the visualization. The following
+properties are reactive:</p>
+<ul>
+<li><a href="viewer.html#emblaze.viewer.Viewer.embeddings"><code>embeddings</code></a> (<code>EmbeddingSet</code>)
+Modify this to change the entire dataset that is displayed.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.thumbnails"><code>thumbnails</code></a> (<code>Thumbnails</code>)
+Represents the image or text thumbnails displayed on hover and click.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.currentFrame"><code>currentFrame</code></a> (<code>int</code>) The
+current frame or embedding space that is being viewed (from <code>0</code> to <code>len(embeddings)</code>).</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.selectedIDs"><code>selectedIDs</code></a> (<code>List[int]</code>) The
+selected ID numbers. Unless you provide custom IDs when constructing the
+<code>EmbeddingSet</code>, these are simply zero-indexed integers.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.alignedIDs"><code>alignedIDs</code></a> (<code>List[int]</code>) The
+IDs of the points to which the embedding spaces are aligned (same format as
+<code>selectedIDs</code>). Alignment is computed relative to the positions of the points in the current frame.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.filterIDs"><code>filterIDs</code></a> (<code>List[int]</code>) The
+IDs of the points that are visible in the plot (same format as <code>selectedIDs</code>).</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.colorScheme"><code>colorScheme</code></a> (<code>string</code>) The
+name of a color scheme to use to render the points. A variety of color schemes
+are available, listed in <code>src/colorschemes.ts</code>. This property can also be
+changed in the Settings panel of the widget.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.previewMode"><code>previewMode</code></a> (<code>string</code>) The
+method to use to generate preview lines, which should be one of the values
+in <a href="utils.html#emblaze.utils.PreviewMode"><code>utils.PreviewMode</code></a>.</li>
+</ul>
+<h2 id="saving-and-loading">Saving and Loading</h2>
+<p>You can save the data used to make comparisons to JSON, so that it is easy to
+load them again in Jupyter or the standalone application without re-running the
+embedding/projection code. Comparisons consist of an <code>EmbeddingSet</code> (containing
+the positions of the points in each 2D projection), a <code>Thumbnails</code> object (dictating
+how to display each point), and one or more <code>NeighborSet</code>s (which contain the
+nearest-neighbor sets used for comparison and display).</p>
+<p>To save a comparison, call the <a href="viewer.html#emblaze.viewer.Viewer.save_comparison"><code>save_comparison()</code></a> method on the <code>Viewer</code>. Note
+that if you are using high-dimensional nearest neighbors (most use cases), this
+method by default saves both the high-dimensional coordinates and the nearest-neighbor
+IDs. This can create files ranging from hundreds of MB to GBs. To store
+only the nearest neighbor IDs, pass <code>ancestor_data=False</code> as a keyword argument.
+Note that if you disable storing the high-dimensional coordinates, you will be
+unable to use tools that depend on <em>distances</em> in hi-D space (such as the
+high-dimensional radius select).</p>
+<p>To load a comparison, simply initialize the <code>Viewer</code> as follows:</p>
+<pre><code class="language-python">w = emblaze.Viewer(file=&quot;/path/to/comparison.json&quot;)
+</code></pre>
+<hr>
+<h1 id="defining-comparisons">Defining Comparisons</h1>
+<p>Because Emblaze only depends on having a set of embeddings and thumbnails, it
+supports making a wide variety of comparisons. In the simplest case, the
+matrix of 2D coordinates, color values, and text descriptions is sufficient
+to populate the visualization. However, things get a little trickier when we
+start to incorporate nearest-neighbor analysis, a central part of defining
+what level we are performing comparison on. <em>On which set of coordinates
+should the nearest neighbors be computed?</em> Emblaze gives you the flexibility to
+choose which neighbor sets are displayed under which contexts, but doing so
+requires some understanding of how neighbors are used under the hood.</p>
+<h2 id="inherited-neighbor-sets">Inherited Neighbor Sets</h2>
+<p>When you call <a href="datasets.html#emblaze.datasets.Embedding.compute_neighbors"><code>compute_neighbors</code></a>
+on an <code>Embedding</code> or <code>EmbeddingSet</code> instance, a <a href="neighbors.html#emblaze.neighbors.Neighbors"><code>Neighbors</code></a>
+object is created that contains the nearest neighbor matrix for the coordinates
+defined in that embedding object.</p>
+<p>Now, when you create additional <code>Embedding</code> or <code>EmbeddingSet</code> objects that
+<em>derive</em> from the previously-defined embeddings, the <code>Neighbors</code> object is
+inherited by default. This means that if you project the embedding down to 2D
+using the <a href="datasets.html#emblaze.datasets.EmbeddingSet.project"><code>project()</code></a>
+method, the nearest neighborhoods that are shown in the Star Trail or sidebar
+will be from the <em>high-dimensional space</em>. This is often desirable, since
+dimensionality reduction plots are known to <strong>distort</strong> nearest neighborhoods
+for large datasets.</p>
+<p>However, sometimes we do want to compare nearest neighborhoods in the projected
+data (such as in the Quickstart example above, where we compared five different
+random initializations of UMAP). If you'd like the differences in nearest
+neighborhoods to be shown in the Star Trail visualization, simply call
+<a href="datasets.html#emblaze.datasets.EmbeddingSet.compute_neighbors"><code>compute_neighbors</code></a>
+again on the dimensionally-reduced <code>EmbeddingSet</code>.</p>
+<h2 id="recent-and-ancestor-neighbors">Recent and Ancestor Neighbors</h2>
+<p>It is worth noting that sometimes we want the nearest neighbors shown in the
+Current sidebar pane to be different than those used to compute Star Trails,
+Suggested Selections, Color Stripes, etc. To support this, Emblaze keeps a parent
+pointer for each <code>Embedding</code> object as you generate them, e.g. using the
+<code>project()</code> method. At visualization time, Emblaze retrieves two neighbor
+sets from the parent tree (both of these may correspond to the same <code>Neighbors</code>
+object, but not necessarily). Each of these two sets are used in different parts of
+the visualization:</p>
+<ul>
+<li><strong>Recent neighbors.</strong> These neighbors, which can be accessed using the
+<a href="datasets.html#emblaze.datasets.EmbeddingSet.get_recent_neighbors"><code>get_recent_neighbors</code></a>
+method on <code>EmbeddingSet</code> or <code>Embedding</code>, are the neighbors inherited from the
+<em>most recent</em> parent of the current embedding (or the current one, if it has
+neighbors). These are used to perform <em>all algorithmic comparisons</em> of frames,
+including <a href="#star-trail-visualization">Star Trail visualizations</a>,
+<a href="#suggested-selections">Suggested Selections</a>, and <a href="#color-stripes">Color Stripes</a>.</li>
+<li><strong>Ancestor neighbors.</strong> These neighbors can be accessed using the
+<a href="datasets.html#emblaze.datasets.EmbeddingSet.get_ancestor_neighbors"><code>get_ancestor_neighbors</code></a>
+method on <code>EmbeddingSet</code> or <code>Embedding</code>. They are the neighbors computed in the
+<em>oldest</em> parent of the current embedding (which may be the current one if it
+has no parents with computed neighbors). These are the neighbors displayed in
+the <a href="#selection-info">sidebar</a> and by the <a href="#nearest-neighbor-lines">nearest neighbor lines</a>,
+and are typically used to communicate the high-dimensional nearest neighbors
+regardless of the level at which embeddings are being compared.</li>
+</ul>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python
+# coding: utf-8
+# Copyright (c) venkatesh-sivaraman.
+# Distributed under the terms of the Modified BSD License.
+
+&#34;&#34;&#34;
+Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using 
+animated scatter plots. It bundles an easy-to-use Python API for performing 
+dimensionality reduction on multiple sets of embedding data (including aligning 
+the results for easier comparison), and a full-featured interactive platform for 
+probing and comparing embeddings that runs within a Jupyter notebook cell.
+
+![](assets/cover_art.png)
+
+# Installation
+
+**Compatibility Note:** Note that this widget has been tested using Python &gt;= 3.7. 
+If you are using JupyterLab, please make sure you are running version 3.0 or 
+higher. The widget currently does not support displaying in the VS Code 
+interactive notebook environment.
+
+Install Emblaze using `pip`:
+
+```bash
+pip install emblaze
+```
+
+The widget should work out of the box when you run `jupyter lab` (see 
+&#34;Quickstart&#34; below).
+
+_Jupyter Notebook note:_ If you are using Jupyter Notebook 5.2 or earlier, you 
+may also need to enable
+the nbextension:
+
+```bash
+jupyter nbextension enable --py --sys-prefix emblaze
+```
+
+## Standalone Demo
+
+Although the full application is designed to work as a Jupyter widget, you can 
+run a standalone version with most of the available features directly in your 
+browser. To do so, simply run the following command after pip-installing the 
+package (note: you do _not_ need to clone the repository to run the standalone 
+app):
+
+```bash
+python -m emblaze.server
+```
+
+Visit `localhost:5000` to see the running application. This will allow you to 
+view two demo datasets: one showing five different t-SNE projections of a subset 
+of MNIST digits, and one showing embeddings of the same 5,000 words according to 
+three different data sources (Google News, Wikipedia, and Twitter). 
+
+To add your own datasets to the standalone app, you can create a directory 
+containing your saved comparison JSON files (see Saving and Loading below), 
+then pass it as a command-line argument:
+
+```bash
+python -m emblaze.server /path/to/comparisons
+```
+
+---
+
+# Quickstart
+
+Let&#39;s demonstrate the use of Emblaze to compare dimensionality
+reduction plots of the MNIST dataset. In a Jupyter notebook, use the following
+code to retrieve the MNIST dataset (or load your own feature and label data as
+variables `X` and `Y`):
+
+```python
+from tensorflow.keras.datasets import mnist
+import numpy as np
+
+_, (x_test, y_test) = mnist.load_data()
+# Get a random subset of the data
+indexes = np.random.choice(x_test.shape[0], size=2000, replace=False)
+X = x_test[indexes].reshape(-1, 28*28)
+Y = y_test[indexes]
+```
+
+The Emblaze viewer takes two basic objects as input for visualization: an
+[**`EmbeddingSet`**](datasets.html#emblaze.datasets.EmbeddingSet), which contains
+one or more coordinate matrices as well as color-coding information, and a 
+[**`Thumbnails`**](thumbnails.html#emblaze.thumbnails.Thumbnails) object, which describes how
+each point in the visualization should be described (typically using a
+combination of text and/or images).
+
+First, let&#39;s construct the `EmbeddingSet`. To do so, we first create a high-dimensional
+`Embedding` to contain the `X` and `Y` matrices we defined above. We will also
+compute the nearest neighbors for each point, which will be displayed in the
+sidebar of the visualization.
+
+```python
+import emblaze
+
+emb = emblaze.Embedding({emblaze.Field.POSITION: X, emblaze.Field.COLOR: Y}, metric=&#39;cosine&#39;)
+emb.compute_neighbors()
+```
+
+Next, we can project this embedding five times using random initializations
+of UMAP (a common dimensionality reduction technique). We compute neighbors here
+again, as we would like to study neighborhood differences in the DR plots. (If
+we were comparing multiple high-dimensional coordinate sets, such as different
+word embedding models, we would not compute neighbors again here. See the
+[Defining Comparisons](#defining-comparisons) section below for more details.)
+
+```python
+variants = emblaze.EmbeddingSet([
+    emb.project(method=emblaze.ProjectionTechnique.UMAP) for _ in range(5)
+])
+variants.compute_neighbors(metric=&#39;euclidean&#39;)
+```
+
+Now, let&#39;s create some **thumbnails** to represent these points visually. Since
+MNIST consists of images, we will use the `ImageThumbnails` class:
+
+```python
+thumbnails = emblaze.ImageThumbnails(X.reshape(-1, 28, 28, 1))
+```
+
+Finally, we can initialize an [`emblaze.Viewer`](viewer.html#emblaze.viewer.Viewer)
+object, which renders the visualization when printed:
+
+```python
+w = emblaze.Viewer(embeddings=variants, thumbnails=thumbnails)
+w
+```
+
+You should see the Emblaze visualization appear in the cell output:
+
+![](assets/mnist.png)
+
+---
+
+# Using Emblaze
+
+Once you&#39;ve loaded the Emblaze viewer, you can interact with the plot to start
+making comparisons of points and clusters. Emblaze offers the following features
+to support comparative analysis:
+
+## Star Trail visualization
+
+When you click a **frame** thumbnail in the browser
+to the left of the main scatter plot, widening lines appear on the plot
+radiating out from particular points. This visualization, which we call a
+Star Trail visualization, highlights points whose neighbor sets change the
+most from one frame to another. When you click the frame thumbnail again, the
+points will smoothly animate along their Star Trails to arrive at their
+positions in the new frame.
+
+## Controllable animation
+
+When in the comparison view (and the Star Trail
+plot is visible), you can manually control the interpolation of the plot from
+one frame to the other. Simply drag the slider in the bottom right corner of
+the plot. The plot remains interactive while in this interpolated state, so
+you can drag the slider halfway and then find points of interest.
+
+## Selections
+
+You can make selections in Emblaze by clicking points in the
+scatter plot. You can add to the selection by holding Cmd (Mac) or Ctrl (other
+operating systems) and clicking. Additionally, you can select multiple points
+at once by holding Cmd/Ctrl and click-and-dragging to define a lasso region.
+To select points within a *high-dimensional radius* of a point, select the
+central point, then click Start Radius Select.
+
+You can also read and write the selection programmatically by accessing the
+Viewer&#39;s [`selectedIDs`](viewer.html#emblaze.viewer.Viewer.selectedIDs) property.
+
+## Nearest neighbor lines
+
+When a single point is selected, blue lines radiate from the selected point to
+its nearest neighbors in the high-dimensional space (see [Ancestor Neighbors](#recent-and-ancestor-neighbors)
+for more details). You can configure how many of these neighbors are highlighted
+by changing the Viewer&#39;s [`numNeighbors`](viewer.html#emblaze.viewer.Viewer.numNeighbors)
+property, or by going to the Settings menu in the lower-right corner of the widget
+interface.
+
+## Selection info
+
+As you define selections, information about the selected
+points and their nearest neighborhoods is shown in the sidebar to the right of
+the plot under the *Current* tab. At the top, you can see the names, descriptions,
+and/or images defined by the [`Thumbnails`](thumbnails.html#emblaze.thumbnails.Thumbnails)
+object for the selected points. In the Neighbors section, you can see the top
+10 nearest neighbors of the selection, which are weighted by their total rank
+with respect to each selected point. When you are comparing two frames (see
+above), the Current sidebar pane also updates to show you Common Changes in
+the nearest neighborhood of the selection between the two frames.
+
+## Aligning and Isolating
+
+For large datasets, it may be helpful to reduce the number of points visible in
+the scatter plot in order to focus on a selection of interest. To do so, select
+a set of points and then click the **Isolate** button. This will limit the visible
+points to the selected points and their high-dimensional nearest neighbors in
+all frames. You can also set the visible points programmatically by accessing
+the Viewer&#39;s [`filterIDs`](viewer.html#emblaze.viewer.Viewer.filterIDs) property.
+
+Relatedly, when animating between frames you may wish to minimize unnecessary
+motion of a set of points (for example, if a cluster rotates in a DR plot due to
+random initialization effects). To minimize the motion of a set of points with
+respect to the rest of the plot, select the points and click **Align**. You can
+also do this programmatically by setting the Viewer&#39;s
+[`alignedIDs`](viewer.html#emblaze.viewer.Viewer.alignedIDs) property.
+
+## Suggested Selections
+
+Emblaze includes a novel clustering algorithm designed
+to surface groups of points that change meaningfully from one frame to another.
+Check out the Suggested pane of the sidebar to see clustering recommendations
+relevant to the area of the plot you are currently looking at.
+
+## Color Stripes
+
+To highlight variation between different frames, each
+frame thumbnail in the browser to the left of the visualization has a color
+associated with it. These colors are dynamically chosen to reflect *differences
+between the frames* with respect to the *current selection.* In other words,
+frames in which the selected points are arranged similarly will have similar
+colors, while frames that have highly divergent arrangements of the points
+will have starkly different colors. See the [`compute_colors`](frame_colors.html#emblaze.frame_colors.compute_colors)
+function for more information.
+
+## Interactive Notebook Analysis
+
+Once you have loaded a `Viewer` instance in the notebook, you can read and write 
+its properties to dynamically work with the visualization. The following 
+properties are reactive:
+
+- [`embeddings`](viewer.html#emblaze.viewer.Viewer.embeddings) (`EmbeddingSet`)
+    Modify this to change the entire dataset that is displayed.
+- [`thumbnails`](viewer.html#emblaze.viewer.Viewer.thumbnails) (`Thumbnails`) 
+    Represents the image or text thumbnails displayed on hover and click.
+- [`currentFrame`](viewer.html#emblaze.viewer.Viewer.currentFrame) (`int`) The 
+    current frame or embedding space that is being viewed (from `0` to `len(embeddings)`).
+- [`selectedIDs`](viewer.html#emblaze.viewer.Viewer.selectedIDs) (`List[int]`) The 
+    selected ID numbers. Unless you provide custom IDs when constructing the 
+        `EmbeddingSet`, these are simply zero-indexed integers.
+- [`alignedIDs`](viewer.html#emblaze.viewer.Viewer.alignedIDs) (`List[int]`) The 
+    IDs of the points to which the embedding spaces are aligned (same format as 
+    `selectedIDs`). Alignment is computed relative to the positions of the points in the current frame.
+- [`filterIDs`](viewer.html#emblaze.viewer.Viewer.filterIDs) (`List[int]`) The 
+    IDs of the points that are visible in the plot (same format as `selectedIDs`).
+- [`colorScheme`](viewer.html#emblaze.viewer.Viewer.colorScheme) (`string`) The 
+    name of a color scheme to use to render the points. A variety of color schemes 
+    are available, listed in `src/colorschemes.ts`. This property can also be 
+    changed in the Settings panel of the widget.
+- [`previewMode`](viewer.html#emblaze.viewer.Viewer.previewMode) (`string`) The 
+    method to use to generate preview lines, which should be one of the values 
+    in [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode).
+
+## Saving and Loading
+
+You can save the data used to make comparisons to JSON, so that it is easy to 
+load them again in Jupyter or the standalone application without re-running the 
+embedding/projection code. Comparisons consist of an `EmbeddingSet` (containing 
+the positions of the points in each 2D projection), a `Thumbnails` object (dictating 
+how to display each point), and one or more `NeighborSet`s (which contain the 
+nearest-neighbor sets used for comparison and display).
+
+To save a comparison, call the [`save_comparison()`](viewer.html#emblaze.viewer.Viewer.save_comparison) method on the `Viewer`. Note 
+that if you are using high-dimensional nearest neighbors (most use cases), this 
+method by default saves both the high-dimensional coordinates and the nearest-neighbor
+IDs. This can create files ranging from hundreds of MB to GBs. To store 
+only the nearest neighbor IDs, pass `ancestor_data=False` as a keyword argument. 
+Note that if you disable storing the high-dimensional coordinates, you will be 
+unable to use tools that depend on _distances_ in hi-D space (such as the 
+high-dimensional radius select).
+
+To load a comparison, simply initialize the `Viewer` as follows:
+
+```python
+w = emblaze.Viewer(file=&#34;/path/to/comparison.json&#34;)
+```
+
+---
+
+# Defining Comparisons
+
+Because Emblaze only depends on having a set of embeddings and thumbnails, it
+supports making a wide variety of comparisons. In the simplest case, the
+matrix of 2D coordinates, color values, and text descriptions is sufficient
+to populate the visualization. However, things get a little trickier when we
+start to incorporate nearest-neighbor analysis, a central part of defining
+what level we are performing comparison on. *On which set of coordinates
+should the nearest neighbors be computed?* Emblaze gives you the flexibility to
+choose which neighbor sets are displayed under which contexts, but doing so
+requires some understanding of how neighbors are used under the hood.
+
+## Inherited Neighbor Sets
+
+When you call [`compute_neighbors`](datasets.html#emblaze.datasets.Embedding.compute_neighbors)
+on an `Embedding` or `EmbeddingSet` instance, a [`Neighbors`](neighbors.html#emblaze.neighbors.Neighbors)
+object is created that contains the nearest neighbor matrix for the coordinates
+defined in that embedding object.
+
+Now, when you create additional `Embedding` or `EmbeddingSet` objects that 
+*derive* from the previously-defined embeddings, the `Neighbors` object is
+inherited by default. This means that if you project the embedding down to 2D
+using the [`project()`](datasets.html#emblaze.datasets.EmbeddingSet.project)
+method, the nearest neighborhoods that are shown in the Star Trail or sidebar
+will be from the *high-dimensional space*. This is often desirable, since
+dimensionality reduction plots are known to **distort** nearest neighborhoods
+for large datasets.
+
+However, sometimes we do want to compare nearest neighborhoods in the projected
+data (such as in the Quickstart example above, where we compared five different
+random initializations of UMAP). If you&#39;d like the differences in nearest
+neighborhoods to be shown in the Star Trail visualization, simply call
+[`compute_neighbors`](datasets.html#emblaze.datasets.EmbeddingSet.compute_neighbors)
+again on the dimensionally-reduced `EmbeddingSet`.
+
+## Recent and Ancestor Neighbors
+
+It is worth noting that sometimes we want the nearest neighbors shown in the
+Current sidebar pane to be different than those used to compute Star Trails,
+Suggested Selections, Color Stripes, etc. To support this, Emblaze keeps a parent
+pointer for each `Embedding` object as you generate them, e.g. using the
+`project()` method. At visualization time, Emblaze retrieves two neighbor
+sets from the parent tree (both of these may correspond to the same `Neighbors`
+object, but not necessarily). Each of these two sets are used in different parts of
+the visualization:
+
+* **Recent neighbors.** These neighbors, which can be accessed using the
+  [`get_recent_neighbors`](datasets.html#emblaze.datasets.EmbeddingSet.get_recent_neighbors)
+  method on `EmbeddingSet` or `Embedding`, are the neighbors inherited from the
+  *most recent* parent of the current embedding (or the current one, if it has
+  neighbors). These are used to perform *all algorithmic comparisons* of frames,
+  including [Star Trail visualizations](#star-trail-visualization),
+  [Suggested Selections](#suggested-selections), and [Color Stripes](#color-stripes).
+* **Ancestor neighbors.** These neighbors can be accessed using the
+  [`get_ancestor_neighbors`](datasets.html#emblaze.datasets.EmbeddingSet.get_ancestor_neighbors)
+  method on `EmbeddingSet` or `Embedding`. They are the neighbors computed in the
+  *oldest* parent of the current embedding (which may be the current one if it
+  has no parents with computed neighbors). These are the neighbors displayed in
+  the [sidebar](#selection-info) and by the [nearest neighbor lines](#nearest-neighbor-lines),
+  and are typically used to communicate the high-dimensional nearest neighbors
+  regardless of the level at which embeddings are being compared.
+
+&#34;&#34;&#34;
+
+__pdoc__ = {
+    &#39;server&#39;: False,
+    &#39;nbextension&#39;: False, 
+    &#39;datasets.ColumnarData&#39;: False,
+    &#39;datasets.NeighborOnlyEmbedding&#39;: False,
+    &#39;utils.LoggingHelper&#39;: False,
+    &#39;viewer.default_thread_starter&#39;: False,
+    &#39;viewer.synchronous_thread_starter&#39;: False,
+}
+
+from .viewer import Viewer
+from .datasets import Embedding, EmbeddingSet
+from .utils import ProjectionTechnique, Field, PreviewMode
+from .thumbnails import Thumbnails, TextThumbnails, ImageThumbnails, CombinedThumbnails
+from ._version import __version__, version_info
+
+from .nbextension import _jupyter_nbextension_paths
+
+import json
+from pathlib import Path
+
+from ._version import __version__
+
+HERE = Path(__file__).parent.resolve()
+
+with (HERE / &#34;labextension&#34; / &#34;package.json&#34;).open() as fid:
+    data = json.load(fid)
+
+def _jupyter_labextension_paths():
+    return [{
+        &#34;src&#34;: &#34;labextension&#34;,
+        &#34;dest&#34;: data[&#34;name&#34;]
+    }]</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="emblaze.datasets" href="datasets.html">emblaze.datasets</a></code></dt>
+<dd>
+<div class="desc"><p>Defines model classes to store embedding data in both high-dimensional and
+dimensionally-reduced spaces.</p></div>
+</dd>
+<dt><code class="name"><a title="emblaze.frame_colors" href="frame_colors.html">emblaze.frame_colors</a></code></dt>
+<dd>
+<div class="desc"><p>A helper module to compute HSV colors for each frame in an animated DR plot.
+The colors are chosen such that the perceptual distance between colors
+…</p></div>
+</dd>
+<dt><code class="name"><a title="emblaze.neighbors" href="neighbors.html">emblaze.neighbors</a></code></dt>
+<dd>
+<div class="desc"><p>Defines model classes to compute and store nearest neighbor sets that can be
+inherited across different <code>Embedding</code> objects.</p></div>
+</dd>
+<dt><code class="name"><a title="emblaze.recommender" href="recommender.html">emblaze.recommender</a></code></dt>
+<dd>
+<div class="desc"><p>Defines a class to compute Suggested Selections, or clusters that exhibit
+consistent or noteworthy changes from one frame to another.</p></div>
+</dd>
+<dt><code class="name"><a title="emblaze.thumbnails" href="thumbnails.html">emblaze.thumbnails</a></code></dt>
+<dd>
+<div class="desc"><p>Defines model classes to store thumbnail data in text and/or image formats.</p></div>
+</dd>
+<dt><code class="name"><a title="emblaze.utils" href="utils.html">emblaze.utils</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="emblaze.viewer" href="viewer.html">emblaze.viewer</a></code></dt>
+<dd>
+<div class="desc"><p>Defines the main Emblaze visualization class, <code>emblaze.Viewer</code>.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#installation">Installation</a><ul>
+<li><a href="#standalone-demo">Standalone Demo</a></li>
+</ul>
+</li>
+<li><a href="#quickstart">Quickstart</a></li>
+<li><a href="#using-emblaze">Using Emblaze</a><ul>
+<li><a href="#star-trail-visualization">Star Trail visualization</a></li>
+<li><a href="#controllable-animation">Controllable animation</a></li>
+<li><a href="#selections">Selections</a></li>
+<li><a href="#nearest-neighbor-lines">Nearest neighbor lines</a></li>
+<li><a href="#selection-info">Selection info</a></li>
+<li><a href="#aligning-and-isolating">Aligning and Isolating</a></li>
+<li><a href="#suggested-selections">Suggested Selections</a></li>
+<li><a href="#color-stripes">Color Stripes</a></li>
+<li><a href="#interactive-notebook-analysis">Interactive Notebook Analysis</a></li>
+<li><a href="#saving-and-loading">Saving and Loading</a></li>
+</ul>
+</li>
+<li><a href="#defining-comparisons">Defining Comparisons</a><ul>
+<li><a href="#inherited-neighbor-sets">Inherited Neighbor Sets</a></li>
+<li><a href="#recent-and-ancestor-neighbors">Recent and Ancestor Neighbors</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="emblaze.datasets" href="datasets.html">emblaze.datasets</a></code></li>
+<li><code><a title="emblaze.frame_colors" href="frame_colors.html">emblaze.frame_colors</a></code></li>
+<li><code><a title="emblaze.neighbors" href="neighbors.html">emblaze.neighbors</a></code></li>
+<li><code><a title="emblaze.recommender" href="recommender.html">emblaze.recommender</a></code></li>
+<li><code><a title="emblaze.thumbnails" href="thumbnails.html">emblaze.thumbnails</a></code></li>
+<li><code><a title="emblaze.utils" href="utils.html">emblaze.utils</a></code></li>
+<li><code><a title="emblaze.viewer" href="viewer.html">emblaze.viewer</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
