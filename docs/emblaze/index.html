@@ -185,6 +185,51 @@ frames in which the selected points are arranged similarly will have similar
 colors, while frames that have highly divergent arrangements of the points
 will have starkly different colors. See the <a href="frame_colors.html#emblaze.frame_colors.compute_colors"><code>compute_colors</code></a>
 function for more information.</p>
+<h2 id="interactive-notebook-analysis">Interactive Notebook Analysis</h2>
+<p>Once you have loaded a <code>Viewer</code> instance in the notebook, you can read and write
+its properties to dynamically work with the visualization. The following
+properties are reactive:</p>
+<ul>
+<li><a href="viewer.html#emblaze.viewer.Viewer.embeddings"><code>embeddings</code></a> (<code>EmbeddingSet</code>)
+Modify this to change the entire dataset that is displayed.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.thumbnails"><code>thumbnails</code></a> (<code>Thumbnails</code>)
+Represents the image or text thumbnails displayed on hover and click.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.currentFrame"><code>currentFrame</code></a> (<code>int</code>) The
+current frame or embedding space that is being viewed (from <code>0</code> to <code>len(embeddings)</code>).</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.selectedIDs"><code>selectedIDs</code></a> (<code>List[int]</code>) The
+selected ID numbers. Unless you provide custom IDs when constructing the
+<code>EmbeddingSet</code>, these are simply zero-indexed integers.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.alignedIDs"><code>alignedIDs</code></a> (<code>List[int]</code>) The
+IDs of the points to which the embedding spaces are aligned (same format as
+<code>selectedIDs</code>). Alignment is computed relative to the positions of the points in the current frame.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.filterIDs"><code>filterIDs</code></a> (<code>List[int]</code>) The
+IDs of the points that are visible in the plot (same format as <code>selectedIDs</code>).</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.colorScheme"><code>colorScheme</code></a> (<code>string</code>) The
+name of a color scheme to use to render the points. A variety of color schemes
+are available, listed in <code>src/colorschemes.ts</code>. This property can also be
+changed in the Settings panel of the widget.</li>
+<li><a href="viewer.html#emblaze.viewer.Viewer.previewMode"><code>previewMode</code></a> (<code>string</code>) The
+method to use to generate preview lines, which should be one of the values
+in <a href="utils.html#emblaze.utils.PreviewMode"><code>utils.PreviewMode</code></a>.</li>
+</ul>
+<h2 id="saving-and-loading">Saving and Loading</h2>
+<p>You can save the data used to make comparisons to JSON, so that it is easy to
+load them again in Jupyter or the standalone application without re-running the
+embedding/projection code. Comparisons consist of an <code>EmbeddingSet</code> (containing
+the positions of the points in each 2D projection), a <code>Thumbnails</code> object (dictating
+how to display each point), and one or more <code>NeighborSet</code>s (which contain the
+nearest-neighbor sets used for comparison and display).</p>
+<p>To save a comparison, call the <a href="viewer.html#emblaze.viewer.Viewer.save_comparison"><code>save_comparison()</code></a> method on the <code>Viewer</code>. Note
+that if you are using high-dimensional nearest neighbors (most use cases), this
+method by default saves both the high-dimensional coordinates and the nearest-neighbor
+IDs. This can create files ranging from hundreds of MB to GBs. To store
+only the nearest neighbor IDs, pass <code>ancestor_data=False</code> as a keyword argument.
+Note that if you disable storing the high-dimensional coordinates, you will be
+unable to use tools that depend on <em>distances</em> in hi-D space (such as the
+high-dimensional radius select).</p>
+<p>To load a comparison, simply initialize the <code>Viewer</code> as follows:</p>
+<pre><code class="language-python">w = emblaze.Viewer(file=&quot;/path/to/comparison.json&quot;)
+</code></pre>
 <hr>
 <h1 id="defining-comparisons">Defining Comparisons</h1>
 <p>Because Emblaze only depends on having a set of embeddings and thumbnails, it
@@ -473,6 +518,58 @@ colors, while frames that have highly divergent arrangements of the points
 will have starkly different colors. See the [`compute_colors`](frame_colors.html#emblaze.frame_colors.compute_colors)
 function for more information.
 
+## Interactive Notebook Analysis
+
+Once you have loaded a `Viewer` instance in the notebook, you can read and write 
+its properties to dynamically work with the visualization. The following 
+properties are reactive:
+
+- [`embeddings`](viewer.html#emblaze.viewer.Viewer.embeddings) (`EmbeddingSet`)
+    Modify this to change the entire dataset that is displayed.
+- [`thumbnails`](viewer.html#emblaze.viewer.Viewer.thumbnails) (`Thumbnails`) 
+    Represents the image or text thumbnails displayed on hover and click.
+- [`currentFrame`](viewer.html#emblaze.viewer.Viewer.currentFrame) (`int`) The 
+    current frame or embedding space that is being viewed (from `0` to `len(embeddings)`).
+- [`selectedIDs`](viewer.html#emblaze.viewer.Viewer.selectedIDs) (`List[int]`) The 
+    selected ID numbers. Unless you provide custom IDs when constructing the 
+        `EmbeddingSet`, these are simply zero-indexed integers.
+- [`alignedIDs`](viewer.html#emblaze.viewer.Viewer.alignedIDs) (`List[int]`) The 
+    IDs of the points to which the embedding spaces are aligned (same format as 
+    `selectedIDs`). Alignment is computed relative to the positions of the points in the current frame.
+- [`filterIDs`](viewer.html#emblaze.viewer.Viewer.filterIDs) (`List[int]`) The 
+    IDs of the points that are visible in the plot (same format as `selectedIDs`).
+- [`colorScheme`](viewer.html#emblaze.viewer.Viewer.colorScheme) (`string`) The 
+    name of a color scheme to use to render the points. A variety of color schemes 
+    are available, listed in `src/colorschemes.ts`. This property can also be 
+    changed in the Settings panel of the widget.
+- [`previewMode`](viewer.html#emblaze.viewer.Viewer.previewMode) (`string`) The 
+    method to use to generate preview lines, which should be one of the values 
+    in [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode).
+
+## Saving and Loading
+
+You can save the data used to make comparisons to JSON, so that it is easy to 
+load them again in Jupyter or the standalone application without re-running the 
+embedding/projection code. Comparisons consist of an `EmbeddingSet` (containing 
+the positions of the points in each 2D projection), a `Thumbnails` object (dictating 
+how to display each point), and one or more `NeighborSet`s (which contain the 
+nearest-neighbor sets used for comparison and display).
+
+To save a comparison, call the [`save_comparison()`](viewer.html#emblaze.viewer.Viewer.save_comparison) method on the `Viewer`. Note 
+that if you are using high-dimensional nearest neighbors (most use cases), this 
+method by default saves both the high-dimensional coordinates and the nearest-neighbor
+IDs. This can create files ranging from hundreds of MB to GBs. To store 
+only the nearest neighbor IDs, pass `ancestor_data=False` as a keyword argument. 
+Note that if you disable storing the high-dimensional coordinates, you will be 
+unable to use tools that depend on _distances_ in hi-D space (such as the 
+high-dimensional radius select).
+
+To load a comparison, simply initialize the `Viewer` as follows:
+
+```python
+w = emblaze.Viewer(file=&#34;/path/to/comparison.json&#34;)
+```
+
 ---
 
 # Defining Comparisons
@@ -683,6 +780,8 @@ setTimeout(() => input.focus(), 100);
 <li><a href="#aligning-and-isolating">Aligning and Isolating</a></li>
 <li><a href="#suggested-selections">Suggested Selections</a></li>
 <li><a href="#color-stripes">Color Stripes</a></li>
+<li><a href="#interactive-notebook-analysis">Interactive Notebook Analysis</a></li>
+<li><a href="#saving-and-loading">Saving and Loading</a></li>
 </ul>
 </li>
 <li><a href="#defining-comparisons">Defining Comparisons</a><ul>

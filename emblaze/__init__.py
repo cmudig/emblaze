@@ -226,6 +226,58 @@ colors, while frames that have highly divergent arrangements of the points
 will have starkly different colors. See the [`compute_colors`](frame_colors.html#emblaze.frame_colors.compute_colors)
 function for more information.
 
+## Interactive Notebook Analysis
+
+Once you have loaded a `Viewer` instance in the notebook, you can read and write 
+its properties to dynamically work with the visualization. The following 
+properties are reactive:
+
+- [`embeddings`](viewer.html#emblaze.viewer.Viewer.embeddings) (`EmbeddingSet`)
+    Modify this to change the entire dataset that is displayed.
+- [`thumbnails`](viewer.html#emblaze.viewer.Viewer.thumbnails) (`Thumbnails`) 
+    Represents the image or text thumbnails displayed on hover and click.
+- [`currentFrame`](viewer.html#emblaze.viewer.Viewer.currentFrame) (`int`) The 
+    current frame or embedding space that is being viewed (from `0` to `len(embeddings)`).
+- [`selectedIDs`](viewer.html#emblaze.viewer.Viewer.selectedIDs) (`List[int]`) The 
+    selected ID numbers. Unless you provide custom IDs when constructing the 
+        `EmbeddingSet`, these are simply zero-indexed integers.
+- [`alignedIDs`](viewer.html#emblaze.viewer.Viewer.alignedIDs) (`List[int]`) The 
+    IDs of the points to which the embedding spaces are aligned (same format as 
+    `selectedIDs`). Alignment is computed relative to the positions of the points in the current frame.
+- [`filterIDs`](viewer.html#emblaze.viewer.Viewer.filterIDs) (`List[int]`) The 
+    IDs of the points that are visible in the plot (same format as `selectedIDs`).
+- [`colorScheme`](viewer.html#emblaze.viewer.Viewer.colorScheme) (`string`) The 
+    name of a color scheme to use to render the points. A variety of color schemes 
+    are available, listed in `src/colorschemes.ts`. This property can also be 
+    changed in the Settings panel of the widget.
+- [`previewMode`](viewer.html#emblaze.viewer.Viewer.previewMode) (`string`) The 
+    method to use to generate preview lines, which should be one of the values 
+    in [`utils.PreviewMode`](utils.html#emblaze.utils.PreviewMode).
+
+## Saving and Loading
+
+You can save the data used to make comparisons to JSON, so that it is easy to 
+load them again in Jupyter or the standalone application without re-running the 
+embedding/projection code. Comparisons consist of an `EmbeddingSet` (containing 
+the positions of the points in each 2D projection), a `Thumbnails` object (dictating 
+how to display each point), and one or more `NeighborSet`s (which contain the 
+nearest-neighbor sets used for comparison and display).
+
+To save a comparison, call the [`save_comparison()`](viewer.html#emblaze.viewer.Viewer.save_comparison) method on the `Viewer`. Note 
+that if you are using high-dimensional nearest neighbors (most use cases), this 
+method by default saves both the high-dimensional coordinates and the nearest-neighbor
+IDs. This can create files ranging from hundreds of MB to GBs. To store 
+only the nearest neighbor IDs, pass `ancestor_data=False` as a keyword argument. 
+Note that if you disable storing the high-dimensional coordinates, you will be 
+unable to use tools that depend on _distances_ in hi-D space (such as the 
+high-dimensional radius select).
+
+To load a comparison, simply initialize the `Viewer` as follows:
+
+```python
+w = emblaze.Viewer(file="/path/to/comparison.json")
+```
+
 ---
 
 # Defining Comparisons
