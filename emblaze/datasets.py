@@ -256,7 +256,7 @@ class Embedding(ColumnarData):
         elif callable(method):
             lo_d = method(hi_d, self.ids, **params)
         else:
-            raise ValueError("Unrecognized projection technique '{}'".format(method))
+            raise ValueError("Unrecognized projection technique '{}'. Please choose from the constants listed in emblaze.ProjectionTechnique, or pass a callable (see method docstring).".format(method))
         
         return self.copy_with_fields({Field.POSITION: lo_d}, clear_neighbors=True)
     
