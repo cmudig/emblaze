@@ -1,6 +1,6 @@
 # Emblaze - Interactive Embedding Comparison
 
-Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using animated scatter plots. It bundles an easy-to-use Python API for performing dimensionality reduction on multiple sets of embedding data (including aligning the results for easier comparison), and a full-featured interactive platform for probing and comparing embeddings that runs within a Jupyter notebook cell. [Read the documentation >](https://emblaze.github.io)
+Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using animated scatter plots. It bundles an easy-to-use Python API for performing dimensionality reduction on multiple sets of embedding data (including aligning the results for easier comparison), and a full-featured interactive platform for probing and comparing embeddings that runs within a Jupyter notebook cell. [Read the documentation >](https://dig.cmu.edu/emblaze/emblaze)
 
 ![](https://raw.githubusercontent.com/cmudig/emblaze/main/examples/screenshots/cover_art.png)
 
@@ -89,7 +89,7 @@ w
 
 You can also visualize embeddings with multimodal labels (i.e. where some points have text labels and others have image labels) by initializing an `emblaze.CombinedThumbnails` instance with a list of other `Thumbnails` objects to combine.
 
-See the [documentation](https://emblaze.github.io) for more details on defining and configuring comparisons with Emblaze.
+See the [documentation](https://dig.cmu.edu/emblaze/emblaze) for more details on defining and configuring comparisons with Emblaze.
 
 ---
 
