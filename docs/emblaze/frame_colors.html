@@ -51,7 +51,7 @@ def _clustered_ordering(distances):
     &#34;&#34;&#34;
     Returns an ordering of the items whose pairwise distances are given.
     &#34;&#34;&#34;
-    clusterer = AgglomerativeClustering(n_clusters=len(distances), affinity=&#39;precomputed&#39;, linkage=&#39;average&#39;)
+    clusterer = AgglomerativeClustering(n_clusters=len(distances), metric=&#39;precomputed&#39;, linkage=&#39;average&#39;)
     clusterer.fit(distances)
 
     def walk_tree(children):

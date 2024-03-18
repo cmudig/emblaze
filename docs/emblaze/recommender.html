@@ -151,7 +151,7 @@ class SelectionRecommender:
         for threshold in np.arange(0.7, 0.91, 0.1):
             clusterer = AgglomerativeClustering(n_clusters=None,
                                                 distance_threshold=threshold,
-                                                affinity=&#39;precomputed&#39;,
+                                                metric=&#39;precomputed&#39;,
                                                 linkage=&#39;average&#39;)
             clusterer.fit(distances)
             cluster_labels = clusterer.labels_
@@ -428,7 +428,7 @@ granularities, then sorting them by relevance to a given query.</p></div>
         for threshold in np.arange(0.7, 0.91, 0.1):
             clusterer = AgglomerativeClustering(n_clusters=None,
                                                 distance_threshold=threshold,
-                                                affinity=&#39;precomputed&#39;,
+                                                metric=&#39;precomputed&#39;,
                                                 linkage=&#39;average&#39;)
             clusterer.fit(distances)
             cluster_labels = clusterer.labels_
