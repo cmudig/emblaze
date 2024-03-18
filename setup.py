@@ -23,7 +23,7 @@ from setuptools import setup
 name = 'emblaze'
 
 # Ensure a valid python version
-ensure_python('>=3.4')
+ensure_python((3, 4))
 
 # Get our version
 version = get_version(pjoin(name, '_version.py'))
@@ -86,7 +86,7 @@ setup_args = dict(
     ],
     include_package_data=True,
     install_requires=[
-        'ipywidgets>=7.0.0',
+        'ipywidgets>=7.7.2',
         'affine>=2.3.0',
         'colormath>=3.0.0',
         'numpy>=1.19.5',
@@ -99,8 +99,6 @@ setup_args = dict(
         'flask-socketio>=5.1.1',
         'eventlet>=0.33.0',
         'numba>=0.53.1',
-        'redis>=4.1.0',
-        'redis-server>=6.0.9',
         'tqdm>=4.61.2'
     ],
     entry_points={

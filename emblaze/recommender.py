@@ -119,7 +119,7 @@ class SelectionRecommender:
         for threshold in np.arange(0.7, 0.91, 0.1):
             clusterer = AgglomerativeClustering(n_clusters=None,
                                                 distance_threshold=threshold,
-                                                affinity='precomputed',
+                                                metric='precomputed',
                                                 linkage='average')
             clusterer.fit(distances)
             cluster_labels = clusterer.labels_

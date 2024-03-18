@@ -23,6 +23,16 @@ the nbextension:
 jupyter nbextension enable --py --sys-prefix emblaze
 ```
 
+### Running as a Standalone App
+
+It's most convenient to use Emblaze as a Jupyter widget, but it can also be run as a standalone web application for small-scale hosting purposes. To do so, run the Flask server using:
+
+```bash
+python -m emblaze.server
+```
+
+See "Standalone App Development" below to learn how to import data into the standalone tool.
+
 ## Examples
 
 Please see `examples/example.ipynb` to try using the Emblaze widget on the Boston housing prices or MNIST (TensorFlow import required) datasets.
@@ -179,6 +189,7 @@ npm run build:all
 Run the packaging script to generate the wheel for distribution:
 
 ```
+pip install --upgrade build twine
 python -m build
 ```
 

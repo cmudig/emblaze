@@ -18,9 +18,7 @@ EXCLUDE_TRAITLETS = set([
 Payload.max_decode_packets = 200
 
 app = Flask(__name__)
-socketio = SocketIO(app,
-                    async_mode='eventlet',
-                    message_queue=os.environ.get('REDIS_URL', 'redis://'))
+socketio = SocketIO(app, async_mode='eventlet')
 
 parent_dir = os.path.dirname(__file__)
 public_dir = os.path.join(parent_dir, "public")
@@ -115,48 +113,16 @@ def _emit_value_handler(name, sid):
                 emit('change:' + name, change.new, room=sid, namespace='/')
     return handle_msg
 
-def run_server(start_redis=False, data_directory=None, debug=False):
+def run_server(data_directory=None, debug=False):
     """
-    Starts the Flask server. If start_redis is True, automatically starts a
-    Redis instance (on port 6379). If not, the server expects a Redis instance
-    at the URL in the environment variable REDIS_URL.
+    Starts the Flask server.
     """
     global data_dir
     if data_directory: data_dir = data_directory
     assert len(_get_all_datasets()) > 0, "No datasets (.json files) found in data directory"
-    
-    redis_pid = None
-    
-    if start_redis:
-        import redis_server
-        import subprocess
-        import tempfile
         
-        temp_dir = tempfile.mkdtemp()
-        pid_path = os.path.join(temp_dir, 'redis.pid')
-        
-        server_path = redis_server.REDIS_SERVER_PATH
-        subprocess.check_call(
-            '{} --daemonize yes --pidfile {} --logfile {}'.format(
-                server_path,
-                pid_path,
-                os.path.join(temp_dir, 'redis.log')),
-            shell=True)
-
-        # If there is a pid file, read it to know what to shut down when the server stops
-        if os.path.exists(pid_path):
-            with open(pid_path, 'r') as file:
-                redis_pid = file.read().strip()
-            print("Started redis server (pid {})".format(redis_pid))
-    
     print("Running Flask server with public dir '{}' and data dir '{}'".format(public_dir, data_dir))
-    try:
-        socketio.run(app, debug=debug, port=4999)
-    except KeyboardInterrupt as e:
-        if redis_pid is not None:
-            print("Shutting down redis server")
-            subprocess.check_call('kill {}'.format(redis_pid))
-        raise e
+    socketio.run(app, debug=debug, port=4999)
     
 if __name__ == "__main__":
-    run_server(start_redis=True, data_directory=sys.argv[1] if len(sys.argv) > 1 else None, debug=True)
+    run_server(data_directory=sys.argv[1] if len(sys.argv) > 1 else None, debug=True)
