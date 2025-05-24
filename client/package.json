@@ -1,0 +1,46 @@
+{
+  "name": "client",
+  "private": true,
+  "version": "0.11.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "devDependencies": {
+    "@anywidget/vite": "^0.2.1",
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
+    "@tsconfig/svelte": "^3.0.0",
+    "@types/d3": "^7.4.3",
+    "anywidget": "^0.9.18",
+    "autoprefixer": "^10.4.13",
+    "postcss": "^8.4.21",
+    "svelte": "^4.2.20",
+    "svelte-fa": "^4.0.4",
+    "tslib": "^2.5.0",
+    "vite": "^5.4.19"
+  },
+  "dependencies": {
+    "@fortawesome/free-regular-svg-icons": "^6.3.0",
+    "@fortawesome/free-solid-svg-icons": "^6.3.0",
+    "@upsetjs/bundle": "^1.11.0",
+    "counterpoint-vis": "^1.0.3",
+    "d3": "^7.8.2",
+    "d3-svg-legend": "^2.25.6",
+    "layercake": "^7.6.1",
+    "mathjs": "^9.3.2",
+    "pixi.js": "^6.1.3",
+    "svelte-select": "^5.5.2"
+  },
+  "homepage": "https://github.com/cmudig/emblaze",
+  "bugs": {
+    "url": "https://github.com/cmudig/emblaze/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": {
+    "name": "venkatesh-sivaraman",
+    "email": "venkatesh.sivaraman.98@gmail.com"
+  }
+}

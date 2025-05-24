@@ -1,17 +1,42 @@
 [build-system]
-requires = ["jupyter_packaging~=0.12", "jupyterlab~=3.1"]
-build-backend = "jupyter_packaging.build_api"
+requires = ["setuptools", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[tool.jupyter-packaging.options]
-skip-if-exists = ["emblaze/labextension/static/style.js"]
-ensured-targets = ["emblaze/labextension/static/style.js", "emblaze/labextension/package.json"]
+[project]
+name = "emblaze"
+authors = [
+    {name = "Venkatesh Sivaraman", email = "venkats@cmu.edu"},
+]
+description = "Interactive widget for embedding comparison"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["AI", "machine learning", "notebook", "jupyter", "data science"]
+license = { file = "LICENSE" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    "affine>=2.3.0",
+    "colormath>=3.0.0",
+    "numpy>=1.19.5",
+    "pandas>=1.2.0",
+    "scikit-learn>=0.24.1",
+    "scipy>=1.6.0",
+    "pillow>=8.2.0",
+    "umap-learn>=0.5.1",
+    "flask>=1.1.2",
+    "flask-socketio>=5.1.1",
+    "eventlet>=0.33.0",
+    "numba>=0.53.1",
+    "tqdm>=4.61.2",
+    "ipywidgets",
+    "anywidget>=0.9.0",
+]
+version = "0.11.0"
 
-[tool.jupyter-packaging.builder]
-factory = "jupyter_packaging.npm_builder"
+[project.urls]
+Homepage = "https://github.com/cmudig/emblaze"
 
-[tool.jupyter-packaging.build-args]
-build_cmd = "build:all"
-npm = ["npm"]
-
-[tool.check-manifest]
-ignore = ["emblaze/labextension/**", "yarn.lock", ".*", "package-lock.json"]
+[tool.setuptools]
+packages = ["emblaze"]

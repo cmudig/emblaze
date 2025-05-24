@@ -3,7 +3,7 @@
   import { helpMessagesVisible } from '../utils/stores';
   import HelpMessage from './HelpMessage.svelte';
 
-  import SelectionBrowseItem from './SelectionBrowseItem';
+  import SelectionBrowseItem from './SelectionBrowseItem.svelte';
 
   const dispatch = createEventDispatcher();
   export let data = [];

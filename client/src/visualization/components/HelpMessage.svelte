@@ -1,5 +1,5 @@
 <script>
-  import Icon from 'fa-svelte';
+  import Fa from 'svelte-fa';
   import { faInfoCircle } from '@fortawesome/free-solid-svg-icons/faInfoCircle';
 
   let messageVisible = false;
@@ -36,7 +36,7 @@
         class="btn btn-link text-muted help-button bp3-button bp3-minimal jp-ToolbarButtonComponent minimal jp-Button"
         on:click={() => (messageVisible = true)}
       >
-        <Icon icon={faInfoCircle} />
+        <Fa icon={faInfoCircle} />
       </button>
     {/if}
   </div>
