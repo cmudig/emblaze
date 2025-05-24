@@ -6,7 +6,7 @@ Emblaze is a Jupyter notebook widget for **visually comparing embeddings** using
 
 ## Installation
 
-**Compatibility Note:** Note that this widget has been tested using Python >= 3.7. If you are using JupyterLab, please make sure you are running version 3.0 or higher. The widget currently does not support displaying in the VS Code interactive notebook environment.
+**Compatibility Note:** Emblaze has been tested using Python >= 3.7. If you are using JupyterLab, please make sure you are running version 3.0 or higher. *NEW:* The widget should work in VS Code and Colab environments thanks to using [anywidget](https://anywidget.dev) for platform-agnostic packaging. Please file a GitHub issue if you notice any compatibility problems.
 
 Install Emblaze using `pip`:
 
@@ -14,24 +14,7 @@ Install Emblaze using `pip`:
 pip install emblaze
 ```
 
-The widget should work out of the box when you run `jupyter lab` (see example code below).
-
-_Jupyter Notebook note:_ If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
-the nbextension:
-
-```bash
-jupyter nbextension enable --py --sys-prefix emblaze
-```
-
-### Running as a Standalone App
-
-It's most convenient to use Emblaze as a Jupyter widget, but it can also be run as a standalone web application for small-scale hosting purposes. To do so, run the Flask server using:
-
-```bash
-python -m emblaze.server
-```
-
-See "Standalone App Development" below to learn how to import data into the standalone tool.
+The widget should work out of the box when you run `jupyter lab` (or open a notebook in VS Code or Colab) and follow the example code below.
 
 ## Examples
 
@@ -111,56 +94,13 @@ Clone repository, then install dependencies. (Note: you may find it easier to in
 pip install -r requirements.txt
 ```
 
-Install the python package. This will also build the JS packages.
+Install the python package.
 
 ```bash
 pip install -e .
 ```
 
-Run the following commands if you use **Jupyter Lab**:
-
-```
-jupyter labextension install @jupyter-widgets/jupyterlab-manager --no-build
-jupyter labextension install .
-```
-
-Run the following commands if you use **Jupyter Notebook**:
-
-```
-jupyter nbextension install --sys-prefix --symlink --overwrite --py emblaze
-jupyter nbextension enable --sys-prefix --py emblaze
-```
-
-Note that the `--symlink` flag doesn't work on Windows, so you will here have to run
-the `install` command every time that you rebuild your extension. For certain installations
-you might also need another flag instead of `--sys-prefix`, but we won't cover the meaning
-of those flags here.
-
-### How to see your changes
-
-Open JupyterLab in watch mode with `jupyter lab --watch`. Then, in a separate terminal, watch the source directory for changes with `npm run watch`. After a change to the JavaScript code, you will wait for the build to finish, then refresh your browser. After changing in Python code, you will need to restart the notebook kernel to see your changes take effect.
-
-### Standalone App Development
-
-To develop using the standalone app, run `npm run watch:standalone` in a separate terminal from the Flask server to continuously build the frontend. You will need to reload the page to see your changes.
-
-The standalone application serves datasets stored at the data path that is printed when the Flask server starts (should be something like `.../lib/python3.9/site-packages/emblaze/data` for the pip-installed version, or `.../emblaze/emblaze/data` for a local repository). You can add your own datasets by building an `EmbeddingSet` and (optionally) a `Thumbnails` object, then saving the results to files in the data directory:
-
-```python
-import os, json
-
-dataset_name = "my-dataset"
-data_dir = ... # data directory printed by flask server
-
-embeddings = ... # EmbeddingSet object
-thumbnails = ... # (Text|Image)Thumbnails object
-
-os.mkdir(os.path.join(data_dir, dataset_name))
-with open(os.path.join(data_dir, dataset_name, "data.json"), "w") as file:
-    json.dump(embeddings.to_json(), file)
-with open(os.path.join(data_dir, dataset_name, "thumbnails.json"), "w") as file:
-    json.dump(thumbnails.to_json(), file)
-```
+In one terminal, `cd` into the `client` directory and then run `vite`. This will start a live reload service for the frontend. In another terminal, start a `jupyter lab` server and open a notebook to start the Emblaze viewer. When you edit the frontend code, you will need to reload the JupyterLab webpage to see the results. When you edit the backend code, you will need to restart the Jupyter Python kernel.
 
 ### Building Documentation
 
@@ -174,16 +114,10 @@ pdoc --html --force --output-dir docs --template-dir docs/templates emblaze
 
 ### Deployment
 
-First clean all npm build intermediates:
+Bump the widget version in `emblaze/_version.py`, `package.json`, and `pyproject.toml` if applicable. Then build the notebook widgets:
 
 ```
-npm run clean
-```
-
-Bump the widget version in `emblaze/_version.py`, `emblaze/_frontend.py`, and `package.json` if applicable. Then build the notebook widgets and standalone app:
-
-```
-npm run build:all
+vite build
 ```
 
 Run the packaging script to generate the wheel for distribution:
