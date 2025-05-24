@@ -1,7 +1,13 @@
-import type { Writable } from 'svelte/store';
+import type { Writable, Subscriber, Unsubscriber } from 'svelte/store';
 import { writable } from 'svelte/store';
 
-export function syncValue(model: any, name_: string, defaultVal: any) {
+interface Traitlet {
+  set(v: any): void;
+  subscribe(run: Subscriber<any>): Unsubscriber;
+  update(func: (v: any) => any): void;
+}
+
+export function traitlet(model: any, name_: string, defaultVal: any): Traitlet {
   const name: string = name_;
   const curVal: Writable<any> = writable(model.get(name) || defaultVal);
 

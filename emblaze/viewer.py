@@ -8,10 +8,7 @@
 Defines the main Emblaze visualization class, `emblaze.Viewer`.
 """
 
-from ipywidgets import DOMWidget
-from numpy.core.fromnumeric import sort
 from traitlets import Integer, Unicode, Dict, Bool, List, Float, Bytes, Instance, Set, observe, Any
-from ._frontend import module_name, module_version
 from .frame_colors import compute_colors
 from .datasets import EmbeddingSet, NeighborOnlyEmbedding, Embedding
 from .thumbnails import Thumbnails
@@ -23,9 +20,18 @@ import glob
 import tqdm
 import threading
 import numpy as np
+import anywidget
+import pathlib
 
 PERFORMANCE_SUGGESTIONS_RECOMPUTE = 1000
 PERFORMANCE_SUGGESTIONS_ENABLE = 10000
+
+# from `npx vite`
+DEV_ESM_URL = "http://localhost:5173/src/widget-main.js?anywidget"
+DEV_CSS_URL = ""
+
+# from `npx vite build`
+BUNDLE_DIR = pathlib.Path(__file__).parent / "static"
 
 def default_thread_starter(fn, args=[], kwargs={}):
     thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
@@ -34,7 +40,7 @@ def default_thread_starter(fn, args=[], kwargs={}):
 def synchronous_thread_starter(fn, args=[], kwargs={}):
     fn(args, kwargs)
 
-class Viewer(DOMWidget):
+class Viewer(anywidget.AnyWidget):
     """
     Represents and maintains the state of an interactive Emblaze interface to
     display in a Jupyter notebook. The basic instantiation of an Emblaze viewer
@@ -47,12 +53,7 @@ class Viewer(DOMWidget):
     w
     ```
     """
-    _model_name = Unicode('ViewerModel').tag(sync=True)
-    _model_module = Unicode(module_name).tag(sync=True)
-    _model_module_version = Unicode(module_version).tag(sync=True)
-    _view_name = Unicode('Viewer').tag(sync=True)
-    _view_module = Unicode(module_name).tag(sync=True)
-    _view_module_version = Unicode(module_version).tag(sync=True)
+    name = Unicode().tag(sync=True)
     
     thread_starter = Any(default_thread_starter)
     _autogenerate_embeddings = Bool(True) # only set this if caching embedding data
@@ -246,6 +247,12 @@ class Viewer(DOMWidget):
             thumbnails: A `ThumbnailSet` object.
             file: A file path or file-like object from which to read a comparison JSON file.
         """
+        try:
+            self._esm = DEV_ESM_URL if kwargs.get('dev', False) else (BUNDLE_DIR / "widget-main.js").read_text()
+            self._css = DEV_CSS_URL if kwargs.get('dev', False) else (BUNDLE_DIR / "style.css").read_text()
+        except FileNotFoundError:
+            raise ValueError("No built widget source found, and dev is set to False. To resolve, run npx vite build from the client directory.")
+
         super(Viewer, self).__init__(*args, **kwargs)
         if self.file:
             self.load_comparison(self.file)

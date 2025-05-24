@@ -9,7 +9,7 @@
   import { ThumbnailProvider } from './visualization/models/thumbnails';
   import { SocketModel } from './socketstores';
   import App from './App.svelte';
-  import { syncValue } from './stores';
+  import { traitlet } from './stores';
   import { MODULE_VERSION } from './version';
   import { helpMessagesVisible } from './visualization/utils/stores';
   import HelpMessage from './visualization/components/HelpMessage.svelte';
@@ -55,7 +55,7 @@
   // Config
 
   let datasetOptions = [];
-  let datasetPath = syncValue(model, 'file', '');
+  let datasetPath = traitlet(model, 'file', '');
 
   // let oldDatasetPath = '';
   // $: if (oldDatasetPath != datasetPath) {
@@ -69,8 +69,8 @@
     return match[1];
   }
 
-  let colorScheme = syncValue(model, 'colorScheme', 'tableau');
-  let previewMode = syncValue(
+  let colorScheme = traitlet(model, 'colorScheme', 'tableau');
+  let previewMode = traitlet(
     model,
     'previewMode',
     PreviewMode.PROJECTION_SIMILARITY

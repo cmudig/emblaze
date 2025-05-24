@@ -4,7 +4,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import * as d3 from 'd3';
   import { fade } from 'svelte/transition';
-  import Icon from 'fa-svelte';
+  import Fa from 'svelte-fa';
   import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
   import Scatterplot from './pixi/Scatterplot.svelte';
   import PreviewSlider from './components/PreviewSlider.svelte';
@@ -333,8 +333,8 @@
     idsOfInterest={alignedIDs.length > 0
       ? getFilterPoints(alignedIDs)
       : clickedIDs.length > 0
-      ? getFilterPoints(clickedIDs)
-      : []}
+        ? getFilterPoints(clickedIDs)
+        : []}
     bind:previewProgress
     bind:clickedIDs
     bind:hoveredID
@@ -501,7 +501,7 @@
     </div>
     {#if warningMessage.length > 0}
       <div id="warning-panel">
-        <Icon icon={faExclamationTriangle} />
+        <Fa icon={faExclamationTriangle} />
         {warningMessage}
       </div>
     {/if}

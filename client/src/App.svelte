@@ -10,7 +10,7 @@
   export let model;
 
   // Creates a Svelte store (https://svelte.dev/tutorial/writable-stores) that syncs with the named Traitlet in widget.ts and example.py.
-  import { syncValue } from './stores';
+  import { traitlet } from './stores';
   import { Dataset, PreviewMode } from './visualization/models/dataset.js';
   import { onMount, onDestroy } from 'svelte';
   import { writable } from 'svelte/store';
@@ -29,34 +29,34 @@
 
   export let fillHeight = false;
 
-  let isLoading = syncValue(model, 'isLoading', false);
+  let isLoading = traitlet(model, 'isLoading', false);
 
-  let data = syncValue(model, 'data', null);
-  let neighborData = syncValue(model, 'neighborData', []);
+  let data = traitlet(model, 'data', null);
+  let neighborData = traitlet(model, 'neighborData', []);
 
-  let plotPadding = syncValue(model, 'plotPadding', 10.0);
+  let plotPadding = traitlet(model, 'plotPadding', 10.0);
   let height = 600; // can make this reactive later
 
   export let dataset = null;
-  let frameTransformations = syncValue(model, 'frameTransformations', []);
-  let frameColors = syncValue(model, 'frameColors', []);
-  let thumbnailData = syncValue(model, 'thumbnailData', {});
+  let frameTransformations = traitlet(model, 'frameTransformations', []);
+  let frameColors = traitlet(model, 'frameColors', []);
+  let thumbnailData = traitlet(model, 'thumbnailData', {});
 
-  let colorScheme = syncValue(model, 'colorScheme', 'tableau');
+  let colorScheme = traitlet(model, 'colorScheme', 'tableau');
   let colorSchemeObject = ColorSchemes.getColorScheme($colorScheme);
   $: {
     let newScheme = ColorSchemes.getColorScheme($colorScheme);
     if (!!newScheme) colorSchemeObject = newScheme;
   }
-  let previewMode = syncValue(
+  let previewMode = traitlet(
     model,
     'previewMode',
     PreviewMode.PROJECTION_SIMILARITY
   );
-  let previewParameters = syncValue(model, 'previewParameters', {});
+  let previewParameters = traitlet(model, 'previewParameters', {});
   let previewK = 10;
   let previewSimilarityThreshold = 0.5;
-  let numNeighbors = syncValue(model, 'numNeighbors', 10);
+  let numNeighbors = traitlet(model, 'numNeighbors', 10);
 
   $: if (
     !!$frameTransformations &&
@@ -109,11 +109,11 @@
   //let thumbnailHoveredID = null;
   let scatterplotHoveredID = null;
 
-  let selectedIDs = syncValue(model, 'selectedIDs', []);
+  let selectedIDs = traitlet(model, 'selectedIDs', []);
   //$: console.log($selectedIDs);
 
-  let alignedIDs = syncValue(model, 'alignedIDs', []);
-  let alignedFrame = syncValue(model, 'alignedFrame', 0);
+  let alignedIDs = traitlet(model, 'alignedIDs', []);
+  let alignedFrame = traitlet(model, 'alignedFrame', 0);
   // alignedFrame should match currentFrame as long as there is no current alignment
   $: if ($alignedIDs.length == 0) $alignedFrame = $currentFrame;
 
@@ -124,17 +124,13 @@
   let previewThumbnailMessage = '';
   let previewThumbnailNeighbors = [];
 
-  let currentFrame = syncValue(model, 'currentFrame', 0);
-  let previewFrame = syncValue(model, 'previewFrame', 0);
+  let currentFrame = traitlet(model, 'currentFrame', 0);
+  let previewFrame = traitlet(model, 'previewFrame', 0);
 
-  let allowsSavingSelections = syncValue(
-    model,
-    'allowsSavingSelections',
-    false
-  );
-  let saveSelectionFlag = syncValue(model, 'saveSelectionFlag', false);
-  let selectionName = syncValue(model, 'selectionName', '');
-  let selectionDescription = syncValue(model, 'selectionDescription', '');
+  let allowsSavingSelections = traitlet(model, 'allowsSavingSelections', false);
+  let saveSelectionFlag = traitlet(model, 'saveSelectionFlag', false);
+  let selectionName = traitlet(model, 'selectionName', '');
+  let selectionDescription = traitlet(model, 'selectionDescription', '');
   let isOpenDialogue = false;
   let nameField = '';
   let descriptionField = '';
@@ -163,17 +159,17 @@
         { value: SidebarPanes.SUGGESTED, name: 'Suggested' },
       ];
   }
-  let visibleSidebarPane = syncValue(
+  let visibleSidebarPane = traitlet(
     model,
     'visibleSidebarPane',
     SidebarPanes.CURRENT
   );
 
-  let filterIDs = syncValue(model, 'filterIDs', []);
+  let filterIDs = traitlet(model, 'filterIDs', []);
 
   // Saving and loading selections
 
-  let selectionList = syncValue(model, 'selectionList', []);
+  let selectionList = traitlet(model, 'selectionList', []);
 
   function openSaveSelectionDialog() {
     $selectionName = '';
@@ -239,7 +235,7 @@
 
   // Selection history
 
-  let selectionHistory = syncValue(model, 'selectionHistory', []);
+  let selectionHistory = traitlet(model, 'selectionHistory', []);
   const HistoryLength = 25;
 
   let oldSelectedIDs = [];
@@ -282,10 +278,12 @@
     if ($selectionHistory.length == 0 || oldSelection.length == 0) {
       $selectionHistory = [selectionObj, ...$selectionHistory];
     } else {
-      let numAdded = newSelection.filter((id) => !oldSelection.includes(id))
-        .length;
-      let numRemoved = oldSelection.filter((id) => !newSelection.includes(id))
-        .length;
+      let numAdded = newSelection.filter(
+        (id) => !oldSelection.includes(id)
+      ).length;
+      let numRemoved = oldSelection.filter(
+        (id) => !newSelection.includes(id)
+      ).length;
       if (numAdded + numRemoved <= 1) {
         $selectionHistory = [selectionObj, ...$selectionHistory.slice(1)];
       } else {
@@ -300,24 +298,24 @@
 
   // Suggested selections
 
-  let suggestedSelections = syncValue(model, 'suggestedSelections', []);
-  let suggestedSelectionWindow = syncValue(
+  let suggestedSelections = traitlet(model, 'suggestedSelections', []);
+  let suggestedSelectionWindow = traitlet(
     model,
     'suggestedSelectionWindow',
     []
   );
-  let loadingSuggestions = syncValue(model, 'loadingSuggestions', false);
-  let loadingSuggestionsProgress = syncValue(
+  let loadingSuggestions = traitlet(model, 'loadingSuggestions', false);
+  let loadingSuggestionsProgress = traitlet(
     model,
     'loadingSuggestionsProgress',
     0.0
   );
-  let recomputeSuggestionsFlag = syncValue(
+  let recomputeSuggestionsFlag = traitlet(
     model,
     'recomputeSuggestionsFlag',
     false
   );
-  let performanceSuggestionsMode = syncValue(
+  let performanceSuggestionsMode = traitlet(
     model,
     'performanceSuggestionsMode',
     false
@@ -426,9 +424,9 @@
 
   // Selection order
 
-  let selectionUnit = syncValue(model, 'selectionUnit', '');
-  let selectionOrderRequest = syncValue(model, 'selectionOrderRequest', {});
-  let selectionOrder = syncValue(model, 'selectionOrder', []);
+  let selectionUnit = traitlet(model, 'selectionUnit', '');
+  let selectionOrderRequest = traitlet(model, 'selectionOrderRequest', {});
+  let selectionOrder = traitlet(model, 'selectionOrder', []);
   const SelectionOrderTimeout = 100;
 
   async function selectionOrderFn(pointID, metric) {
@@ -466,9 +464,9 @@
 
   // Interaction logging
 
-  let loggingEnabled = syncValue(model, 'loggingEnabled', false);
-  let interactionHistory = syncValue(model, 'interactionHistory', []);
-  let saveInteractionsFlag = syncValue(model, 'saveInteractionsFlag', false);
+  let loggingEnabled = traitlet(model, 'loggingEnabled', false);
+  let interactionHistory = traitlet(model, 'interactionHistory', []);
+  let saveInteractionsFlag = traitlet(model, 'saveInteractionsFlag', false);
 
   let loggingInterval = null;
   const LoggingIntervalTime = 10000;
@@ -712,8 +710,8 @@
             emptyMessage="No suggested selections right now.{$performanceSuggestionsMode
               ? ' Suggestions are in performance mode - will compute when less than 1,000 points are displayed.'
               : dataset != null && dataset.frameCount <= 1
-              ? ' Add more embeddings to see suggestions.'
-              : ''}"
+                ? ' Add more embeddings to see suggestions.'
+                : ''}"
             helpMessage="This view lists <strong>Suggested Selections</strong>, which are groups of points that exhibit potentially interesting changes between frames. Try selecting different frames or moving around the scatter plot to see different suggestions."
             on:loadSelection={(e) => {
               handleLoadSelection(e);

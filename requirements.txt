@@ -12,3 +12,4 @@ flask-socketio>=5.1.1
 eventlet>=0.33.0
 numba>=0.53.1
 tqdm>=4.61.2
+anywidget>=0.9.18
