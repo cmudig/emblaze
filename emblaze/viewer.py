@@ -392,7 +392,7 @@ class Viewer(DOMWidget):
         base_frame = embeddings[0].field(Field.POSITION)
         mins = np.min(base_frame, axis=0)
         maxes = np.max(base_frame, axis=0)
-        self.plotPadding = np.min(maxes - mins) * 0.2
+        self.plotPadding = float(np.min(maxes - mins) * 0.2)
         
         self.colorScheme = self.detect_color_scheme()
         self.previewMode = self.detect_preview_mode()

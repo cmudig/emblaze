@@ -105,7 +105,7 @@ See the [documentation](https://dig.cmu.edu/emblaze/emblaze) for more details on
 
 ## Development Installation
 
-Clone repository, then install dependencies:
+Clone repository, then install dependencies. (Note: you may find it easier to install SciPy using conda first - `conda install scipy`)
 
 ```bash
 pip install -r requirements.txt
